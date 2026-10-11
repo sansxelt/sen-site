@@ -29,7 +29,7 @@ const DATA_TOPICS: Topic[] = [
 ];
 
 const RULES = [
-  "Test only against accounts you own, and stop as soon as you can show the problem.",
+  "Test only systems you own or are authorized to test, and stop as soon as you can show the problem.",
   "Do not open, change or keep anyone else's data. If you reach some by accident, tell us and delete it.",
   "Give us a reasonable chance to fix it before you publish anything.",
 ];
@@ -68,7 +68,7 @@ export default function V8SecurityPage() {
             <span className="v8-eyebrow">Security</span>
             <h1 className="v8-h1">Security and responsible disclosure.</h1>
             <p className="v8-lead">{COMPANY_LINE} This page sets out where development stands, what to share with us, and how to report a security issue.</p>
-            <p className="v8-body">The public site provides information and a way to contact us. The AI-security product, app and console are in private development.</p>
+            <p className="v8-body">The public site provides information and a way to contact us. Vraelis Contour and its evidence app are in private development.</p>
             <div className="v8-actions" style={{ marginTop: 10 }}>
               <a className="v8-btn v8-btn--solid v8-btn--lg" href="#report">Report a security issue<span className="v8-arrow" aria-hidden="true" /></a>
               <a className="v8-btn v8-btn--soft v8-btn--lg" href="/.well-known/security.txt">security.txt</a>

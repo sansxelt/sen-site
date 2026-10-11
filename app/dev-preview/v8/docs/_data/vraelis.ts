@@ -88,6 +88,7 @@ export const VRAELIS_PAGES: Page[] = [
       { t: "h2", text: "Ask AI" },
       { t: "p", text: "Ask AI answers from this documentation only. It quotes the passages that match your question, word for word, each linked to its section. When the docs do not cover something, it says so. Open it from the header, or from the first row of search." },
       { t: "p", text: "Ask AI does not answer from the earlier references. The conversation is not kept after the page closes." },
+      { t: "p", text: "If generated answers are switched on, each one is labelled as generated, and the panel says where your question is sent." },
       { t: "h2", text: "Markdown for AI assistants" },
       { t: "p", text: "Every page has a Markdown twin. Copy for LLM copies the page as Markdown, and View as Markdown opens it. [llms.txt](/docs/llms.txt) lists every page with its twin." },
       { t: "h2", text: "Earlier references" },

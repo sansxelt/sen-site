@@ -5,7 +5,7 @@ import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, typ
 import { CopyButton } from "./client";
 import { AskIcon } from "./ask-button";
 import { ASK_EVENT, openSearch } from "./events";
-import { useDocsEndpoint, useDocsLink } from "./host";
+import { Go, useDocsEndpoint, useDocsLink } from "./host";
 import type { AssistantMode } from "../_data/assistant-mode";
 
 // ASK AI, the docs assistant. After x.ai's "Ask Grok" (an entry at the top of the Ctrl K search and a chat that opens
@@ -35,7 +35,8 @@ type Turn = { id: number; q: string; a: string; mode: AssistantMode; sources: So
 
 const NOTE: Record<AssistantMode, string> = {
   extract: "Answers are passages quoted from the documentation, matched to your words. Check the linked sections.",
-  generate: "Answers are generated from the documentation and can be wrong. Check the linked sections.",
+  // Generate mode sends the question to a provider, so the note says so and links the privacy policy (2026-10-11 audit).
+  generate: "Your question and the matching docs sections are sent to Anthropic to write the answer. Answers can be wrong. Check the linked sections.",
 };
 const LEAD: Record<AssistantMode, string> = {
   extract: "Ask about Vraelis Contour or our research. You get the passages of this documentation that answer it, word for word, each linked to its section.",
@@ -295,7 +296,7 @@ export function AskPanel({ mode }: { mode: AssistantMode }) {
               ) : (
                 <div className="v8-ask__a">
                   {t.state === "searching" ? <p className="v8-ask__status">Reading the documentation</p> : null}
-                  {t.a && t.mode === "extract" ? <p className="v8-ask__label v8-ask__from">From the documentation</p> : null}
+                  {t.a ? <p className="v8-ask__label v8-ask__from">{t.mode === "extract" ? "From the documentation" : "Generated answer"}</p> : null}
                   {t.a ? <div className={t.mode === "extract" ? "v8-docs-answer v8-docs-answer--extract" : "v8-docs-answer"}><Answer text={t.a} cite={cite} onCite={onCite} /></div> : null}
                   {t.state === "stopped" ? <p className="v8-ask__status">Stopped.</p> : null}
                   {list.length ? (
@@ -334,7 +335,7 @@ export function AskPanel({ mode }: { mode: AssistantMode }) {
           )}
         </div>
         <p className="v8-ask__note">
-          <span>{NOTE[turns.at(-1)?.mode ?? mode]}</span>
+          <span>{NOTE[turns.at(-1)?.mode ?? mode]}{(turns.at(-1)?.mode ?? mode) === "generate" ? <> <Go to={link("/privacy")}>Privacy</Go></> : null}</span>
           {left <= 100 ? <span className="v8-ask__count" aria-live="polite">{left} left</span> : null}
         </p>
       </form>

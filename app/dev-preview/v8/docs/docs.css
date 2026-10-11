@@ -161,7 +161,7 @@
 .v8 .v8-docs-body > .v8-docs-code { margin-top: 20px; }
 .v8 .v8-docs-code__bar { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 4px 6px 4px 16px; border-bottom: 1px solid rgba(255,255,255,.07); font: 500 12.5px/1.3 var(--sans); }
 .v8 .v8-docs-code__label { flex: 1; min-width: 0; overflow: hidden; color: rgba(250,250,250,.78); text-overflow: ellipsis; white-space: nowrap; }
-.v8 .v8-docs-code__lang { flex: none; color: rgba(250,250,250,.45); font-size: 12px; }
+.v8 .v8-docs-code__lang { flex: none; color: var(--ink-3); font-size: 12px; }
 .v8 .v8-docs-code pre { margin: 0; padding: 14px 18px 16px; max-height: 520px; overflow: auto; color: #E1E4E8; font: 400 13px/1.75 var(--mono); white-space: pre; tab-size: 2; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.16) transparent; }
 .v8 .v8-docs-code pre code, .v8 .v8-dcp pre code { font: inherit; color: inherit; }
 .v8 .v8-docs-copy { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 7px 10px; border: 0; border-radius: 8px; background: none; color: var(--ink-3); font: 500 12px/1 var(--sans); cursor: pointer; transition: color .15s, background .15s; }
@@ -310,7 +310,7 @@
 .v8 .v8-dcp pre { margin: 0; height: 280px; padding: 18px 20px; overflow: auto; color: #E1E4E8; font: 400 13px/1.75 var(--mono); white-space: pre; tab-size: 2; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.16) transparent; }
 .v8 .v8-dcp--hero pre { height: 304px; }
 .v8 .v8-dcp--jump pre { height: 340px; }
-.v8 .v8-dcp__note { padding: 10px 16px 12px; border-top: 1px solid rgba(255,255,255,.07); color: rgba(250,250,250,.45); font: 400 12px/1.4 var(--sans); }
+.v8 .v8-dcp__note { padding: 10px 16px 12px; border-top: 1px solid rgba(255,255,255,.07); color: rgba(250,250,250,.62); font: 400 12px/1.4 var(--sans); }
 
 .v8 .v8-dh-sec__h { margin-bottom: 24px; font-size: clamp(28px, 2.6vw, 34px); font-weight: 500; line-height: 1.15; letter-spacing: -.02em; }
 .v8 .v8-dh-sec__lead { margin: -12px 0 24px; color: var(--ink-3); font-size: 15px; line-height: 1.6; }

@@ -202,7 +202,7 @@ export function V8Footer() {
             <ThemeToggle />
             <a className="v8-affil" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/v8/brand/foremake-logo.jpg" alt="" width={22} height={22} />Affiliated with Foremake, Inc
+              <img src="/v8/brand/foremake-logo.jpg" alt="" width={22} height={22} />Affiliated with Foremake, Inc.
             </a>
           </div>
           <nav aria-label="Footer">

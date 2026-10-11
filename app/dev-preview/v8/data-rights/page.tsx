@@ -3,8 +3,7 @@ import { LegalPage, V8_LEGAL_PRIMS } from "../_legal/legal";
 
 export const metadata = v8meta({
   title: "Data rights",
-  description:
-    "Access, export and deletion: what Vraelis holds, what leaving actually removes, and the one thing deletion cannot undo, which is a verification record someone else already relied on.",
+  description: "How to ask Vraelis by email for access to your data, an export, a correction or a deletion, and what deletion cannot undo.",
   path: "/data-rights",
 });
 
