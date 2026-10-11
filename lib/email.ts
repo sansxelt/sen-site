@@ -176,7 +176,9 @@ export function contactConfirmText(name: string) {
   return [
     "We received your message",
     "",
-    `${first ? `Hi ${first},` : "Hi,"} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`,
+    first ? `Hi ${first},` : "Hi,",
+    "",
+    "Thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.",
     "",
     "To add anything, reply to this email.",
     "",

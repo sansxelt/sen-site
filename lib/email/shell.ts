@@ -6,7 +6,7 @@
 // ignored the reader's dark mode. It was four frames around three lines: a grey page, a bordered card, a
 // header bar with the wordmark, a footer bar. Now:
 //
-//   - ONE OPEN COLUMN, 560px, left aligned. No card, no bars. The diamond lockup sits at the top like a
+//   - ONE OPEN COLUMN (600px since THE FORMAT below), no card, no bars. The mark sits at the top like a
 //     letterhead, then the heading, the content, and a quiet footer under a single hairline.
 //   - REDONE 2026-10-11 (founder: "emails are horrid", then "keep it white and black ... switch depending if
 //     they white or dark mode"): WHITE BY DEFAULT with black ink, like the x.ai, Vercel and Supabase mail he
@@ -18,6 +18,14 @@
 //   - State colour only where the email reports a state, as a one-line status row.
 //   - A one-time code is the action of its email, set large in mono on a soft panel (oneTimeCode).
 //   - Every email carries a hidden preheader, the line an inbox shows under the subject.
+//
+// THE FORMAT (2026-10-11, founder pointing at a SpaceXAI login notice: "not the worst but study this"):
+//   - The mark alone (the diamond, no wordmark) at the top: dark facets on white, its own light facets in dark
+//     mode. The sender name already says Vraelis.
+//   - A 600px column, larger and airier type (16px at 1.75), one body colour, no grey paragraphs mid-letter.
+//   - A medium-weight heading, the greeting on its own line, details as plain "Label: value" lines with the label
+//     in bold, no table rules.
+//   - A sign-off after a clear gap ("Vraelis Team"), a hairline, and a short, widely spaced footer.
 //
 // MAIL CLIENT NOTES
 //   - Layout is tables with inline styles; the <style> block only adds the light palette and small-screen
@@ -39,7 +47,7 @@ export const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,
 // it white and black ... switch depending if they white or dark mode"). The dark palette is the DARK block below.
 const BG = "#FFFFFF";
 const INK = "#0A0A0B";
-const BODY = "#3F3F46";
+const BODY = "#27272A";
 const MUTED = "#71717A";
 const LINE = "#E4E4E7";
 const SOFT = "#F4F4F5";
@@ -108,7 +116,7 @@ const PREHEADER_PAD = "&#847;&zwnj;&nbsp;".repeat(60);
 const DARK = `
   body, .vx-bg { background: #0A0A0B !important; }
   .vx-ink { color: #FAFAFA !important; }
-  .vx-text { color: #C9C9CF !important; }
+  .vx-text { color: #D4D4D8 !important; }
   .vx-muted, .vx-muted a { color: #8E8E96 !important; }
   .vx-rule { border-color: #232327 !important; }
   .vx-soft { background: #141416 !important; border-color: #232327 !important; }
@@ -126,17 +134,17 @@ const OGSC = DARK.trim().split("\n").map((line) => {
 }).join("\n    ");
 
 export function shell(content: string, opts: ShellOptions): string {
-  const foot = `margin:0 0 8px;font-family:${FONT};font-size:12.5px;line-height:1.6;color:${MUTED};`;
+  const foot = `margin:0 0 14px;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};`;
   const footLink = `color:${MUTED};text-decoration:underline;text-underline-offset:2px;`;
   const reason = quietLinks(opts.reason ?? DEFAULT_REASON, footLink);
   const supportLine = opts.support === false
     ? ""
-    : `<p class="vx-muted" style="${foot}">Questions? Email <a href="mailto:${SUPPORT_EMAIL}" style="${footLink}">${SUPPORT_EMAIL}</a>.</p>`;
+    : `<p class="vx-muted" style="${foot}">For questions, contact <a href="mailto:${SUPPORT_EMAIL}" style="${footLink}">${SUPPORT_EMAIL}</a></p>`;
   // Mail to our own inboxes (support: false) is not signed off unless asked.
   const signoffText = opts.signoff === false || (opts.signoff === undefined && opts.support === false)
-    ? "" : (opts.signoff ?? "The Vraelis team");
+    ? "" : (opts.signoff ?? "Vraelis Team");
   const signoff = signoffText
-    ? `<p class="vx-text" style="margin:8px 0 0;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${escapeHtml(signoffText)}</p>`
+    ? `<p class="vx-text" style="margin:36px 0 0;font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};">${escapeHtml(signoffText)}</p>`
     : "";
   const year = new Date().getUTCFullYear();
   return `<!DOCTYPE html>
@@ -165,7 +173,7 @@ export function shell(content: string, opts: ShellOptions): string {
     ${OGSC}
     @media only screen and (max-width: 600px) {
       .vx-outer { padding: 28px 20px 36px !important; }
-      .vx-h1 { font-size: 22px !important; }
+      .vx-h1 { font-size: 24px !important; }
       .vx-otp { font-size: 28px !important; letter-spacing: 0.16em !important; }
     }
     @media only screen and (max-width: 480px) {
@@ -178,18 +186,18 @@ export function shell(content: string, opts: ShellOptions): string {
   <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(opts.preheader)}${PREHEADER_PAD}</div>
   <table class="vx-bg" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${BG}" style="background:${BG};">
     <tr><td align="center" class="vx-outer" style="padding:56px 24px 64px;">
-      <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
-        <tr><td style="padding:0 0 44px;">
-          <a href="https://vraelis.com" style="text-decoration:none;"><img class="vx-logo-light" src="${ASSET_ORIGIN}/email/lockup-ink@2x.png" width="102" height="26" alt="Vraelis" style="display:block;width:102px;height:26px;border:0;outline:none;color:${INK};font-family:${FONT};font-size:18px;font-weight:600;line-height:26px;"><img class="vx-logo-dark" src="${ASSET_ORIGIN}/email/lockup@2x.png" width="102" height="26" alt="" style="display:none;width:102px;height:26px;border:0;outline:none;mso-hide:all;"></a>
+      <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+        <tr><td style="padding:0 0 40px;">
+          <a href="https://vraelis.com" style="text-decoration:none;"><img class="vx-logo-light" src="${ASSET_ORIGIN}/email/mark-ink@2x.png" width="32" height="30" alt="Vraelis" style="display:block;width:32px;height:30px;border:0;outline:none;color:${INK};font-family:${FONT};font-size:18px;font-weight:600;line-height:30px;"><img class="vx-logo-dark" src="${ASSET_ORIGIN}/email/mark@2x.png" width="32" height="30" alt="" style="display:none;width:32px;height:30px;border:0;outline:none;mso-hide:all;"></a>
         </td></tr>
-        <tr><td class="vx-text" style="font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">
+        <tr><td class="vx-text" style="font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};">
           ${content}
           ${signoff}
         </td></tr>
-        <tr><td style="padding:40px 0 0;">
+        <tr><td style="padding:44px 0 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr><td class="vx-rule" style="padding:24px 0 0;border-top:1px solid ${LINE};">
+            <tr><td class="vx-rule" style="padding:28px 0 0;border-top:1px solid ${LINE};">
               <p class="vx-muted" style="${foot}">&copy; ${year} Vraelis</p>
               <p class="vx-muted" style="${foot}">${reason}</p>
               ${supportLine}
@@ -208,17 +216,24 @@ export function shell(content: string, opts: ShellOptions): string {
 // ── Atoms. Each takes HTML that is already safe; callers escape anything that came from outside. ───────
 
 export function h1(html: string): string {
-  return `<h1 class="vx-h1 vx-ink" style="margin:0 0 14px;font-family:${FONT};font-size:26px;font-weight:600;line-height:1.2;letter-spacing:-0.02em;color:${INK};word-break:break-word;">${html}</h1>`;
+  return `<h1 class="vx-h1 vx-ink" style="margin:0 0 28px;font-family:${FONT};font-size:28px;font-weight:500;line-height:1.25;letter-spacing:-0.015em;color:${INK};word-break:break-word;">${html}</h1>`;
 }
 
-/** Body paragraph, 15px. */
+const para = (html: string) =>
+  `<p class="vx-text" style="margin:0 0 18px;font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};">${html}</p>`;
+
+/** Body paragraph, 16px. A paragraph that opens with the greeting ("Hi Dana, thanks for ...") is set as two, the
+ *  greeting on its own line, as letters do; the templates can keep writing it inline. */
 export function p(html: string): string {
-  return `<p class="vx-text" style="margin:0 0 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${html}</p>`;
+  const m = html.match(/^\s*(Hi(?: [^,<]{1,60})?,)\s+([\s\S]+)$/);
+  if (!m) return para(html);
+  return para(m[1]) + para(m[2].charAt(0).toUpperCase() + m[2].slice(1));
 }
 
-/** Secondary text, 13.5px muted: fallbacks, "did not request this", fine print. */
+/** Secondary lines (fallbacks, "did not request this"): body type one step smaller, the same colour. No grey
+ *  paragraphs mid-letter. */
 export function small(html: string): string {
-  return `<p class="vx-muted" style="margin:0 0 12px;font-family:${FONT};font-size:13.5px;line-height:1.6;color:${MUTED};">${html}</p>`;
+  return `<p class="vx-text" style="margin:0 0 18px;font-family:${FONT};font-size:15px;line-height:1.75;color:${BODY};">${html}</p>`;
 }
 
 /** Emphasis inside body copy. */
@@ -258,26 +273,21 @@ export function status(tone: StatusTone, html: string): string {
 }
 
 /**
- * Key/value details. Labels muted, values ink, tabular figures so amounts and dates line up. Values are
- * escaped unless passed as { html }, which is for a value that is itself a link.
+ * Key/value details as plain lines, "Label: value", the label in bold. Tabular figures so amounts and dates line
+ * up. Values are escaped unless passed as { html }, which is for a value that is itself a link.
  */
 export type DetailValue = string | { html: string };
 export function details(rows: Array<[string, DetailValue]>): string {
-  const cell = `font-family:${FONT};font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;vertical-align:top;`;
-  const body = rows.map(([label, value], i) => {
-    const edge = i === 0 ? "" : `border-top:1px solid ${LINE};`;
+  const lines = rows.map(([label, value]) => {
     const v = typeof value === "string" ? escapeHtml(value) : value.html;
-    return `<tr>
-      <td class="vx-dt vx-muted vx-rule" width="148" style="${cell}${edge}width:148px;padding:10px 16px 10px 0;color:${MUTED};">${escapeHtml(label)}</td>
-      <td class="vx-dd vx-ink vx-rule" style="${cell}${edge}padding:10px 0;color:${INK};word-break:break-word;">${v}</td>
-    </tr>`;
+    return `<p class="vx-text" style="margin:0;font-family:${FONT};font-size:16px;line-height:1.75;font-variant-numeric:tabular-nums;color:${BODY};word-break:break-word;"><strong class="vx-ink" style="font-weight:600;color:${INK};">${escapeHtml(label)}:</strong> ${v}</p>`;
   }).join("");
-  return `<table class="vx-rule" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 24px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};border-collapse:collapse;">${body}</table>`;
+  return `<div style="margin:0 0 18px;">${lines}</div>`;
 }
 
 /** A short bulleted list in body type. Items are HTML. */
 export function list(items: string[]): string {
-  return `<ul class="vx-text" style="margin:0 0 16px;padding:0 0 0 20px;font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">${items
+  return `<ul class="vx-text" style="margin:0 0 18px;padding:0 0 0 20px;font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};">${items
     .map((i) => `<li style="margin:0 0 6px;">${i}</li>`).join("")}</ul>`;
 }
 
@@ -299,10 +309,10 @@ export function oneTimeCode(value: string): string {
 /**
  * A full-width picture: a still, a capture or an animated GIF (founder 2026-10-11: "images r cool too / vids /
  * gifs"). Mail clients do not play video, so a video goes in as a GIF or as its poster image with `href` pointing
- * at the video. The image must be hosted (ASSET_ORIGIN) and should be at least 2x its 560px display width.
+ * at the video. The image must be hosted (ASSET_ORIGIN) and should be at least 2x its 600px display width.
  */
 export function image(opts: { src: string; alt: string; width: number; height: number; href?: string; caption?: string }): string {
-  const w = 560, h = Math.round((opts.height / opts.width) * w);
+  const w = 600, h = Math.round((opts.height / opts.width) * w);
   const img = `<img src="${escapeHtml(opts.src)}" width="${w}" height="${h}" alt="${escapeHtml(opts.alt)}" style="display:block;width:100%;max-width:${w}px;height:auto;border:0;border-radius:12px;outline:none;">`;
   const linked = opts.href ? `<a href="${escapeHtml(opts.href)}" target="_blank" style="text-decoration:none;">${img}</a>` : img;
   const caption = opts.caption ? `<p class="vx-muted" style="margin:10px 0 0;font-family:${FONT};font-size:13px;line-height:1.5;color:${MUTED};">${escapeHtml(opts.caption)}</p>` : "";
@@ -312,13 +322,15 @@ export function image(opts: { src: string; alt: string; width: number; height: n
 /** A quoted block of someone else's words (a support message, a lead's note). Text is escaped. */
 export function quote(text: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate;">
-    <tr><td class="vx-soft vx-text" style="padding:14px 16px;background:${SOFT};border:1px solid ${LINE};border-radius:8px;font-family:${FONT};font-size:14px;line-height:1.6;color:${BODY};white-space:pre-wrap;word-break:break-word;">${escapeHtml(text)}</td></tr>
+    <tr><td class="vx-text vx-rule" style="padding:2px 0 2px 16px;border-left:2px solid ${LINE};font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};white-space:pre-wrap;word-break:break-word;">${escapeHtml(text)}</td></tr>
   </table>`;
 }
 
 /** A plain-text preview line from rendered HTML: the first paragraph if there is one, else all the text. */
 export function textPreview(html: string, max = 140): string {
-  const first = html.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? html;
+  // The first paragraph with content: p() sets a leading "Hi Dana," on its own line, which says nothing in a preview.
+  const paras = [...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => m[1]);
+  const first = paras.find((t) => !/^\s*Hi(?: [^,<]{1,60})?,\s*$/.test(t)) ?? paras[0] ?? html;
   const text = first
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
