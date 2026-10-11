@@ -99,7 +99,7 @@ export default function Home() {
             </Link>
             <Link href={href("/applications/autonomous-systems")} className="v8-tile">
               <div className="v8-tile__media">
-                <AutoVideo src="/home/systems-film-opening.mp4" poster="/home/systems-poster-opening.jpg" label="Editorial footage of the systems where AI is deployed." />
+                <AutoVideo src="/home/systems-film-civil.mp4" poster="/home/systems-poster-civil.jpg" label="Editorial footage of the systems where AI is deployed: factory robots, a power substation, a drone, a solar farm and software." />
               </div>
               <div className="v8-tile__foot"><span>Applications</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>

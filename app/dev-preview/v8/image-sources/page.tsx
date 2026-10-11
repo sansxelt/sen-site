@@ -8,14 +8,15 @@ import "./image-sources.css";
 
 export const metadata = v8meta({
   title: "Image sources",
-  description: "Where every picture on the Vraelis site comes from: captures of the Vraelis Contour app, licensed editorial photographs and the systems films.",
+  description: "Where every picture on the Vraelis site comes from: captures of the Vraelis Contour app, licensed editorial photographs and the systems film.",
   path: "/image-sources",
 });
 
 // Credits for every picture the v8 site can show. Photographs come from EDITORIAL_PHOTOGRAPHS (the registry the kit's
 // photo helpers read), with authors and Pexels ids as recorded in public/site/photography/CREDITS.md. Film shots are
-// the six clips listed in public/home/systems-film-sources.txt, restated here without that file's older product
-// sentence. Product pictures come from CAPTURES in the kit: real captures, never rebuilt windows.
+// the seven Pexels clips in the homepage film (/home/systems-film-civil.mp4), as listed in
+// public/home/systems-film-sources.txt and scripts/field-film/SOURCES.md. The v8 site shows no military footage.
+// Product pictures come from CAPTURES in the kit: real captures, never rebuilt windows.
 const PEXELS_LICENSE = "https://www.pexels.com/license/";
 
 const RECORDINGS = [
@@ -23,13 +24,14 @@ const RECORDINGS = [
   { file: "/v8/contour/contour-observations.mp4", what: "A screen recording of the app's destination screen stepping through the four recorded observations, with a WebM copy." },
 ];
 
-const FILM_SHOTS: { shot: string; source: string; url: string; rights: string; commons?: string }[] = [
-  { shot: "Warehouse robotic arm", source: "Ocelotwood, Pexels 16938947", url: "https://www.pexels.com/video/16938947/", rights: "Pexels License" },
-  { shot: "Software on screen", source: "cottonbro, Pexels 5473798", url: "https://www.pexels.com/video/5473798/", rights: "Pexels License" },
-  { shot: "LS3 legged robot experiment with 3rd Battalion, 3rd Marines, Kahuku Training Area, Hawaii, 2014", source: "U.S. Marine Corps video by Sgt. William L. Holdaway, U.S. Marine Corps Forces, Pacific. DVIDS 349764 (VIRIN 140715-M-CP369-001)", url: "https://www.dvidshub.net/video/349764/ls3-action-along-side-3-3-marines", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:349764-LS3_in_action_along_side_3-3_Marines.webm" },
-  { shot: "MQ-9 Reaper training flight, Nevada Test and Training Range, July 15, 2019", source: "U.S. Air Force video by Senior Airman Haley Stevens, 432nd Wing. DVIDS 708466 (VIRIN 190715-F-UA265-393)", url: "https://www.dvidshub.net/video/708466/mq-9-reaper-aerial-video", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:MQ-9_Reaper_aerial_video_DOD_107212162-5e1342c0d88af.webm" },
-  { shot: "AH-64 Apache demonstration, Lielvarde Air Base, Latvia, May 2, 2025", source: "U.S. Army video by Sgt. Charlie Duke, Combat Aviation Brigade, 1st Armored Division. DVIDS 962366 (VIRIN 250502-A-UP538-3633)", url: "https://www.dvidshub.net/video/962366", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:AH-64_Apache_Capability_Demostration_(962366).webm" },
-  { shot: "SPIKE NLOS live fire from an AH-64E, Ustka, Poland, August 2025", source: "U.S. Army video by Sgt. Jamie Robinson, 12th Combat Aviation Brigade. DVIDS 975462 (VIRIN 250827-A-FL725-6037)", url: "https://www.dvidshub.net/video/975462/12th-combat-aviation-brigade-employs-spike-nlos-missile-system-historic-live-fire-event", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:U.S._Army_AH-64E_Apache_Guardian_Launching_a_SPIKE_NLOS_Missile.webm" },
+const FILM_SHOTS: { shot: string; source: string; url: string; rights: string }[] = [
+  { shot: "Industrial robot arm on a production line", source: "Usman AbdulrasheedGambo, Pexels 32386532", url: "https://www.pexels.com/video/32386532/", rights: "Pexels License" },
+  { shot: "Factory floor with mobile robots", source: "Usman AbdulrasheedGambo, Pexels 32386627", url: "https://www.pexels.com/video/32386627/", rights: "Pexels License" },
+  { shot: "Drone view of a power substation", source: "Thanh Văn, Pexels 10416553", url: "https://www.pexels.com/video/10416553/", rights: "Pexels License" },
+  { shot: "Civilian quadcopter in flight", source: "Grisha Grishkoff, Pexels 4446375", url: "https://www.pexels.com/video/4446375/", rights: "Pexels License" },
+  { shot: "Drone view of a solar farm", source: "Roman Odintsov, Pexels 7042814", url: "https://www.pexels.com/video/7042814/", rights: "Pexels License" },
+  { shot: "Warehouse robotic arm stacking pallets", source: "Ocelotwood, Pexels 16938947", url: "https://www.pexels.com/video/16938947/", rights: "Pexels License" },
+  { shot: "Software on screen", source: "cottonbro studio, Pexels 5473798", url: "https://www.pexels.com/video/5473798/", rights: "Pexels License" },
 ];
 
 function Out({ to, children }: { to: string; children: ReactNode }) {
@@ -52,7 +54,7 @@ export default function ImageSources() {
           <ul>
             <li><a href="#product-captures">Product captures</a></li>
             <li><a href="#photographs">Photographs</a></li>
-            <li><a href="#films">Systems films</a></li>
+            <li><a href="#films">Systems film</a></li>
           </ul>
         </Wrap>
       </nav>
@@ -114,8 +116,8 @@ export default function ImageSources() {
         <Wrap>
           <div className="v8-head imgs-head">
             <span className="v8-eyebrow">Films</span>
-            <h2 className="v8-h2">Systems films.</h2>
-            <p className="v8-body">Silent original edits of these six clips (files /home/systems-film-*, posters from the same edits). The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement. No U.S. government relationship is implied.</p>
+            <h2 className="v8-h2">Systems film.</h2>
+            <p className="v8-body">A silent original edit of these seven clips from Pexels under the <Out to={PEXELS_LICENSE}>Pexels License</Out> (file /home/systems-film-civil.mp4, poster from the same edit). The footage is context, not Vraelis hardware, customers or deployments. No endorsement or relationship is implied.</p>
           </div>
           <div className="v8-table-wrap imgs-table-wrap">
             <table className="v8-table imgs-table">
@@ -125,7 +127,7 @@ export default function ImageSources() {
                 {FILM_SHOTS.map((f) => (
                   <tr key={f.url}>
                     <td>{f.shot}</td>
-                    <td><Out to={f.url}>{f.source}</Out>{f.commons ? <span className="imgs-also">Also on <Out to={f.commons}>Wikimedia Commons</Out></span> : null}</td>
+                    <td><Out to={f.url}>{f.source}</Out></td>
                     <td>{f.rights === "Pexels License" ? <Out to={PEXELS_LICENSE}>Pexels License</Out> : f.rights}</td>
                   </tr>
                 ))}

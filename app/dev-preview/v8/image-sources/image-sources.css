@@ -20,7 +20,6 @@
 .v8 .imgs-alt { display: block; color: var(--ink); }
 .v8 .imgs-file { display: block; margin-top: 3px; color: var(--ink-3); font-size: 12px; overflow-wrap: anywhere; }
 .v8 .imgs-table td:first-child > .imgs-file:first-child { margin-top: 0; color: var(--ink-2); }
-.v8 .imgs-also { display: block; margin-top: 3px; color: var(--ink-3); font-size: 12.5px; }
 .v8 .imgs-after { margin-top: 16px; }
 /* A phone reads each row as a short stack instead of scrolling a table sideways. */
 @media (max-width: 720px) {
