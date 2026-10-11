@@ -115,7 +115,7 @@ export default function ImageSources() {
           <div className="v8-head imgs-head">
             <span className="v8-eyebrow">Films</span>
             <h2 className="v8-h2">Systems films.</h2>
-            <p className="v8-body">Silent original edits of these six clips (files /home/systems-film-*, posters from the same edits). The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement. Vraelis has no relationship with the U.S. Department of War or any military service.</p>
+            <p className="v8-body">Silent original edits of these six clips (files /home/systems-film-*, posters from the same edits). The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement. No U.S. government relationship is implied.</p>
           </div>
           <div className="v8-table-wrap imgs-table-wrap">
             <table className="v8-table imgs-table">
