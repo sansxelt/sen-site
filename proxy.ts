@@ -378,7 +378,10 @@ export default function proxy(req: NextRequest) {
     }
   }
   // Docs slugs share words with closed console roots (/limits, /api, /cli, /review), so the docs host skips this.
-  if (!docsMain && !v8Owns(path) && isClosedProductPage(path, host)) {
+  // v8 claims its paths on the MAIN host only. app.vraelis.com (and the workspace host) keep their closed-product
+  // rule for every path, "/" included, so a promoted v8 can never open the console there.
+  const v8Claims = v8Owns(path) && !isAppHost && !workspaceHost;
+  if (!docsMain && !v8Claims && isClosedProductPage(path, host)) {
     const url = new URL("/beta", isProd ? "https://vraelis.com" : req.nextUrl.origin.replace("app.localhost", "localhost"));
     const response = NextResponse.redirect(url, 307);
     response.headers.set("cache-control", "no-store");
