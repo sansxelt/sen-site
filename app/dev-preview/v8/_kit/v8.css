@@ -1,6 +1,6 @@
 /* VRAELIS V8 (2026-10-10). The site rebuilt on x.ai's structure and motion, Gusto's way of showing a product,
    and Garuda's light: a black ground, lit surfaces, and one spectral light that appears only on the logo intro,
-   the hero underline, the selected item, focus, and the glow behind product stages. State colours keep their
+   the selected item, focus, and the glow behind product stages (founder 2026-10-10: no hero underline). State colours keep their
    meaning and always come with words. Every rule is scoped under .v8 so nothing leaks into the live tree.
    Direction: https://claude.ai/artifact/PsCkgY5oUMzi2FYSB5JQbT */
 
@@ -99,12 +99,8 @@ html:has(.v8) { --nav-h: 76px; }
 .v8-fade { animation: v8-fade .6s var(--ease) both; animation-delay: var(--d, .35s); }
 @keyframes v8-fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-/* The tagline's three areas take the spectral underline in turn. The sentence never changes. */
 .v8-area { position: relative; }
 .v8-glue { white-space: nowrap; }
-.v8-area::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.06em; height: .07em; min-height: 3px; border-radius: 3px; background: var(--spec); transform: scaleX(0); transform-origin: left; opacity: .95; }
-.v8-area[data-on="true"]::after { animation: v8-underline 3.2s var(--ease) both; }
-@keyframes v8-underline { 0% { transform: scaleX(0); transform-origin: left; } 22%, 74% { transform: scaleX(1); transform-origin: left; } 75% { transform-origin: right; } 100% { transform: scaleX(0); transform-origin: right; } }
 
 /* ── Buttons ────────────────────────────────────────────────────────────────────────────────────────── */
 .v8-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 18px; border-radius: 999px; border: 0; font: 500 14.5px/1.2 var(--sans); white-space: nowrap; cursor: pointer; transition: filter .15s var(--ease-std), background-color .15s var(--ease-std), box-shadow .15s var(--ease-std), color .15s; }
@@ -408,6 +404,5 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 /* ── Motion preferences ─────────────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .v8 *, .v8 *::before, .v8 *::after { animation-duration: .001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-  .v8-area[data-on="true"]::after { transform: scaleX(1); }
-  .v8-chapter { opacity: 1; }
+    .v8-chapter { opacity: 1; }
 }

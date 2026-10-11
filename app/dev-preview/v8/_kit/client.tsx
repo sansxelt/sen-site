@@ -2,15 +2,9 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 
-/** The tagline with its three areas underlined in turn by the spectral light. The text never changes. */
+/** The tagline, rising in word by word; each area and its joining word stay together on one line. */
 export function AreasLine({ before, areas, joiners, after }: { before: string; areas: readonly string[]; joiners: string[]; after: string }) {
-  const [on, setOn] = useState(0);
-  useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => setOn((i) => (i + 1) % areas.length), 3200);
-    return () => clearInterval(id);
-  }, [areas.length]);
-  // Every word rises in on load (x.ai's hero); each area rises as one unit so its underline stays whole.
+  // Every word rises in on load (x.ai's hero); each area rises as one unit with its joining word.
   // Tokens are separated by real spaces so the line still wraps; punctuation attaches to the word before it.
   // A joining word ("and") travels with the area after it, so it is never left alone on a line.
   type Token = { text: string; area?: number; prefix?: string };
@@ -37,7 +31,7 @@ export function AreasLine({ before, areas, joiners, after }: { before: string; a
           {k > 0 ? " " : null}
           {t.area === undefined
             ? <span style={{ ["--i" as string]: k }}>{t.text}</span>
-            : <span className="v8-glue" style={{ ["--i" as string]: k }}>{t.prefix}<span className="v8-area" data-on={t.area === on}>{t.text.replace(/[,.;:]+$/, "")}</span>{t.text.match(/[,.;:]+$/)?.[0] ?? ""}</span>}
+            : <span className="v8-glue" style={{ ["--i" as string]: k }}>{t.prefix}<span className="v8-area">{t.text.replace(/[,.;:]+$/, "")}</span>{t.text.match(/[,.;:]+$/)?.[0] ?? ""}</span>}
         </Fragment>
       ))}
     </span>
