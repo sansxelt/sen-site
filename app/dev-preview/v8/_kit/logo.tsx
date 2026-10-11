@@ -91,6 +91,7 @@ export function glideToTop() {
 export function Brand({ home, navId }: { home: string; navId: string }) {
   const brand = useRef<HTMLAnchorElement>(null);
   const word = useRef<HTMLSpanElement>(null);
+  const replay = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const b = brand.current, w = word.current, nav = document.getElementById(navId);
@@ -162,19 +163,28 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
     if (document.getElementById(INTRO_STYLE_ID)) start();
     // Coming back to the page from another site with Back restores it from the browser's page cache without a load,
     // so replay the intro then too (founder 2026-10-10: "when they go off page and come back, then it does replay").
-    const onShow = (e: PageTransitionEvent) => {
-      if (!e.persisted || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    replay.current = () => {
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       finish();
       nav.style.transition = "none";
       const s = document.createElement("style"); s.id = INTRO_STYLE_ID; s.textContent = INTRO_CSS; document.head.appendChild(s);
       requestAnimationFrame(() => { nav.style.transition = ""; cancelled = false; start(); });
     };
+    const onShow = (e: PageTransitionEvent) => { if (e.persisted) replay.current?.(); };
     window.addEventListener("pageshow", onShow);
-    return () => { cancelled = true; finish(); window.removeEventListener("pageshow", onShow); };
+    return () => { cancelled = true; finish(); replay.current = null; window.removeEventListener("pageshow", onShow); };
   }, [navId]);
 
   // x.ai's logo: from another page it goes home; on the homepage it glides back to the top, and at the top it reloads.
   const pathname = usePathname();
+  // Arriving home from another page of the site replays the intro too (founder, 2026-10-11: "whenever they go back
+  // home it should always repeat"); before, only a full load, a Back from another site or the reload at the top did.
+  const last = useRef(pathname);
+  useEffect(() => {
+    const isHome = (p: string) => p === home || p === `${home}/`;
+    const from = last.current; last.current = pathname;
+    if (isHome(pathname) && !isHome(from)) replay.current?.();
+  }, [pathname, home]);
   const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     if (pathname !== home && pathname !== `${home}/`) return;
