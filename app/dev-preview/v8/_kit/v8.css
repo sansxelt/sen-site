@@ -168,7 +168,8 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-brand__mark { position: relative; display: block; width: 26px; height: 26px; }
 .v8-brand__mark svg { width: 100%; height: 100%; display: block; }
 .v8-brand__tint { position: absolute; inset: 0; opacity: 0; mix-blend-mode: normal; }
-.v8-brand__word { position: absolute; left: 47px; top: 50%; transform: translateY(calc(-50% + 1.5px)); font: 600 21px/1 var(--display); letter-spacing: -.012em; color: var(--ink); white-space: nowrap; opacity: 0; pointer-events: none; }
+.v8-brand__word { position: absolute; left: 47px; top: 50%; transform: translateY(calc(-50% + 1.4px)); display: block; color: var(--ink); opacity: 0; pointer-events: none; }
+.v8-brand__word svg { display: block; }
 .v8-brand canvas { position: absolute; pointer-events: none; }
 .v8-nav { position: relative; display: flex; align-items: center; gap: 2px; transition: transform .7s var(--ease); will-change: transform; }
 /* One highlight that slides between items (x.ai), instead of each item lighting up on its own. */
@@ -234,8 +235,9 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-footer { border-top: 1px solid var(--line); padding-block: 56px 32px; }
 .v8-footer__grid { display: grid; grid-template-columns: minmax(200px, 1.3fr) repeat(6, minmax(0, 1fr)); gap: 32px 24px; }
 .v8-footer__brand { display: grid; align-content: start; gap: 14px; padding-right: 24px; }
-.v8-footer__brand .v8-lockup { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font: 600 19px/1 var(--display); letter-spacing: -.01em; }
-.v8-footer__brand .v8-lockup svg { width: 22px; height: 22px; }
+.v8-footer__brand .v8-lockup { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); }
+.v8-footer__brand .v8-lockup > svg:first-child { width: 22px; height: 22px; }
+.v8-footer__brand .v8-lockup > svg + svg { margin-top: 2px; }
 .v8-footer h2 { margin-bottom: 12px; color: var(--ink); font: 500 13.5px/1.3 var(--sans); letter-spacing: 0; }
 .v8-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
 .v8-footer li a { color: var(--ink-3); font-size: 13.5px; transition: color .15s; }
