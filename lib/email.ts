@@ -151,16 +151,17 @@ export function passwordResetHtml(resetUrl: string) {
   });
 }
 
-// The contact confirmation (redone 2026-10-11): it says what happens next, then shows the sender exactly what
-// they sent, so the email is a receipt they can reply to rather than a form letter.
-export function contactConfirmHtml(name: string, subject: string, message?: string) {
-  const safeName    = escapeHtml(name);
-  const safeSubject = escapeHtml(subject);
-  const greeting    = safeName ? `Hi ${safeName},` : "Hi,";
+// The contact confirmation (redone 2026-10-11). It goes to whatever address was typed into a public form, so
+// it carries NO text the sender wrote: no message, no subject, only a first name cut short. Echoing the message
+// would let anyone use this form to send their own words and links from our domain to a stranger (security
+// review 2026-10-11). The sender already knows what they wrote.
+const confirmName = (name: string) => name.trim().split(/\s+/)[0]?.slice(0, 40) ?? "";
+
+export function contactConfirmHtml(name: string) {
+  const first = escapeHtml(confirmName(name));
   return shell(`
     ${h1("We received your message")}
-    ${p(`${greeting} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`)}
-    ${message ? `${small(`Your message: ${strong(safeSubject)}`)}${quote(message)}` : p(`Your subject: ${strong(safeSubject)}.`)}
+    ${p(`${first ? `Hi ${first},` : "Hi,"} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`)}
     ${p("To add anything, reply to this email.")}
     ${small("If you did not send this, you can ignore this email. We will not write to you unless you contact us.")}
   `, {
@@ -170,14 +171,12 @@ export function contactConfirmHtml(name: string, subject: string, message?: stri
 }
 
 /** The plain-text twin of the confirmation, so text-only clients get a letter, not stripped markup. */
-export function contactConfirmText(name: string, subject: string, message?: string) {
+export function contactConfirmText(name: string) {
+  const first = confirmName(name);
   return [
     "We received your message",
     "",
-    `${name ? `Hi ${name},` : "Hi,"} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`,
-    "",
-    `Your message: ${subject}`,
-    ...(message ? ["", message.split("\n").map((l) => `> ${l}`).join("\n")] : []),
+    `${first ? `Hi ${first},` : "Hi,"} thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.`,
     "",
     "To add anything, reply to this email.",
     "",
@@ -495,8 +494,7 @@ export async function sendContactConfirmEmail(
   /** Inbox the message was routed to, controls the `from` so the
       confirmation comes from the same department the user contacted. */
   inbox:   SupportInbox = "help@vraelis.com",
-  /** The sender's own words, quoted back in the confirmation. */
-  message?: string,
+  // The signature stays (subject, inbox): the confirmation no longer prints the subject (see contactConfirmHtml).
 ) {
   const resend = getResend();
   if (!resend) return;
@@ -507,8 +505,8 @@ export async function sendContactConfirmEmail(
       to: email,
       replyTo: inbox,
       subject: "We received your message",
-      html: contactConfirmHtml(name, subject, message),
-      text: contactConfirmText(name, subject, message),
+      html: contactConfirmHtml(name),
+      text: contactConfirmText(name),
     });
   } catch (error) {
     console.error("sendContactConfirmEmail failed:", error);

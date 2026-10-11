@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     // above already went out, and the caller must not learn which branch ran.
     try {
       if (await allowStrict(`contact-to:${canonicalizeEmail(email)}`, 1, 3600)) {
-        await sendContactConfirmEmail(email, name, subject, to, message);
+        await sendContactConfirmEmail(email, name, subject, to);
       } else {
         console.warn("[contact] confirmation suppressed by per-mailbox limit");
       }
