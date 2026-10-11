@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { V6_BASE, V6_HOME, GROUND_CSS } from "@/lib/v6-routes";
 import type { Metadata } from "next";
+
+/** With v8 promoted (proxy.ts) its pages are the site, so the 404 links into them, not into the v6 tree. */
+const V8_PUBLIC = process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
 import { robotsMeta } from "@/lib/stealth";
 
 // A NOT-FOUND RESPONSE MUST NEVER BE INDEXABLE, AND THE FRAMEWORK'S OWN GUARD DOES NOT SURVIVE HERE.
@@ -62,8 +65,8 @@ export default function NotFound() {
         </p>
 
         <div className="v404-actions v404-in v404-d4">
-          <Link href={V6_HOME} className="v404-btn v404-cta">Back to Vraelis</Link>
-          <Link href={`${V6_BASE}/platform#how`} className="v404-btn v404-ghost">See how it works</Link>
+          <Link href={V8_PUBLIC ? "/" : V6_HOME} className="v404-btn v404-cta">Back to Vraelis</Link>
+          <Link href={V8_PUBLIC ? "/contour#how" : `${V6_BASE}/platform#how`} className="v404-btn v404-ghost">See how it works</Link>
         </div>
       </div>
     </main>

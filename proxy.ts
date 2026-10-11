@@ -756,6 +756,7 @@ export const config = {
   // path can contain a dot, so we must not skip the proxy for it.
   matcher: ["/((?!_next/|[^?]*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|woff2?|ttf|otf|eot|pdf|mp4|webm|wasm)(?:$|\\?)).*)",
     "/llms.txt", // only for the docs host's own llms.txt; the main host's passes straight through (see proxy())
+    "/docs/llms.txt", // the docs' llms.txt at /docs when v8 is promoted without the docs host (review builds)
     "/api/:path*", "/rank/app/:path*", "/dev-preview/v6/app/:path*", "/dev-preview/recorded-app/:path*",
     "/:product(app|console|systems|verifications|guarantees|review|records|usage|applications|passes|issues|repairs|deployments|activity|team|organization|connections|plans|credits|billing|account|checkout|limits|cli|admin|new|r)/:path*"],
 };
