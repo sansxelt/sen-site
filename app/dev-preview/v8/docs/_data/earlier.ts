@@ -26,9 +26,23 @@ const BROWSER_BANNER = { label: "Historical. This product is retired.", text: "T
 // The recorded-reports page described a different earlier component, so its banner names that one.
 const RECORDED_BANNER = { label: "Historical. This component is retired.", text: "This page describes the earlier recorded-evidence component and is kept only as history. It is not current and not available." };
 
+/** Prose from the retired product with nothing left to run: its endpoint URLs and its command spans become words. */
+const RUNNABLE_URL = /https?:\/\/(?:app\.)?vraelis\.com(?:\/[^\s)\]`"']*)?/g;
+const RUNNABLE_CODE = /`(?:vraelis|npx|npm|curl|irm|node|pnpm|yarn|export)[^`]*`/g;
+function inert(text: string): string {
+  return text.replace(RUNNABLE_URL, "(retired endpoint)").replace(RUNNABLE_CODE, "(retired command)");
+}
+
 function convert(b: V6Block): Block | null {
   switch (b.t) {
-    case "p": case "ul": case "steps": case "note": case "code": case "table": return b;
+    // The earlier service is retired, so nothing on these pages may be runnable (founder 2026-10-11): code blocks
+    // (install commands, API calls, CI snippets, webhook handlers) are replaced by a notice, and endpoint URLs and
+    // command spans inside the prose are neutralised. The prose itself stays as history.
+    case "code": return { t: "note", label: "Removed.", text: "This example called the earlier service, which is retired. Its commands and endpoints are no longer shown." };
+    case "p": return { ...b, text: inert(b.text) };
+    case "note": return { ...b, text: inert(b.text) };
+    case "ul": case "steps": return { ...b, items: b.items.map(inert) };
+    case "table": return { ...b, rows: b.rows.map((r) => r.map(inert)) };
     case "h2": return { t: "h2", text: b.text };
     case "h3": return { t: "h3", text: b.text, id: b.id };
     // The coverage list the browser product published, as it stood. Kept as a table so the twin can carry it.
