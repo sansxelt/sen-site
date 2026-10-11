@@ -11,7 +11,11 @@ async function main() {
   const pages = ["/app", "/app/systems/demo", "/systems/demo.json", "/verifications/recorded", "/billing",
     "/checkout", "/rank/app", "/rank/app/systems/demo", "/dev-preview/v6/app", "/dev-preview/recorded-app",
     "/console", "/r/report", "/signin", "/signup", "/dev-preview/v6/signin", "/auth/signin", "/auth/auto-signin",
-    ...APP_ROOTS.flatMap(root => [`/${root}`, `/${root}/record.json`])];
+    // Invite links (2026-10-11): accepting one on load added a signed-in visitor to a closed console's workspace.
+    "/invite/abc", "/invite/abc/accept",
+    // "api" is an app root for the console's /api page, but everything under /api/ is a real API route and is
+    // never a page (b68c5540, the contact fix); closed APIs are refused with a 503 below instead.
+    ...APP_ROOTS.flatMap(root => root === "api" ? ["/api"] : [`/${root}`, `/${root}/record.json`])];
   for (const path of pages) {
     assert(isClosedProductPage(path, "vraelis.com"));
     assert(unstable_doesProxyMatch({ config, nextConfig: {}, url: `https://vraelis.com${path}` }), `matcher covers ${path}`);
@@ -49,7 +53,9 @@ async function main() {
   }
   const apis = ["/api/fixtures/strike", "/api/fixtures/drone", "/api/preflight/apps/x/runs", "/api/v/checkout", "/api/v/keys", "/api/v/workspace", "/api/v1/verifications",
     "/api/mcp", "/api/oauth/token", "/api/auth/register", "/api/auth/callback/google", "/api/auth/callback/credentials",
-    "/api/v1/verifications/x.json", "/api/stripe/payment-intent", "/api/vraelis/checkout", "/api/paypal/create-subscription"];
+    "/api/v1/verifications/x.json", "/api/stripe/payment-intent", "/api/vraelis/checkout", "/api/paypal/create-subscription",
+    // Retired 2026-10-11: the earlier products' waitlist, and the admin tool that created live PayPal plans.
+    "/api/waitlist", "/api/paypal/setup-plans", "/api/v/paypal/setup-plans"];
   for (const path of apis) {
     assert(isClosedProductApi(path));
     assert(unstable_doesProxyMatch({ config, nextConfig: {}, url: `https://vraelis.com${path}` }));
@@ -60,15 +66,19 @@ async function main() {
       assert.equal(res.headers.get("cache-control"), "no-store");
     }
   }
-  for (const path of ["/", "/beta", "/contact", "/docs", "/developers", "/developers/api", "/pricing", "/auth/reset-password"]) {
+  for (const path of ["/api/contact", "/api/record.json", "/api/v/data-requests", "/api/auth/reset-password"]) {
+    assert(!isClosedProductPage(path, "vraelis.com"), `${path} is an API route, never a closed page`);
+  }
+  for (const path of ["/", "/beta", "/contact", "/docs", "/developers", "/developers/api", "/pricing", "/auth/reset-password", "/invited", "/invitations"]) {
     assert(!isClosedProductPage(path, "vraelis.com"), `${path} remains public`);
   }
   for (const path of ["/api/contact", "/api/vraelis/contact", "/api/stripe/webhook", "/api/v/paypal/webhook", "/api/paypal/webhook",
-    "/api/cron/lifecycle", "/api/v/account/delete", "/api/v/data-requests", "/api/auth/reset-password", "/api/auth/session", "/api/auth/signout"]) {
+    "/api/cron/lifecycle", "/api/v/account/delete", "/api/v/data-requests", "/api/auth/reset-password", "/api/auth/session", "/api/auth/signout",
+    "/api/auth/verify", "/api/auth/confirm-signup", "/api/credits/balance"]) {
     assert(!isClosedProductApi(path), `${path} remains operational`);
   }
   for (const href of ["/app", "/signin?mode=signup", "/checkout?plan=x", "/dev-preview/v6/app", "https://app.vraelis.com", "https://console.vraelis.com/", "https://data.vraelis.com/", "https://data.vraelis.com/signin"]) assert(isProductEntryHref(href));
   for (const href of ["/docs", "/beta", "/developers/api", "https://example.com/signin", "mailto:sales@vraelis.com"]) assert(!isProductEntryHref(href));
-  console.log("PASS app closure: direct routes, subdomains, RSC/session requests, product APIs, dotted paths and public/service exceptions");
+  console.log("PASS app closure: direct routes, invite links, retired waitlist and plan setup, subdomains, RSC/session requests, product APIs, dotted paths and public/service exceptions");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
