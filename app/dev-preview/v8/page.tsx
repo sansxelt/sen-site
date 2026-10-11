@@ -140,7 +140,7 @@ export default function Home() {
             <CodeTabs tabs={[
               { id: "obs", label: "Recorded observation", file: "observation 02, reload pending", code: OBSERVATION_2 },
               { id: "policy", label: "Runtime policy", file: "policy cpu-lab, version 1", code: POLICY },
-              { id: "tests", label: "Trace checks", file: "contour-app, trace tests", code: TRACE_TESTS },
+              { id: "tests", label: "Trace checks", file: "contour-app 7ecb6d0, tests", code: TRACE_TESTS },
             ]} />
           </div>
         </Wrap>

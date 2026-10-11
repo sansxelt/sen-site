@@ -54,7 +54,29 @@ export const POLICY = `{
   }
 }`;
 
-export const TRACE_TESTS = `$ node --test trace.test.mjs
+/** The evidence app's own suite at revision 7ecb6d0 (contour-app branch of the private repo), captured 2026-10-10:
+ *  trace checks and import safety. Separate from the experiment's 131 (runtime-policy revision); never added to it. */
+export const TRACE_TESTS = `$ node --test trace.test.mjs import-safety.test.mjs
+✔ the captured run has no unvalidated fields and its checked trace is the file, unchanged
+✔ top-level trust flags are listed as extras and left out of the checked trace
+✔ trust flags on every nested object are listed by path and left out of the checked trace
+✔ a "__proto__" field is an extra, not a prototype
+✔ displayed text that claims verification, attestation, signing or trust is refused
+✔ claims are caught through camelCase, snake_case and digits, but ordinary words are not
+✔ look-alike letters, control and bidirectional characters in displayed text are refused
+✔ where a trace came from is set by the app, never by the file
+✔ valid calendar timestamps with an explicit zone are accepted
+✔ impossible dates and times are refused
+✔ timestamps without an explicit zone, and garbage, are refused
+✔ a trace with an invalid timestamp is refused with TRACE_TIMESTAMP_INVALID
+✔ the checked trace shares nothing with the file: later edits to the file cannot reach the screens
+✔ the raw file, extras included, is kept as-is for the source view and export
+✔ defined fields with malformed values are refused, not passed through
+✔ a refused file leaves the open state exactly as it was
+✔ a refusal partway through the events builds no new state
+✔ an accepted file builds a new state without touching the old one
+✔ unreadable files are refused with a reason code
+✔ every refusal carries a reason code and a readable message
 ✔ captured worker observations are internally consistent
 ✔ a pending release cannot be imported as matched
 ✔ wrong reported runtime cannot be imported as matched
@@ -69,6 +91,6 @@ export const TRACE_TESTS = `$ node --test trace.test.mjs
 ✔ an unavailable observation carrying a loaded report is refused
 ✔ a malformed reason code is refused
 ✔ the captured reason code is accepted
-ℹ tests 14
-ℹ pass 14
+ℹ tests 34
+ℹ pass 34
 ℹ fail 0`;
