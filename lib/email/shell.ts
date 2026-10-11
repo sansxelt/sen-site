@@ -6,47 +6,50 @@
 // ignored the reader's dark mode. It was four frames around three lines: a grey page, a bordered card, a
 // header bar with the wordmark, a footer bar. Now:
 //
-//   - ONE OPEN COLUMN, 520px, left aligned, on the mail app's own background. No page colour, no card, no
-//     bars. The mark and wordmark sit at the top like a letterhead, then the heading, the content, and a
-//     quiet footer under a single hairline.
-//   - IT FOLLOWS THE READER'S THEME. color-scheme is "light dark". The light design paints white, so a client
-//     that neither darkens mail nor reads our styles still shows a readable letter; in dark mode the page
-//     colour is cleared and the message sits on the client's own dark background. Apple Mail, iOS Mail and Outlook for Mac honour the
-//     prefers-color-scheme block below and get our dark palette; Outlook.com and the Outlook apps get it
-//     through [data-ogsc]/[data-ogsb]; the Gmail apps darken mail themselves, and a design with no page
-//     colour and plain ink text is what their inversion handles cleanly. Gmail on the web never darkens
-//     mail, so there it is the light design.
-//   - ONE accent, ink, for the one primary button and for links, as on the site and the console. In dark
-//     mode it turns to near white, so the button stays the brightest thing on the screen.
+//   - ONE OPEN COLUMN, 560px, left aligned. No card, no bars. The diamond lockup sits at the top like a
+//     letterhead, then the heading, the content, and a quiet footer under a single hairline.
+//   - REDONE 2026-10-11 (founder: "emails are horrid"): DARK BY DEFAULT, the site's own look (black ground,
+//     white ink, the real lockup as an image). Clients that report a light theme and honour
+//     prefers-color-scheme (Apple Mail, iOS Mail, Outlook for Mac) get the matching light palette from the
+//     LIGHT block, keyed to the vx-* classes, with the dark-ink lockup. Everywhere else, Gmail on the web
+//     included, the dark design is painted inline and stands.
+//   - ONE accent for the one primary button and for links: white on dark, ink on light.
 //   - State colour only where the email reports a state, as a one-line status row.
 //   - A one-time code is the action of its email, set large in mono on a soft panel (oneTimeCode).
 //   - Every email carries a hidden preheader, the line an inbox shows under the subject.
 //
 // MAIL CLIENT NOTES
-//   - Layout is tables with inline styles; the <style> block only adds dark mode and small-screen spacing.
-//     Every element whose colour changes in dark mode carries a vx-* class for it.
+//   - Layout is tables with inline styles; the <style> block only adds the light palette and small-screen
+//     spacing. Every element whose colour changes in light mode carries a vx-* class for it.
 //   - Outlook on Windows renders with Word: it ignores max-width (hence the fixed 520 ghost table), ignores
 //     padding on <a> (hence mso-padding-alt on the button cell), and falls back to Times New Roman when the
 //     FIRST font in a stack is missing (hence the mso font override).
-//   - The mark is a table cell with a background and a letter, not an image: a blocked image is worse than
-//     no image, and there is no hosted logo meant for mail.
+//   - The mark is the real diamond lockup as a hosted PNG (public/email/lockup@2x.png): mail clients do not
+//     render SVG. Its alt text is the name, styled, so a client that blocks images still shows "Vraelis".
+//
+// THE LOOK (2026-10-11, founder: "emails are horrid"): the site's own. Black ground, white ink, quiet greys,
+// a white pill for the one action. Dark only, on purpose: the site is black everywhere, and declaring a dark
+// colour scheme keeps Apple Mail and Gmail from repainting the message white.
 
 export const FONT = "'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 export const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 
-// Light palette (inline). The dark palette is in the <style> block, keyed to the vx-* classes.
-const INK = "#0A0A0B";
-const BODY = "#3F3F46";
-const MUTED = "#71717A";
-const LINE = "#E4E4E7";
-const SOFT = "#F4F4F5";
-const ACCENT = "#0A0A0B";
+const BG = "#0A0A0B";
+const INK = "#FAFAFA";
+const BODY = "#C9C9CF";
+const MUTED = "#8E8E96";
+const LINE = "#232327";
+const SOFT = "#141416";
+const ACCENT = "#FAFAFA";
+
+/** Where the hosted images live. Override for a preview deployment with VRAELIS_EMAIL_ASSET_ORIGIN. */
+export const ASSET_ORIGIN = (process.env.VRAELIS_EMAIL_ASSET_ORIGIN || "https://vraelis.com").replace(/\/$/, "");
 
 const TONES = {
-  problem: { fg: "#B42318", bg: "#FEF3F2", border: "#FECDCA" },
-  success: { fg: "#067647", bg: "#ECFDF3", border: "#ABEFC6" },
+  problem: { fg: "#FDA29B", bg: "#2A1513", border: "#5C2620" },
+  success: { fg: "#FAFAFA", bg: "#141416", border: "#3A3A40" },
   // A change that is neither good nor bad news, such as a plan ending on schedule.
-  notice: { fg: "#3F3F46", bg: "#F4F4F5", border: "#E4E4E7" },
+  notice: { fg: "#C9C9CF", bg: "#141416", border: "#232327" },
 } as const;
 export type StatusTone = keyof typeof TONES;
 
@@ -82,26 +85,22 @@ export const DEFAULT_REASON = "You are receiving this because you have a Vraelis
 // Filler after the preheader so an inbox preview does not run on into the body text.
 const PREHEADER_PAD = "&#847;&zwnj;&nbsp;".repeat(60);
 
-// The dark palette, once, for the three ways clients ask for it.
-const DARK = `
-  .vx-bg { background: transparent !important; }
-  .vx-ink { color: #FAFAFA !important; }
-  .vx-text { color: #D4D4D8 !important; }
-  .vx-muted, .vx-muted a { color: #A1A1AA !important; }
-  .vx-rule { border-color: #2E2F33 !important; }
-  .vx-soft { background: #1B1B1E !important; border-color: #2E2F33 !important; }
-  .vx-mark { background: #FAFAFA !important; color: #0A0A0B !important; }
-  .vx-btn { background: #FAFAFA !important; }
-  .vx-btn a { color: #0A0A0B !important; }
-  a.vx-link { color: #FAFAFA !important; }
-  .vx-problem { background: #2A1513 !important; border-color: #5C2620 !important; color: #FDA29B !important; }
-  .vx-success { background: #0F2419 !important; border-color: #1F4D35 !important; color: #75E0A7 !important; }
-  .vx-notice { background: #1B1B1E !important; border-color: #2E2F33 !important; color: #D4D4D8 !important; }`;
-// The same rules for Outlook.com and the Outlook apps, which mark a dark-mode message with [data-ogsc].
-const OGSC = DARK.trim().split("\n").map((line) => {
-  const [selectors, rule] = line.trim().split("{");
-  return `${selectors.split(",").map((s) => `[data-ogsc] ${s.trim()}`).join(", ")} {${rule}`;
-}).join("\n    ");
+// The light palette, for clients that report a light theme and honour prefers-color-scheme (Apple Mail, iOS
+// Mail, Outlook for Mac). Everywhere else, Gmail on the web included, the dark design stands.
+const LIGHT = `
+  body, .vx-bg { background: #FFFFFF !important; }
+  .vx-ink { color: #0A0A0B !important; }
+  .vx-text { color: #3F3F46 !important; }
+  .vx-muted, .vx-muted a { color: #71717A !important; }
+  .vx-rule { border-color: #E4E4E7 !important; }
+  .vx-soft { background: #F4F4F5 !important; border-color: #E4E4E7 !important; }
+  .vx-btn { background: #0A0A0B !important; }
+  .vx-btn a { color: #FFFFFF !important; }
+  a.vx-link { color: #0A0A0B !important; }
+  .vx-notice, .vx-success { background: #F4F4F5 !important; border-color: #E4E4E7 !important; color: #3F3F46 !important; }
+  .vx-problem { background: #FEF3F2 !important; border-color: #FECDCA !important; color: #B42318 !important; }
+  .vx-logo-dark { display: none !important; }
+  .vx-logo-light { display: block !important; }`;
 
 export function shell(content: string, opts: ShellOptions): string {
   const reason = escapeHtml(opts.reason ?? DEFAULT_REASON);
@@ -118,24 +117,21 @@ export function shell(content: string, opts: ShellOptions): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
   <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
+  <meta name="color-scheme" content="dark light">
+  <meta name="supported-color-schemes" content="dark light">
   <title>Vraelis</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <style>table,td,th,p,a,h1,li,span,div{font-family:'Segoe UI',Arial,sans-serif !important;}</style>
   <![endif]-->
   <style>
-    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    :root { color-scheme: dark light; supported-color-schemes: dark light; }
     body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     a { color: ${ACCENT}; }
-    @media (prefers-color-scheme: dark) {${DARK}
+    .vx-logo-light { display: none !important; mso-hide: all; }
+    @media (prefers-color-scheme: light) {${LIGHT}
     }
-    ${OGSC}
-    [data-ogsb] .vx-bg { background: transparent !important; }
-    [data-ogsb] .vx-soft { background: #1B1B1E !important; }
-    [data-ogsb] .vx-mark, [data-ogsb] .vx-btn { background: #FAFAFA !important; }
     @media only screen and (max-width: 600px) {
       .vx-outer { padding: 28px 20px 36px !important; }
       .vx-h1 { font-size: 22px !important; }
@@ -147,26 +143,21 @@ export function shell(content: string, opts: ShellOptions): string {
     }
   </style>
 </head>
-<body class="vx-bg" style="margin:0;padding:0;background:#FFFFFF;">
+<body class="vx-bg" style="margin:0;padding:0;background:${BG};">
   <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(opts.preheader)}${PREHEADER_PAD}</div>
-  <table class="vx-bg" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="background:#FFFFFF;">
-    <tr><td align="center" class="vx-outer" style="padding:48px 24px 56px;">
-      <!--[if mso]><table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
-        <tr><td style="padding:0 0 36px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;">
-            <tr>
-              <td class="vx-mark" width="26" height="26" align="center" valign="middle" bgcolor="${INK}" style="width:26px;height:26px;border-radius:7px;background:${INK};font-family:${FONT};font-size:14px;font-weight:700;line-height:26px;color:#FFFFFF;text-align:center;">V</td>
-              <td class="vx-ink" style="padding-left:10px;font-family:${FONT};font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:26px;color:${INK};">Vraelis</td>
-            </tr>
-          </table>
+  <table class="vx-bg" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${BG}" style="background:${BG};">
+    <tr><td align="center" class="vx-outer" style="padding:56px 24px 64px;">
+      <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <tr><td style="padding:0 0 44px;">
+          <a href="https://vraelis.com" style="text-decoration:none;"><img class="vx-logo-dark" src="${ASSET_ORIGIN}/email/lockup@2x.png" width="102" height="26" alt="Vraelis" style="display:block;width:102px;height:26px;border:0;outline:none;color:${INK};font-family:${FONT};font-size:18px;font-weight:600;line-height:26px;"><img class="vx-logo-light" src="${ASSET_ORIGIN}/email/lockup-ink@2x.png" width="102" height="26" alt="" style="display:none;width:102px;height:26px;border:0;outline:none;mso-hide:all;"></a>
         </td></tr>
         <tr><td class="vx-text" style="font-family:${FONT};font-size:15px;line-height:1.6;color:${BODY};">
           ${content}
         </td></tr>
-        <tr><td style="padding:24px 0 0;">
+        <tr><td style="padding:32px 0 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr><td class="vx-rule" style="padding:20px 0 0;border-top:1px solid ${LINE};">
+            <tr><td class="vx-rule" style="padding:22px 0 0;border-top:1px solid ${LINE};">
               <p class="vx-muted" style="${foot}">${reason}</p>
               ${supportLine}
               <p class="vx-muted" style="${foot}margin:0;">Vraelis &middot; <a href="https://vraelis.com" style="${footLink}">vraelis.com</a> &middot; <a href="https://vraelis.com/privacy" style="${footLink}">Privacy</a> &middot; <a href="https://vraelis.com/terms" style="${footLink}">Terms</a></p>
@@ -184,7 +175,7 @@ export function shell(content: string, opts: ShellOptions): string {
 // ── Atoms. Each takes HTML that is already safe; callers escape anything that came from outside. ───────
 
 export function h1(html: string): string {
-  return `<h1 class="vx-h1 vx-ink" style="margin:0 0 14px;font-family:${FONT};font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-0.02em;color:${INK};word-break:break-word;">${html}</h1>`;
+  return `<h1 class="vx-h1 vx-ink" style="margin:0 0 14px;font-family:${FONT};font-size:26px;font-weight:600;line-height:1.2;letter-spacing:-0.02em;color:${INK};word-break:break-word;">${html}</h1>`;
 }
 
 /** Body paragraph, 15px. */
@@ -219,8 +210,8 @@ export function mailto(address: string): string {
  */
 export function button(href: string, label: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 28px;border-collapse:separate;">
-    <tr><td class="vx-btn" align="center" bgcolor="${ACCENT}" style="border-radius:8px;background:${ACCENT};mso-padding-alt:12px 22px;">
-      <a href="${escapeHtml(href)}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;font-weight:600;line-height:20px;color:#FFFFFF;text-decoration:none;border-radius:8px;">${label}</a>
+    <tr><td class="vx-btn" align="center" bgcolor="${ACCENT}" style="border-radius:999px;background:${ACCENT};mso-padding-alt:12px 24px;">
+      <a href="${escapeHtml(href)}" target="_blank" style="display:inline-block;padding:12px 24px;font-family:${FONT};font-size:15px;font-weight:600;line-height:20px;color:${BG};text-decoration:none;border-radius:999px;">${label}</a>
     </td></tr>
   </table>`;
 }
