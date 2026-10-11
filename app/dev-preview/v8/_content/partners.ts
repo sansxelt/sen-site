@@ -22,6 +22,8 @@ export type Partner = {
   means: string[];
   boundary: string[];
   logo: { src: string; w: number; h: number; alt: string };
+  /** True only once the company has given written permission to show its logo. Until then the name is set in type. */
+  logoCleared?: boolean;
   glow: string;
   photo: { src: string; alt: string; credit: string; href: string };
   links: { label: string; href: string }[];

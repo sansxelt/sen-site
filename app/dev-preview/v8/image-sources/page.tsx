@@ -138,8 +138,8 @@ export default function ImageSources() {
       <Section rule id="partner-logos" className="imgs-sec">
         <Wrap>
           <div className="v8-stack">
-            <h2 className="v8-h2">Partner logos and photographs.</h2>
-            <p className="v8-body">The Reddit lockup is Reddit&apos;s own file from redditinc.com, and the ByteDance logo is ByteDance&apos;s own file from bytedance.com, both shown unmodified on the Partners pages. They are trademarks of their owners. The partner pages also use two licensed Pexels photographs: an aerial view of a city at night by Denys Mikhalevych (photo 12534226) and a person holding a phone in the dark by Jaroslav Maléř (photo 19949818).</p>
+            <h2 className="v8-h2">Partner names and photographs.</h2>
+            <p className="v8-body">The Partners pages name Reddit and ByteDance in our own type and do not show either company&apos;s logo; the logos will appear only with each company&apos;s written permission. Reddit and ByteDance are trademarks of their owners. The partner pages also use two licensed Pexels photographs: an aerial view of a city at night by Denys Mikhalevych (photo 12534226) and a person holding a phone in the dark by Jaroslav Maléř (photo 19949818).</p>
           </div>
         </Wrap>
       </Section>
