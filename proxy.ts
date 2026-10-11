@@ -272,7 +272,8 @@ function v8Promoted(req: NextRequest, path: string, host: string): NextResponse 
   return res;
 }
 function docsNoindex(res: NextResponse) {
-  if (!v8Public() || stealthConfigured()) res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  // A review build (VRAELIS_REVIEW_LABEL, the *.vercel.app deployment sent for review) is never indexed either.
+  if (!v8Public() || stealthConfigured() || process.env.VRAELIS_REVIEW_LABEL) res.headers.set("X-Robots-Tag", "noindex, nofollow");
   return res;
 }
 function docsHost(req: NextRequest, path: string, main: string) {
