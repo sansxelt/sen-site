@@ -88,7 +88,7 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
       const W = Math.ceil(wr.width) + 2, H = Math.ceil(wr.height) + 8;
       const off = document.createElement("canvas"); off.width = W * dpr; off.height = H * dpr;
       const o = off.getContext("2d"); if (!o) return finish();
-      const cs = getComputedStyle(w);
+      const cs = getComputedStyle(w), ink = cs.color; // the theme's ink, so the held word is dark on the light ground
       o.scale(dpr, dpr); o.fillStyle = "#fff"; o.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; o.textBaseline = "middle"; o.fillText(w.textContent || "Vraelis", 0, H / 2);
       const px = o.getImageData(0, 0, off.width, off.height).data;
       const parts: { x: number; y: number; a: number; r: number; j: number }[] = [];
@@ -111,7 +111,7 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
         c.clearRect(0, 0, cv.width, cv.height);
         for (const p of parts) {
           const order = 1 - p.x / W, rel = st - order * .75 - p.r * .12;
-          if (rel <= 0) { c.globalAlpha = p.a; c.fillStyle = "#FAFAFA"; c.fillRect(p.x + ox + pad, p.y + pad, 1, 1); continue; }
+          if (rel <= 0) { c.globalAlpha = p.a; c.fillStyle = ink; c.fillRect(p.x + ox + pad, p.y + pad, 1, 1); continue; }
           const k = Math.min(1, rel / .45), e = easeInOut(k);
           const x = p.x + (target - p.x) * e + p.j * 14 * Math.sin(k * Math.PI), y = p.y + p.j * 6 * k;
           c.fillStyle = spec(1 - (p.x / W) * .9 + k * .3);
