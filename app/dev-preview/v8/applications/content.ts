@@ -34,7 +34,7 @@ export type AppPage = {
   contact?: { to: string; title: string; lead: string };
 };
 
-const SELF_REPORTS = "No hardware attestation. Runtime reports are worker self-reports.";
+const SELF_REPORTS = "No hardware attestation. Runtime identity is a worker self-report.";
 
 export const APP_PAGES: Record<AppSlug, AppPage> = {
   defense: {
@@ -49,13 +49,13 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "An unapproved change is a security event", body: "A different release, or the wrong destination, changes what the system does." },
       { title: "Reviewers need to read the evidence", body: "What was approved, for where, and what the system reports running." },
     ],
-    steps: ["", "Test approval cannot carry into operations.", "", "", ""],
+    steps: ["", "Destination-bound approval: test approval cannot carry into operations.", "", "", ""],
     capture: "crop-release-approval",
     stance: {
       title: "The builder should not be the only judge.",
       cards: [
         { title: "Security software only", body: "Vraelis does not decide how a system is used." },
-        { title: "Approval apart from the builder", body: "In the experiment, publisher, deployer and approver are separate roles. The trace keeps a receipt digest, not the approver's identity." },
+        { title: "Approval apart from the builder", body: "In the experiment, release authorization separates publisher, deployer and approver roles. The trace keeps a receipt digest, not the approver's identity." },
         { title: "A record kept in order", body: "Every observation is kept, including ones that confirm nothing." },
       ],
     },
@@ -82,7 +82,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "An unapproved release is a security event", body: "A change to an operational system, to be handled as one." },
       { title: "The change record needs the model", body: "What was approved, for where, and what the runtime reported." },
     ],
-    steps: ["", "Approval for one site does not cover another.", "", "", "Kept for the operator's change process."],
+    steps: ["", "Destination-bound approval: one site's approval does not cover another.", "", "", "Deployment evidence kept for the operator's change process."],
     capture: "crop-loaded-unavailable",
     notClaimed: [
       "No deployments with utilities or other operators, and no customers.",
@@ -107,13 +107,13 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "The first question is which model", body: "When a machine surprises you, the answer should come from a record." },
     ],
     hypothesis: "Robotics is one segment we study. Release and platform engineers at robotics suppliers and integrators meet this problem early.",
-    steps: ["", "Approval for one machine does not cover another.", "", "A pending reload is visible, not assumed.", ""],
+    steps: ["", "Destination-bound approval: one machine's approval does not cover another.", "", "A version mismatch shows as reload pending, not assumed.", ""],
     capture: "crop-pair-pending",
     notClaimed: [
       "No deployments on robots or vehicles, and no customers.",
       "No robot or vehicle integration. The experiment is a synthetic ONNX CPU workload.",
       "No protection against adversarial inputs or perception attacks.",
-      "No certification.",
+      "No certification, and no evidence freshness for machines in the field: heartbeats are not built.",
       SELF_REPORTS,
     ],
     related: ["model-integrity", "adversarial-threats", "security-evidence"],
@@ -131,7 +131,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "An unapproved release is a security event", body: "For the institution responsible for the system." },
       { title: "Readable by someone outside engineering", body: "Including what could not be confirmed." },
     ],
-    steps: ["", "Approval covers that system and no more.", "", "In a view a reviewer can follow.", ""],
+    steps: ["", "Destination-bound approval covers that system and no more.", "", "Version mismatch shown as reload pending, in a view a reviewer can follow.", ""],
     capture: "crop-pair-pending",
     notClaimed: [
       "No government deployments, contracts or customers.",
@@ -161,7 +161,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "Both sides need the same record", body: "Not a deployment log only one of you sees." },
     ],
     hypothesis: "These teams meet this problem first. We are testing it.",
-    steps: ["", "Some systems may need two: the supplier's and the operator's.", "", "", "Both sides start from the same record."],
+    steps: ["", "Release authorization may need two approvals: the supplier's and the operator's.", "", "", "Both sides start from the same deployment evidence."],
     capture: "app-release-cpu2",
     notClaimed: [
       "No customers or deployments, and no partner endorsement of Vraelis Contour.",

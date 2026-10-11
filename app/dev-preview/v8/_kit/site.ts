@@ -78,11 +78,11 @@ export const FACTS = {
 } as const;
 
 export const WORKFLOW = [
-  { n: "01", title: "Identify the release", body: "Name the model artifact, its preprocessing and its configuration by digest, so a release is one exact thing.", kinds: [["impl", "Model and configuration digests"], ["prop", "Preprocessing identity"]] as [Kind, string][], shot: "crop-release-identity" },
-  { n: "02", title: "Bind approval to the release and destination", body: "An approval names the exact release and where it may run, under a runtime policy with an age limit.", kinds: [["impl", "Signed bindings in the experiment"]] as [Kind, string][], shot: "crop-release-approval" },
-  { n: "03", title: "Integrate with a supported runtime", body: "The receiving runtime checks the policy before it serves. Today that is ONNX Runtime 1.23.2 on CPU.", kinds: [["impl", "ONNX Runtime 1.23.2, CPU"], ["prop", "Customer runtime adapters"]] as [Kind, string][], shot: "app-policy" },
-  { n: "04", title: "Compare approved and reported", body: "Put the approved identity beside the identity the runtime reports loading, field by field.", kinds: [["impl", "Evidence app"]] as [Kind, string][], shot: "crop-pair-pending" },
-  { n: "05", title: "Preserve discrepancies, missing evidence and recovery", body: "Keep every observation, including the ones that cannot confirm anything, and the explicit reload that followed.", kinds: [["impl", "Recorded observations"], ["prop", "Investigation workflow"]] as [Kind, string][], shot: "app-observations-unavailable" },
+  { n: "01", title: "Identify the release", body: "Artifact integrity and configuration integrity: the model, its configuration and, later, its preprocessing are named by digest.", kinds: [["impl", "Model and configuration digests"], ["prop", "Preprocessing identity"]] as [Kind, string][], shot: "crop-release-identity" },
+  { n: "02", title: "Bind approval to the release and destination", body: "Release authorization with destination-bound approval: one exact release, one named environment, an age limit.", kinds: [["impl", "Signed bindings in the experiment"]] as [Kind, string][], shot: "crop-release-approval" },
+  { n: "03", title: "Integrate with a supported runtime", body: "The receiving runtime checks its runtime policy before it serves. Today that is ONNX Runtime 1.23.2 on CPU.", kinds: [["impl", "ONNX Runtime 1.23.2, CPU"], ["prop", "Customer runtime adapters"]] as [Kind, string][], shot: "app-policy" },
+  { n: "04", title: "Compare approved and reported", body: "Runtime identity beside the approved release, field by field, so a version mismatch is visible.", kinds: [["impl", "Evidence app"]] as [Kind, string][], shot: "crop-pair-pending" },
+  { n: "05", title: "Preserve discrepancies, missing evidence and recovery", body: "Deployment evidence and recovery verification: every observation kept, including the ones that confirm nothing.", kinds: [["impl", "Recorded observations"], ["prop", "Investigation workflow"]] as [Kind, string][], shot: "app-observations-unavailable" },
 ] as const;
 
 /** The four recorded observations, as the app shows them. Times are UTC from the trace. */

@@ -33,7 +33,7 @@ export type ResearchPage = {
 };
 
 const TESTS = `${FACTS.tests.value} ${FACTS.tests.label}. Not production readiness.`;
-const SELF_REPORT = "Hardware attestation. Runtime reports are worker self-reports.";
+const SELF_REPORT = "Hardware attestation. Runtime identity is a worker self-report.";
 
 export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
   "model-integrity": {
@@ -53,10 +53,10 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
       kind: "experiment",
       title: "Where Vraelis Contour starts.",
       items: [
-        { kind: "impl", text: "Releases named by model, configuration, release and receipt digests." },
-        { kind: "impl", text: "Signed bindings tie approval to the exact release and destination, with a 60 second age limit." },
+        { kind: "impl", text: "Artifact integrity: model bytes checked against the approved digest before a session loads them." },
+        { kind: "impl", text: "Release authorization: signed bindings to the exact release and destination, with a 60 second age limit." },
         { kind: "impl", text: "Runtime policy checked before serving: ONNX Runtime 1.23.2, CPUExecutionProvider only." },
-        { kind: "impl", text: "Approved and reported loaded identity compared field by field." },
+        { kind: "impl", text: "Configuration integrity: the configuration digest is part of the release, compared on every report." },
         { kind: "meas", text: TESTS },
         { kind: "prop", text: "Preprocessing identity. Not recorded yet." },
         { kind: "not", text: SELF_REPORT },
@@ -66,7 +66,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     open: [
       { title: "Naming preprocessing", body: "How to identify tokenizers, scaling and feature code by digest." },
       { title: "More than one runtime", body: "Other runtimes and accelerators. No adapters are built." },
-      { title: "Fresh reports", body: "Heartbeat freshness is being built, not done." },
+      { title: "Model provenance", body: "Where a model and its training inputs came from, beyond its digest." },
       { title: "A compromised host", body: "Its self-report can say anything. Outside the experiment." },
     ],
     related: ["security-evidence", "machine-trust", "adversarial-threats"],
@@ -85,7 +85,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     studyTitle: "Separate the attack from the conditions.",
     study: [
       { title: "Which path does the attack use?", body: "Sensor input, training data and model file each need their own threat model." },
-      { title: "Where does a release check stop?", body: "It shows a release changed, not that the approved bytes were trustworthy." },
+      { title: "Where does a release check stop?", body: "It shows a release changed, not model provenance: where the approved bytes came from." },
       { title: "What belongs in the baseline?", body: "Lighting, viewpoint, normal variation and sensor faults, so ordinary conditions are not read as attacks." },
       { title: "Is it drift or an attack?", body: "An anomaly is a reason to investigate, not proof of an attack." },
       { title: "What does a countermeasure cost?", body: "Latency, memory and compute on the edge, plus misses and false alarms." },
@@ -95,7 +95,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
       title: "Research direction, with no product claim.",
       paragraphs: [
         "Nothing Vraelis has built tests, detects or blocks these attacks. No detector, no measured result.",
-        "The one overlap is the supply path: in the Vraelis Contour experiment, a changed release shows as differing fields. That does not cover manipulated inputs or poisoned training data.",
+        "The one overlap is the supply path: unauthorized changes, a wrong destination or changed components, are specified as scripted fault tests, not run. That does not cover manipulated inputs or poisoned training data.",
       ],
     },
     open: [
@@ -131,7 +131,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
       title: "Research direction, with no product claim.",
       paragraphs: [
         "Vraelis has no identity, access or authorization product, and makes no zero trust claim.",
-        "One narrow boundary exists in the Vraelis Contour experiment: separate publisher, deployer and approver roles, approval for one release and destination with a 60 second age limit, checked before serving. One check, not a machine trust system.",
+        "One narrow boundary exists in the Vraelis Contour experiment: release authorization with separate publisher, deployer and approver roles, and destination-bound approval naming the environment and resource, with a 60 second age limit, checked before serving. One check, not a machine trust system.",
       ],
     },
     open: [
@@ -164,18 +164,18 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
       kind: "experiment",
       title: "Recorded observations, in the experiment.",
       items: [
-        { kind: "impl", text: "Four observations from one run: matched, reload pending, matched, evidence unavailable." },
-        { kind: "impl", text: "Each keeps the approved identity, reported loaded identity and policy result." },
-        { kind: "impl", text: "A stopped worker was recorded as evidence unavailable (RUNTIME_UNAVAILABLE), not a match." },
+        { kind: "impl", text: "Deployment evidence: four observations recorded in order, including evidence unavailable." },
+        { kind: "impl", text: "Each keeps the approved identity, the worker's reported runtime identity and the policy result." },
+        { kind: "impl", text: "Recovery verification: after one recorded explicit reload, the reported identity was compared again." },
         { kind: "impl", text: "The app refuses to import pending, missing evidence or wrong runtime observations as matched." },
-        { kind: "prop", text: "An investigation workflow over the record." },
+        { kind: "prop", text: "Recovery failure tests, specified but not run, and an investigation workflow." },
         { kind: "not", text: "Independent attestation. Every record is a worker self-report." },
       ],
       capture: "app-observations-unavailable",
     },
     open: [
       { title: "Edited records", body: "An edited, self-consistent trace still validates today." },
-      { title: "Stale reports", body: "Heartbeat freshness is being built, not done." },
+      { title: "Evidence freshness", body: "Heartbeats that show a report is current, not stale. Not built." },
       { title: "Expected silence", body: "Telling a planned outage from a fault." },
       { title: "Reviewer effort", body: "Time for an outsider to reach a conclusion. Not measured." },
     ],
