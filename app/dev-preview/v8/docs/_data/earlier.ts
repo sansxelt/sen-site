@@ -28,7 +28,7 @@ const RECORDED_BANNER = { label: "Historical. This component is retired.", text:
 
 /** Prose from the retired product with nothing left to run: its endpoint URLs and its command spans become words. */
 const RUNNABLE_URL = /https?:\/\/(?:app\.)?vraelis\.com(?:\/[^\s)\]`"']*)?/g;
-const RUNNABLE_CODE = /`(?:vraelis|npx|npm|curl|irm|node|pnpm|yarn|export)[^`]*`/g;
+const RUNNABLE_CODE = /`(?:vraelis|npx|npm|curl|irm|node|pnpm|yarn|export)(?![\w-])[^`]*`/g;
 function inert(text: string): string {
   return text.replace(RUNNABLE_URL, "(retired endpoint)").replace(RUNNABLE_CODE, "(retired command)");
 }
