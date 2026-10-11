@@ -106,6 +106,12 @@ the cleanup-2 closures and the email footer.
   states current practice only, with no deletion period promised. Still missing, and blocking the promotion: the
   legal entity (registered name, type, state or country), the notice address, governing law and courts (the terms
   say California today), and the data controller. The founder's reply had placeholders for these four.
+- Founder, 2026-10-11 (second answer): Foremake, Inc, Vraelis and Overlym are unincorporated brands; "Foremake, Inc"
+  stays the brand name exactly as written, but nothing may call it a corporation or invent an entity. Applied in
+  1399ea15: a "Who operates Vraelis" section opens Terms and Privacy, with the operator, the notice address and the
+  governing law in app/dev-preview/v8/_legal/operator.ts (all unset). A live v8 build fails while any is unset, so a
+  placeholder cannot be published; `npm run v8:operator:test -- --ready` must pass before step 2. Neither a parent or
+  guardian nor counsel is to be filled in as the operator by default.
 
 ## Code switch (already on site-v8, inert until the flag is set)
 
