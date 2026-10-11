@@ -163,16 +163,21 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
     if (document.getElementById(INTRO_STYLE_ID)) start();
     // Coming back to the page from another site with Back restores it from the browser's page cache without a load,
     // so replay the intro then too (founder 2026-10-10: "when they go off page and come back, then it does replay").
+    // A replay on a live page eases into the held state instead of snapping to it (founder, 2026-10-11: going home
+    // "does it but it's not smooth, just pops in"): the name fades in while the menu glides over on its own .7s
+    // transition, and the sweep starts once both have settled. A full load needs none of this: the held state is
+    // already painted before the first frame.
+    let settle = 0;
     replay.current = () => {
       if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      finish();
-      nav.style.transition = "none";
+      finish(); clearTimeout(settle);
+      w.style.transition = "opacity .45s var(--ease)";
       const s = document.createElement("style"); s.id = INTRO_STYLE_ID; s.textContent = INTRO_CSS; document.head.appendChild(s);
-      requestAnimationFrame(() => { nav.style.transition = ""; cancelled = false; start(); });
+      settle = window.setTimeout(() => { w.style.transition = ""; cancelled = false; start(); }, 650);
     };
     const onShow = (e: PageTransitionEvent) => { if (e.persisted) replay.current?.(); };
     window.addEventListener("pageshow", onShow);
-    return () => { cancelled = true; finish(); replay.current = null; window.removeEventListener("pageshow", onShow); };
+    return () => { cancelled = true; clearTimeout(settle); finish(); replay.current = null; window.removeEventListener("pageshow", onShow); };
   }, [navId]);
 
   // x.ai's logo: from another page it goes home; on the homepage it glides back to the top, and at the top it reloads.
