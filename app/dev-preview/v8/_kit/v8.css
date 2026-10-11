@@ -157,8 +157,6 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-pill em::before { content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; background: var(--spec); opacity: .55; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
 .v8-pill > .v8-arrow { color: var(--ink-3); transition: transform .2s var(--ease), color .2s var(--ease); }
 .v8-pill:hover > .v8-arrow { color: var(--ink); transform: translateX(2px); }
-.v8-pill__sep { margin: 0 7px; color: var(--ink-4); }
-@media (max-width: 520px) { .v8-pill__more { display: none; } }
 .v8-pill:hover { box-shadow: inset 0 0 0 1px var(--line-3); background: color-mix(in srgb, var(--ink) 5.0%, transparent); }
 
 /* ── Header ─────────────────────────────────────────────────────────────────────────────────────────── */
