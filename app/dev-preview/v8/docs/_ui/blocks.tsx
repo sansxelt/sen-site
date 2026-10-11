@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { Capture, Ledger, Tag } from "../../_kit/blocks";
-import { KIND_LABEL, WORKFLOW, href } from "../../_kit/site";
+import { KIND_LABEL, WORKFLOW } from "../../_kit/site";
+import { dl } from "../_data/host";
 import { headingIds } from "../_data/pages";
 import { inline, isClosedProduct } from "../_data/text";
 import type { Block } from "../_data/types";
@@ -12,7 +13,7 @@ import { CopyButton } from "./client";
 // only difference, tables with no outer frame, and real app captures with their caption.
 
 function DocLink({ to, children }: { to: string; children: ReactNode }) {
-  if (to.startsWith("/")) return <Link href={href(to)}>{children}</Link>;
+  if (to.startsWith("/")) return <Link href={dl(to)}>{children}</Link>;
   if (to.startsWith("#")) return <a href={to}>{children}</a>;
   return <a href={to} rel="noopener noreferrer" target="_blank">{children}</a>;
 }
@@ -138,7 +139,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "cards": return (
             <div key={i} className="v8-docs-cards">
               {b.items.map((c) => (
-                <Link key={c.to} href={href(c.to)} className="v8-docs-card">
+                <Link key={c.to} href={dl(c.to)} className="v8-docs-card">
                   <b>{c.title}</b><span>{c.line}</span><i className="v8-arrow" aria-hidden="true" />
                 </Link>
               ))}

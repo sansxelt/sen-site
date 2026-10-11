@@ -6,6 +6,7 @@ import { INTRO_SCRIPT, THEME_SCRIPT } from "./_kit/scripts";
 import { socialCard } from "@/lib/social-card";
 import { robotsMeta } from "@/lib/stealth";
 import { TAGLINE, COMPANY_LINE } from "./_kit/site";
+import { loadDocsHost } from "./docs/_data/host";
 
 // V8, the x.ai-structured rebuild (2026-10-10). A preview under /dev-preview/v8 until the founder switches the
 // public routes; noindex until then. Fonts: the root layout already provides IBM Plex Sans (--font-brand-sans)
@@ -26,7 +27,16 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { colorScheme: "dark", themeColor: "#0A0A0B" };
 
-export default function V8Layout({ children }: { children: ReactNode }) {
+export default async function V8Layout({ children }: { children: ReactNode }) {
+  // On docs.vraelis.com the docs draw their own header and footer (docs/layout.tsx); this layout only sets the theme.
+  if (await loadDocsHost()) {
+    return (
+      <div className="v8 v8--docs-host">
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {children}
+      </div>
+    );
+  }
   return (
     <div className="v8">
       {/* Sets the logo intro's starting state before the header paints (see _kit/logo.tsx). */}

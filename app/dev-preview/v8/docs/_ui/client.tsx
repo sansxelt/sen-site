@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { href } from "../../_kit/site";
+import { docsBase } from "../_data/links";
 import { MARKDOWN_ID, type TabId, type TocItem } from "../_data/types";
+import { AskButton } from "./ask-button";
+import { useDocsLink, useDocsMain } from "./host";
 import { SearchPill } from "./search";
 
 // The docs' interactive parts. Everything else in the docs is server-rendered.
@@ -120,10 +122,14 @@ export function SideNav({ current, children }: { current: string; children: Reac
   );
 }
 
-/** The docs bar under the site header: product tabs and the search pill. The active tab comes from the path. */
+/** The docs bar under the header: product tabs, the search pill and Ask AI. The active tab comes from the path,
+ *  which is /dev-preview/v8/docs/<slug> on the main host and /<slug> on docs.vraelis.com. */
 export function DocsBar({ tabs, slugTab }: { tabs: { id: TabId; label: string; to: string }[]; slugTab: Record<string, TabId> }) {
   const pathname = usePathname();
-  const base = href("/docs");
+  const main = useDocsMain();
+  const link = useDocsLink();
+  const base = docsBase(main);
+  const home = base || "/";
   const slug = pathname.startsWith(`${base}/`) ? pathname.slice(base.length + 1).split("/")[0] : "";
   const activeTab = slugTab[slug];
   // On a phone the tabs scroll sideways; keep the active one in view (without moving the page).
@@ -138,13 +144,13 @@ export function DocsBar({ tabs, slugTab }: { tabs: { id: TabId; label: string; t
   return (
     <div className="v8-docs-bar">
       <div className="v8-wrap v8-wrap--frame v8-docs-bar__in">
-        <Link href={base} className="v8-docs-bar__home" aria-current={pathname === base ? "page" : undefined}>Documentation</Link>
+        <Link href={home} className="v8-docs-bar__home" aria-current={pathname === home ? "page" : undefined}>Documentation</Link>
         <nav ref={strip} className="v8-docs-bar__tabs" aria-label="Documentation sections">
           {tabs.map((t) => (
-            <Link key={t.id} href={href(t.to)} aria-current={activeTab === t.id ? "true" : undefined}>{t.label}</Link>
+            <Link key={t.id} href={link(t.to)} aria-current={activeTab === t.id ? "true" : undefined}>{t.label}</Link>
           ))}
         </nav>
-        <div className="v8-docs-bar__end"><SearchPill /></div>
+        <div className="v8-docs-bar__end"><SearchPill /><AskButton /></div>
       </div>
     </div>
   );

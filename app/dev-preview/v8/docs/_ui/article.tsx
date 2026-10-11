@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { href } from "../../_kit/site";
+import { dl } from "../_data/host";
 import { adjacent, navLabel, outline, tabGroups } from "../_data/pages";
 import { pageMarkdown } from "../_data/text";
 import { MARKDOWN_ID, type Page } from "../_data/types";
@@ -29,7 +29,7 @@ export function Sidebar({ page }: { page: Page }) {
             <ul>
               {g.pages.map((p) => (
                 <li key={p.slug}>
-                  <Link href={href(`/docs/${p.slug}`)} aria-current={p.slug === page.slug ? "page" : undefined}>{navLabel(p)}</Link>
+                  <Link href={dl(`/docs/${p.slug}`)} aria-current={p.slug === page.slug ? "page" : undefined}>{navLabel(p)}</Link>
                 </li>
               ))}
             </ul>
@@ -44,7 +44,7 @@ export function Article({ page }: { page: Page }) {
   const toc = outline(page);
   const { prev, next } = adjacent(page.slug);
   const md = pageMarkdown(page);
-  const twin = href(`/docs/md/${page.slug}.md`);
+  const twin = dl(`/docs/md/${page.slug}.md`);
   return (
     <div className="v8-wrap v8-wrap--frame v8-docs-frame">
       <aside className="v8-docs-side" aria-label="Documentation navigation"><Sidebar page={page} /></aside>
@@ -70,10 +70,10 @@ export function Article({ page }: { page: Page }) {
         {prev || next ? (
           <nav className="v8-docs-pager" aria-label="Previous and next page">
             {prev ? (
-              <Link href={href(`/docs/${prev.slug}`)} rel="prev"><span className="l">Previous</span><span className="t">{navLabel(prev)}</span></Link>
+              <Link href={dl(`/docs/${prev.slug}`)} rel="prev"><span className="l">Previous</span><span className="t">{navLabel(prev)}</span></Link>
             ) : <span />}
             {next ? (
-              <Link href={href(`/docs/${next.slug}`)} rel="next" className="is-next"><span className="l">Next</span><span className="t">{navLabel(next)}</span></Link>
+              <Link href={dl(`/docs/${next.slug}`)} rel="next" className="is-next"><span className="l">Next</span><span className="t">{navLabel(next)}</span></Link>
             ) : <span />}
           </nav>
         ) : null}

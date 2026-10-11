@@ -2,32 +2,31 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { href } from "../../_kit/site";
+import { AskIcon } from "./ask-button";
+import { SEARCH_EVENT, openAsk, openSearch } from "./events";
+import { useDocsLink } from "./host";
 import type { SearchEntry, TabId } from "../_data/types";
 
-// DOCS SEARCH (x.ai's Cmd/Ctrl K modal, without the assistant). The index is section level, one entry for each
+// DOCS SEARCH (x.ai's Cmd/Ctrl K modal). Its first row hands the query to Ask AI (ask.tsx), as x.ai's does to Grok. The index is section level, one entry for each
 // page's opening and each h2 and h3, built from the docs data by the search-index route and fetched the first
 // time search opens (or the pill is hovered). Matching is local: every word of the query has to start a word
 // somewhere in the section; title hits outrank page-title hits, which outrank body hits, and current docs
 // rank above earlier references. Filter chips narrow by tab. Arrow keys move, Enter opens, Escape closes, and
 // the right pane previews the selected section. Nothing leaves the browser.
 
-const OPEN_EVENT = "v8-docs-search";
-const INDEX_URL = () => href("/docs/search-index");
-
 type Entry = SearchEntry & { _t: string; _p: string; _x: string };
 let indexPromise: Promise<Entry[]> | null = null;
-function loadIndex(): Promise<Entry[]> {
+/** The index URL depends on the host: /dev-preview/v8/docs/search-index, or /search-index on docs.vraelis.com. */
+function loadIndex(url: string): Promise<Entry[]> {
   if (!indexPromise) {
-    indexPromise = fetch(INDEX_URL())
+    indexPromise = fetch(url)
       .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<SearchEntry[]>; })
       .then((list) => list.map((e) => ({ ...e, _t: e.title.toLowerCase(), _p: e.page.toLowerCase(), _x: e.text.toLowerCase() })))
       .catch((err) => { indexPromise = null; throw err; });
   }
   return indexPromise;
 }
-const warm = () => { loadIndex().catch(() => {}); };
-export const openSearch = () => window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+export { openSearch };
 
 const noop = () => () => {};
 /** "⌘K" on Apple platforms, "Ctrl K" elsewhere. The server and first paint say "Ctrl K". */
@@ -47,6 +46,8 @@ function SearchIcon() {
 /** The search pill: in the docs bar, and larger on the docs home. */
 export function SearchPill({ size }: { size?: "lg" }) {
   const key = useModKey();
+  const link = useDocsLink();
+  const warm = () => { loadIndex(link("/docs/search-index")).catch(() => {}); };
   return (
     <button type="button" className={size === "lg" ? "v8-docs-pill v8-docs-pill--lg" : "v8-docs-pill"} aria-label="Search docs" aria-keyshortcuts="Control+K Meta+K"
       onClick={openSearch} onPointerEnter={warm} onFocus={warm}>
@@ -159,6 +160,7 @@ type Filter = "all" | TabId;
 
 export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) {
   const router = useRouter();
+  const link = useDocsLink();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -175,7 +177,7 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
   const show = useCallback(() => {
     if (openRef.current) return;
     returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    openRef.current = true; setOpen(true); setSel(0);
+    openRef.current = true; setOpen(true); setSel(-1);
   }, []);
   const close = useCallback((restore = true) => {
     if (!openRef.current) return;
@@ -192,17 +194,17 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
       }
     };
     window.addEventListener("keydown", onKey);
-    window.addEventListener(OPEN_EVENT, show);
-    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener(OPEN_EVENT, show); };
+    window.addEventListener(SEARCH_EVENT, show);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener(SEARCH_EVENT, show); };
   }, [show, close]);
 
   // Load the index the first time search opens.
   useEffect(() => {
     if (!open || data) return;
     let live = true;
-    loadIndex().then((d) => { if (live) { setData(d); setFailed(false); } }, () => { if (live) setFailed(true); });
+    loadIndex(link("/docs/search-index")).then((d) => { if (live) { setData(d); setFailed(false); } }, () => { if (live) setFailed(true); });
     return () => { live = false; };
-  }, [open, data]);
+  }, [open, data, link]);
 
   // While open: the page behind does not scroll, and the field has focus.
   useEffect(() => {
@@ -234,8 +236,10 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
     return c;
   }, [scored]);
   const visible = useMemo(() => (filter === "all" ? scored : scored.filter((e) => e.tab === filter)).slice(0, 60), [scored, filter]);
-  const at = Math.min(sel, Math.max(0, visible.length - 1));
-  const cur = visible[at] ?? null;
+  // Row 0 is Ask AI; results follow. With nothing chosen yet, a query selects its best result, and Ask AI when
+  // nothing matches, so Enter does the useful thing either way.
+  const at = sel < 0 ? (terms.length && visible.length ? 1 : 0) : Math.min(sel, visible.length);
+  const cur = at > 0 ? visible[at - 1] ?? null : null;
 
   // Keep the selected result in view as the arrows move it.
   useEffect(() => {
@@ -243,11 +247,12 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
     list.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
   }, [at, open, visible]);
 
+  const ask = () => { close(false); openAsk(q.trim() || undefined); };
   const go = (e: Entry) => {
-    const path = href(`/docs/${e.slug}`);
+    const path = link(`/docs/${e.slug}`);
     close(false);
     if (pathname === path) {
-      if (e.anchor) { window.location.hash = e.anchor; document.getElementById(e.anchor)?.focus?.({ preventScroll: true }); }
+      if (e.anchor) { window.location.assign(`#${e.anchor}`); document.getElementById(e.anchor)?.focus?.({ preventScroll: true }); }
       else window.scrollTo({ top: 0 });
       return;
     }
@@ -255,11 +260,11 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
   };
 
   const onInputKey = (e: ReactKeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setSel(Math.min(at + 1, visible.length - 1)); }
+    if (e.key === "ArrowDown") { e.preventDefault(); setSel(Math.min(at + 1, visible.length)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setSel(Math.max(at - 1, 0)); }
     else if (e.key === "Home" && e.ctrlKey) { e.preventDefault(); setSel(0); }
-    else if (e.key === "End" && e.ctrlKey) { e.preventDefault(); setSel(visible.length - 1); }
-    else if (e.key === "Enter" && cur) { e.preventDefault(); go(cur); }
+    else if (e.key === "End" && e.ctrlKey) { e.preventDefault(); setSel(visible.length); }
+    else if (e.key === "Enter") { e.preventDefault(); if (cur) go(cur); else if (at === 0) ask(); }
   };
   // Escape closes; Tab stays inside the dialog.
   const onDialogKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -278,8 +283,8 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
 
   // With no query, every page is listed under its tab; with a query, results are one ranked list.
   const options = visible.map((e, i) => (
-    <div key={e.id} id={`v8-docs-sr-${i}`} role="option" aria-selected={i === at} className="v8-docs-sr__item"
-      onMouseMove={() => { if (i !== at) setSel(i); }} onClick={() => go(e)}>
+    <div key={e.id} id={`v8-docs-sr-${i + 1}`} role="option" aria-selected={i + 1 === at} className="v8-docs-sr__item"
+      onMouseMove={() => { if (i + 1 !== at) setSel(i + 1); }} onClick={() => go(e)}>
       <span className="t">{mark(e.title, hl)}</span>
       <span className="c">{e.crumb}</span>
       {terms.length ? <span className="x">{mark(snippet(e.text, any), hl)}</span> : null}
@@ -300,7 +305,17 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
         {g.items}
       </div>
     ));
-  } else body = options;
+  } else body = <div role="group" aria-label="Results"><div className="v8-docs-sr__group" aria-hidden="true">Results</div>{options}</div>;
+  const askRow = (
+    <div role="group" aria-label="Ask AI">
+      <div className="v8-docs-sr__group" aria-hidden="true">Ask AI</div>
+      <div id="v8-docs-sr-0" role="option" aria-selected={at === 0} className="v8-docs-sr__item v8-docs-sr__ask"
+        onMouseMove={() => { if (at !== 0) setSel(0); }} onClick={ask}>
+        <span className="t"><AskIcon />{terms.length ? <>Ask AI: <q>{q.trim()}</q></> : "Ask AI a question"}</span>
+        <span className="c">An answer written from these docs, with links to its sections</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="v8-docs-modal" onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}>
@@ -309,19 +324,20 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
           <SearchIcon />
           <input ref={input} type="text" value={q} placeholder="Search docs" aria-label="Search docs" autoComplete="off" spellCheck={false}
             role="combobox" aria-expanded="true" aria-controls="v8-docs-sr-list" aria-autocomplete="list"
-            aria-activedescendant={cur ? `v8-docs-sr-${at}` : undefined}
-            onChange={(e) => { setQ(e.target.value); setSel(0); }} onKeyDown={onInputKey} />
+            aria-activedescendant={`v8-docs-sr-${at}`}
+            onChange={(e) => { setQ(e.target.value); setSel(-1); }} onKeyDown={onInputKey} />
           <button type="button" className="v8-docs-modal__esc" onClick={() => close()} aria-label="Close search">Esc</button>
         </div>
         <div className="v8-docs-modal__chips" aria-label="Filter by section">
           {chips.map((c) => (
-            <button key={c.id} type="button" aria-pressed={filter === c.id} onClick={() => { setFilter(c.id); setSel(0); input.current?.focus(); }}>
+            <button key={c.id} type="button" aria-pressed={filter === c.id} onClick={() => { setFilter(c.id); setSel(-1); input.current?.focus(); }}>
               {c.label}<span>{data ? counts[c.id] : ""}</span>
             </button>
           ))}
         </div>
         <div className="v8-docs-modal__panes">
           <div ref={list} id="v8-docs-sr-list" className="v8-docs-sr" role="listbox" aria-label={terms.length ? "Search results" : "All pages"}>
+            {askRow}
             {body}
           </div>
           <div className="v8-docs-sp" aria-label="Preview of the selected section" role="region" key={cur?.id ?? "none"}>
@@ -330,6 +346,15 @@ export function SearchModal({ tabs }: { tabs: { id: TabId; label: string }[] }) 
                 <p className="v8-docs-sp__crumb">{cur.crumb}</p>
                 <p className="v8-docs-sp__title">{mark(cur.title, hl)}</p>
                 <div className="v8-docs-sp__body"><Preview md={cur.md} re={hl} /></div>
+              </>
+            ) : at === 0 ? (
+              <>
+                <p className="v8-docs-sp__crumb">Ask AI</p>
+                <p className="v8-docs-sp__title">{terms.length ? q.trim() : "Ask a question about these docs"}</p>
+                <div className="v8-docs-sp__body">
+                  <p>Ask AI answers from this documentation only: the passages that match your question, each linked to its section. When the docs do not cover something, it says so.</p>
+                  <p>Press Enter to ask.</p>
+                </div>
               </>
             ) : <p className="v8-docs-sr__empty">The selected section appears here.</p>}
           </div>

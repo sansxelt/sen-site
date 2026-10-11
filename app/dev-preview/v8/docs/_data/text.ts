@@ -2,11 +2,14 @@ import { CAPTURES, captureSrc } from "../../_kit/blocks";
 import { CAPTURE_CAPTION, KIND_LABEL, STATUS, WORKFLOW } from "../../_kit/site";
 import { PAGES, TABS, headingIds, tabOf } from "./pages";
 import type { Block, Page, SearchEntry } from "./types";
+import { DOCS_ORIGIN } from "@/lib/docs-host";
 
 // Text forms of the docs: inline markup parsing, the Markdown twins (and Copy for LLM), plain text, and the
 // section-level search index. Everything is derived from PAGES, so the twin and the page cannot disagree.
 
 const SITE = "https://vraelis.com";
+/** A site path as an absolute address: docs paths on the docs' own host (lib/docs-host.ts), the rest on the main site. */
+const abs = (path: string) => (path === "/docs" || path.startsWith("/docs/") || path.startsWith("/docs#") ? DOCS_ORIGIN + (path.slice(5) || "/") : SITE + path);
 
 export type Inline = { k: "text"; s: string } | { k: "code"; s: string } | { k: "link"; s: string; href: string };
 const INLINE_RE = /`([^`]+)`|\[([^\]]+)\]\(([^)\s]+)\)/g;
@@ -34,7 +37,7 @@ function inlineMd(text: string): string {
     if (x.k === "code") return `\`${x.s}\``;
     if (x.k === "link") {
       if (isClosedProduct(x.href)) return "";
-      return `[${x.s}](${x.href.startsWith("/") ? SITE + x.href : x.href})`;
+      return `[${x.s}](${x.href.startsWith("/") ? abs(x.href) : x.href})`;
     }
     return x.s;
   }).join("").trimEnd();
@@ -67,7 +70,7 @@ function blockMd(b: Block): string[] {
       "**Being built**", "", ...STATUS.building.map((i) => `- ${i}`), "",
       "**Not claimed**", "", ...STATUS.notClaimed.map((i) => `- ${i}`),
     ];
-    case "cards": return b.items.map((i) => `- [${i.title}](${SITE}${i.to}): ${i.line}`);
+    case "cards": return b.items.map((i) => `- [${i.title}](${abs(i.to)}): ${i.line}`);
   }
 }
 
@@ -81,7 +84,7 @@ export function pageMarkdown(page: Page): string {
   const out = [`# ${page.title}`, ""];
   if (page.banner) out.push(`> **${page.banner.label.replace(/[.:]$/, "")}.** ${page.banner.text}`, "");
   out.push(page.lead ?? page.description, "", blocksMd(page.blocks), "", "---", "",
-    `Vraelis documentation, ${tab.label}. ${SITE}/docs/${page.slug}`);
+    `Vraelis documentation, ${tab.label}. ${DOCS_ORIGIN}/${page.slug}`);
   return out.join("\n") + "\n";
 }
 
@@ -90,7 +93,7 @@ export function indexMarkdown(): string {
   const out = ["# Vraelis documentation", "", "How Vraelis Contour works, the research behind it, and earlier implementation references. Vraelis Contour is not for public use: it is built for release, platform and security engineers at suppliers and system integrators.", ""];
   for (const t of TABS) {
     out.push(`## ${t.label}`, "", t.line, "");
-    for (const p of PAGES.filter((x) => x.tab === t.id)) out.push(`- [${p.title}](${SITE}/docs/${p.slug}) ([Markdown](${SITE}/docs/md/${p.slug}.md)): ${p.description}`);
+    for (const p of PAGES.filter((x) => x.tab === t.id)) out.push(`- [${p.title}](${DOCS_ORIGIN}/${p.slug}) ([Markdown](${DOCS_ORIGIN}/md/${p.slug}.md)): ${p.description}`);
     out.push("");
   }
   return out.join("\n");
