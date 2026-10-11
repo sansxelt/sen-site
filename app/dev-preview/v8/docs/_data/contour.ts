@@ -260,7 +260,7 @@ export const CONTOUR_PAGES: Page[] = [
         ["`pending`", "Reload pending", "The reported identity differs from the approved one. In baseline mode the runtime waits for an explicit reload."],
         ["`unknown`", "Evidence unavailable", "There is no loaded report. The observation carries a reason code and no loaded identity."],
       ] },
-      { t: "p", text: "Colour in the app carries the same meaning: green for Matched, amber for Reload pending and coral for Evidence unavailable. The words are always shown with it." },
+      { t: "p", text: "The app shows each state in words. Matched is drawn at full contrast; Reload pending and Evidence unavailable are drawn a step quieter." },
       { t: "h2", text: "Reason codes" },
       { t: "p", text: "An observation with the status `unknown` says why. The captured run has one reason code, `RUNTIME_UNAVAILABLE`: the worker was stopped, so nothing reported what was loaded." },
       { t: "p", text: "A reason code is upper-case letters, digits and underscores, starts with a letter, and is at most 64 characters long. The evidence app refuses a trace with a malformed code." },

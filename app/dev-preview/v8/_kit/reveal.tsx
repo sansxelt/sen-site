@@ -39,7 +39,9 @@ export function RevealOnRoute() {
   useLayoutEffect(() => {
     const main = document.getElementById("v8-main");
     const pending = () => document.getElementById(REVEAL_STYLE_ID)?.remove();
-    if (!main || matchMedia("(prefers-reduced-motion: reduce)").matches) { pending(); return; }
+    // The docs have their own layered entrance (docs/_ui), so this one steps aside there.
+    const docs = /\/docs(\/|$)/.test(pathname);
+    if (!main || docs || matchMedia("(prefers-reduced-motion: reduce)").matches) { pending(); return; }
     // The roots are the page's sections; on pages built without sections (contact, the legal pages) they are the
     // top-level blocks of main.
     const els: Element[] = [];
