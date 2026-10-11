@@ -25,7 +25,10 @@ export function isClosedProductPage(path: string, host: string): boolean {
   const appHost = isWorkspaceHost(host) || host === "app.vraelis.com" || host === "console.vraelis.com" || host.startsWith("app.localhost");
   return (appHost && !at(path, "/api")) || isAppPath(path)
     || ["/rank/app", "/dev-preview/v6/app", "/dev-preview/v6/signin", "/dev-preview/recorded-app", "/console", "/r", "/rank/r",
-      "/signin", "/signup", "/auth/signin", "/auth/auto-signin"].some(root => at(path, root));
+      "/signin", "/signup", "/auth/signin", "/auth/auto-signin",
+      // 2026-10-11: invite links accepted on load for a signed-in visitor, adding them to a closed console's
+      // workspace. Closed like the console; the invite records are kept.
+      "/invite"].some(root => at(path, root));
 }
 
 export function isClosedProductApi(path: string): boolean {
@@ -38,6 +41,10 @@ export function isClosedProductApi(path: string): boolean {
     // 2026-10-11: the retired product's PayPal subscription start. Its /api/v twin was already closed; this
     // legacy path still let a signed-in caller open a new PayPal subscription. Webhooks stay open (above).
     "/api/paypal/create-subscription",
+    // 2026-10-11: the waitlist for the retired workshop/whisper/lens products (it still stored addresses), and
+    // the admin tool that creates billing plans in the live PayPal account. Account recovery, data-rights
+    // requests and the payment webhooks are not on this list and stay open.
+    "/api/waitlist", "/api/paypal/setup-plans",
   ].some(root => at(path, root));
 }
 
