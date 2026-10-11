@@ -33,7 +33,7 @@ export default function Home() {
               <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={["defense.", "critical infrastructure.", "autonomous systems."]} /></span>
             </h1>
-            <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 30 }}>
+            <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 46 }}>
               <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
               <Button to="/contour" kind="soft" size="lg">Explore Vraelis Contour</Button>
             </div>

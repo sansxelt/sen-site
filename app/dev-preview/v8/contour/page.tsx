@@ -85,12 +85,7 @@ export default function ContourPage() {
         <Wrap>
           <div className="v8-fade" style={{ ["--d" as string]: ".45s" }}>
             <HeroStage
-              video={{
-                src: "/v8/contour/contour-observations.mp4",
-                webm: "/v8/contour/contour-observations.webm",
-                poster: "/v8/contour/contour-observations-poster.webp",
-                label: "Recording of the Vraelis Contour evidence app stepping through the four recorded observations: matched, reload pending, matched after an explicit reload, and evidence unavailable.",
-              }}
+              still={{ src: captureSrc("app-destination-pending"), srcSet: `${captureSrc("app-destination-pending", true)} 1200w, ${captureSrc("app-destination-pending")} 2400w`, alt: CAPTURES["app-destination-pending"].alt, w: CAPTURES["app-destination-pending"].w, h: CAPTURES["app-destination-pending"].h, obs: "02" }}
               lifts={LIFTS.map((l) => ({ src: captureSrc(l.name), w: CAPTURES[l.name].w, h: CAPTURES[l.name].h, slot: l.slot, during: l.during }))}
               caption={<><span>{CAPTURE_CAPTION}</span><TextLink to="/contour#observations" muted>The four observations</TextLink></>}
             />

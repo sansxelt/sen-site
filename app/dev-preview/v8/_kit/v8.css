@@ -155,8 +155,7 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 /* ── Header ─────────────────────────────────────────────────────────────────────────────────────────── */
 .v8-header { position: fixed; inset: 0 0 auto; z-index: 50; height: var(--header-h); }
 .v8-header::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--glass); backdrop-filter: blur(12px) saturate(1.2); -webkit-backdrop-filter: blur(12px) saturate(1.2); }
-.v8-header__rule { position: absolute; inset: auto 0 0; height: 1px; background: var(--line-2); opacity: var(--rule, 0); transition: opacity .2s linear; }
-.v8-header[data-open="true"] .v8-header__rule { opacity: 1; }
+.v8-header__rule { display: none; }
 .v8-header__bar { position: relative; display: flex; align-items: center; height: 100%; gap: 8px; }
 .v8-brand { position: relative; display: flex; align-items: center; height: 40px; flex: none; color: var(--ink); margin-right: 18px; }
 .v8-brand__mark { position: relative; display: block; width: 26px; height: 26px; }
@@ -242,7 +241,7 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 @media (max-width: 560px) { .v8-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ── Hero ───────────────────────────────────────────────────────────────────────────────────────────── */
-.v8-hero { padding-block: clamp(36px, 5.5vw, 84px) clamp(40px, 5vw, 72px); }
+.v8-hero { padding-block: clamp(64px, 8.6vw, 132px) clamp(64px, 6.5vw, 100px); }
 .v8-hero__inner { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 22px; text-align: center; }
 .v8-hero__inner > * { max-width: 100%; }
 @media (max-width: 340px) { .v8-glue { white-space: normal; } }
@@ -440,14 +439,8 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-footer li button { padding: 0; border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 13.5px; cursor: pointer; }
 .v8-footer li button:hover { color: var(--ink); }
 
-/* The homepage entrance continues into the bento: tiles rise in one after another once the buttons have landed
-   (x.ai: .45s, 60ms apart). Visible at rest without script; off under reduced motion like every animation here. */
-.v8-hero + section .v8-bento > .v8-tile { animation: v8-tile-in .7s var(--ease) both; }
-.v8-hero + section .v8-bento > .v8-tile:nth-child(1) { animation-delay: .85s; }
-.v8-hero + section .v8-bento > .v8-tile:nth-child(2) { animation-delay: .93s; }
-.v8-hero + section .v8-bento > .v8-tile:nth-child(3) { animation-delay: 1.01s; }
-.v8-hero + section .v8-bento > .v8-tile:nth-child(4) { animation-delay: 1.09s; }
-.v8-hero + section .v8-bento > .v8-tile:nth-child(5) { animation-delay: 1.17s; }
+/* The homepage arrives in layers: hero, then the whole bento together (founder: one section loads as one). Visible at rest without script; off under reduced motion like every animation here. */
+.v8-hero + section .v8-bento > .v8-tile { animation: v8-tile-in .75s var(--ease) both; animation-delay: .9s; }
 @keyframes v8-tile-in { from { opacity: 0; transform: translateY(28px) scale(.985); } to { opacity: 1; transform: none; } }
 
 /* Controls are not text: no selection highlight when they are clicked or dragged across. */

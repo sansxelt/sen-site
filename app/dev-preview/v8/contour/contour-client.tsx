@@ -17,13 +17,15 @@ const obsAt = (t: number) => (SEGMENTS.find(([end]) => t < end) ?? SEGMENTS[SEGM
 
 export type Lift = { src: string; w: number; h: number; slot: "a" | "b" | "c"; during: string[] };
 
-export function HeroStage({ video, lifts, caption }: {
-  video: { src: string; webm?: string; poster: string; label: string };
+export function HeroStage({ video, still, lifts, caption }: {
+  video?: { src: string; webm?: string; poster: string; label: string };
+  /** A still capture instead of the recording: the screen never changes, so every detail for it shows at once. */
+  still?: { src: string; srcSet?: string; alt: string; w: number; h: number; obs: string };
   lifts: Lift[];
   caption: ReactNode;
 }) {
   const screen = useRef<HTMLDivElement>(null);
-  const [obs, setObs] = useState("02");
+  const [obs, setObs] = useState(still?.obs ?? "02");
   useEffect(() => {
     const v = screen.current?.querySelector("video");
     if (!v) return;
@@ -51,7 +53,10 @@ export function HeroStage({ video, lifts, caption }: {
     <figure className="v8-figure ct-stage">
       <div className="v8-stage">
         <div className="v8-stage__screen" ref={screen}>
-          <AutoVideo src={video.src} webm={video.webm} poster={video.poster} label={video.label} />
+          {still
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={still.src} srcSet={still.srcSet} sizes="(max-width: 900px) 100vw, 1280px" alt={still.alt} width={still.w} height={still.h} fetchPriority="high" decoding="async" />
+            : video ? <AutoVideo src={video.src} webm={video.webm} poster={video.poster} label={video.label} /> : null}
         </div>
         {lifts.map((l) => (
           <div key={l.src} className={`v8-lifted ct-lift ct-lift--${l.slot}`} data-on={l.during.includes(obs)} aria-hidden="true">
