@@ -252,7 +252,12 @@ const V8_SUCCESSOR_PREFIXES: [string, string][] = [["/guides/", "/docs"], ["/sol
 const v8Machine = (path: string) => path.startsWith("/api/") || path === "/yc" || path === "/og" || path.startsWith("/og/")
   || path === "/icon" || path === "/apple-icon" || path.startsWith("/icon/") || path.startsWith("/apple-icon/")
   || path === "/v1" || path.startsWith("/v1/") || path === "/mcp" || path.startsWith("/.well-known/")
-  || path === "/curtain" || path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt" || path === "/llms-full.txt";
+  || path === "/curtain" || path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt" || path === "/llms-full.txt"
+  // Account recovery (reset-password, its confirm link, email verification) stays operational under v8: the links in
+  // emails already sent point here. The sign-in pages among them are closed earlier, by isClosedProductPage. The
+  // retired installers keep answering 410 rather than becoming a v8 404 (found while preparing the promotion,
+  // 2026-10-11: without this, v8 rewrote every one of these into its own 404).
+  || path.startsWith("/auth/") || path === "/install" || path === "/install.ps1";
 /** The docs host's origin when the docs live on their own host, or "" when they are served at /docs on this one. */
 function v8DocsHostOrigin(): string {
   const env = process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN;
