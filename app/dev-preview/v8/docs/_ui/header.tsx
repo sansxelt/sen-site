@@ -130,9 +130,10 @@ function Tabs({ nav, active }: { nav: NavTab[]; active?: TabId }) {
         if (!t.menu) return <Go key={t.id} to={link(t.to)} className="v8-dhd__tab" aria-current={cur}>{t.label}</Go>;
         return (
           <div key={t.id} ref={box} className="v8-dhd__tabsplit" data-open={open}>
-            <Go to={link(t.to)} className="v8-dhd__tab v8-dhd__tab--split" aria-current={cur}>{t.label}</Go>
-            <button ref={button} type="button" className="v8-dhd__tabmore" aria-label={`Open ${t.label} menu`} aria-expanded={open} aria-controls={id}
-              data-current={!!cur} onClick={() => setOpen((o) => !o)}><Chevron /></button>
+            {/* The whole tab opens the menu (founder, 2026-10-11: clicking "Products" went to the page instead, so the
+                menu looked missing). Its overview page is the menu's first entry. */}
+            <button ref={button} type="button" className="v8-dhd__tab v8-dhd__tab--menu" aria-haspopup="true" aria-expanded={open} aria-controls={id}
+              data-current={!!cur} onClick={() => setOpen((o) => !o)}>{t.label}<Chevron /></button>
             {open ? (
               <div id={id} className="v8-dhd__card v8-dhd__card--tab">
                 {t.menu.map((l) => (

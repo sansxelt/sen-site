@@ -12,7 +12,10 @@ export const metadata = v8meta({
 });
 
 // The routed intake from the live /contact, restyled for v8. Behaviour is unchanged (see ./contact-form.tsx): the
-// same fields, validation, POST body and messages. ?topic= arrives from Join us and the menus and presets the form.
+// same fields, validation, POST body and messages. ?topic= arrives from the menus and presets the form.
+// ONE PAGE FOR CONTACT AND JOIN US (founder, 2026-10-11, after scale.com, whose Contact and Get Started are the same
+// form): /contact with no topic is the Vraelis Contour inquiry, every Contact and Join us link lands here, and the
+// chips are the same set on every visit, "Any other inquiry" included (topic=other, the general form).
 const ADDRESSES: [string, string][] = [
   ["help@vraelis.com", "General and technical inquiries"],
   ["sales@vraelis.com", "Vraelis Contour, AI security and organizational inquiries"],
@@ -23,15 +26,16 @@ const ROUTES = [
   { topic: "research", label: "Research collaboration" },
   { topic: "government", label: "Government or institution" },
   { topic: "privacy", label: "Privacy request" },
+  { topic: "other", label: "Any other inquiry" },
 ] as const;
-const EYEBROW: Record<string, string> = { research: "Research collaboration", government: "Government and institutions", privacy: "Privacy" };
+const EYEBROW: Record<string, string> = { research: "Research collaboration", government: "Government and institutions", privacy: "Privacy", other: "Contact" };
 
 type Query = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function Contact({ searchParams }: { searchParams: Query }) {
   const { topic: raw } = await searchParams;
   const topic = typeof raw === "string" ? raw : undefined;
-  const contour = topic === "contour" || topic === "ai-security";
+  const contour = !topic || topic === "contour" || topic === "ai-security";
   return (
     <div className="cnt">
       <section className="v8-page-hero cnt-sec">
@@ -51,11 +55,10 @@ export default async function Contact({ searchParams }: { searchParams: Query })
                   const on = r.topic === topic || (r.topic === "contour" && contour);
                   return <Link key={r.topic} href={href(`/contact?topic=${r.topic}`)} className="cnt-route" aria-current={on ? "page" : undefined}>{r.label}</Link>;
                 })}
-                {topic ? <Link href={href("/contact")} className="cnt-route">Any other inquiry</Link> : null}
               </nav>
             </header>
             <div className="cnt-formwrap">
-              <ContactForm key={topic ?? ""} topicParam={topic} privacyHref={href("/privacy")} />
+              <ContactForm key={topic ?? ""} topicParam={contour ? "contour" : topic === "other" ? undefined : topic} privacyHref={href("/privacy")} />
             </div>
             <aside className="cnt-aside" aria-label="Other contact options">
               <details className="cnt-direct">

@@ -66,7 +66,7 @@ export default function Company() {
         eyebrow="Company"
         title={<RiseWords text={COMPANY_LINE} />}
         lead={<>Our first product direction is {CONTOUR.name}.</>}
-        actions={<><Button to="/contact?topic=contour" arrow>Join us</Button><Button to="/contact" kind="soft">Contact</Button></>}
+        actions={<><Button to="/contact" arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
       />
 
       <section aria-label="Where to go next" className="cmp-proof-sec">

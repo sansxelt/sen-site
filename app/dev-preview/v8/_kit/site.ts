@@ -142,7 +142,7 @@ export const APPLICATIONS_NOTE = "Intended application areas. Vraelis has no cus
 
 /** Join us routes into the existing contact intake: audience and topic arrive already chosen. */
 export const JOIN = [
-  { label: "Discuss Vraelis Contour", hint: "Release, platform and security teams", to: "/contact?topic=contour" },
+  { label: "Discuss Vraelis Contour", hint: "Release, platform and security teams", to: "/contact" },
   { label: "Research collaboration", hint: "Researchers and academic teams", to: "/contact?topic=research" },
   { label: "Government or institution", hint: "Public bodies", to: "/contact?topic=government" },
   { label: "Report a security issue", hint: "Disclosure", to: "/security#report" },

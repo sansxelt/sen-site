@@ -1,7 +1,9 @@
 /* /contact (v8). The routed intake restyled on kit tokens: intro and other options on the left, the form on a lit
    surface on the right. Scoped under .v8 .cnt. Coral appears only on a field that needs fixing, with words. */
 
-.v8 .cnt-sec { padding-bottom: var(--section); }
+/* Deliberate room under the form (founder, 2026-10-11, after scale.com): the section fills the screen, so the footer
+   starts below the fold instead of crowding the form. */
+.v8 .cnt-sec { min-height: calc(100svh - var(--header-h)); padding-bottom: calc(var(--section) * 1.5); }
 .v8 .cnt-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-areas: "intro form" "aside form"; grid-template-rows: auto 1fr; column-gap: clamp(32px, 5vw, 88px); row-gap: 32px; align-items: start; }
 .v8 .cnt-intro { grid-area: intro; display: grid; gap: 18px; align-content: start; }
 .v8 .cnt-intro .v8-h1 { max-width: 16ch; }

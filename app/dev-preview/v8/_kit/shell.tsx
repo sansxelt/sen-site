@@ -152,7 +152,7 @@ export function V8Header() {
             <Link className="v8-nav__item" href={href("/docs")} aria-current={isCurrent("/docs") ? "page" : undefined} onMouseEnter={(e) => { setOpen(null); pillTo(e.currentTarget); }} onFocus={(e) => pillTo(e.currentTarget)}>Docs</Link>
           </nav>
           <div className="v8-header__end">
-            <Link className="v8-btn v8-btn--soft v8-btn--sm" href={href("/contact")}>Contact</Link>
+            {/* One way in, as on scale.com where Contact and Get Started are the same form (founder, 2026-10-11). */}
             <Link className="v8-btn v8-btn--solid v8-btn--sm" href={href(JOIN[0].to)}>Join us</Link>
             <button type="button" className="v8-burger" aria-label={drawer ? "Close menu" : "Open menu"} aria-expanded={drawer} aria-controls="v8-drawer"
               onClick={() => setDrawer((d) => !d)}><span aria-hidden="true" /></button>
@@ -170,7 +170,6 @@ export function V8Header() {
         <Link href={href("/docs")} onClick={() => setDrawer(false)}>Docs</Link>
         <div className="v8-drawer__ctas">
           <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href(JOIN[0].to)} onClick={() => setDrawer(false)}>Join us</Link>
-          <Link className="v8-btn v8-btn--soft v8-btn--lg" href={href("/contact")} onClick={() => setDrawer(false)}>Contact</Link>
         </div>
       </div>
     </>
