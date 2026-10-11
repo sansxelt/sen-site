@@ -39,10 +39,10 @@ export default async function Contact({ searchParams }: { searchParams: Query })
           <div className={cx("cnt-grid", contour && "cnt-grid--contour")}>
             <header className="cnt-intro">
               <span className="v8-eyebrow">{contour ? "Vraelis Contour" : EYEBROW[topic ?? ""] ?? "Contact"}</span>
-              <h1 className="v8-h1">{contour ? "Tell us how you release models." : "Reach the right team."}</h1>
+              <h1 className="v8-h1">{contour ? "Join us on Vraelis Contour." : "Reach the right team."}</h1>
               <p className="v8-lead">
                 {contour
-                  ? "How models move from approval to the systems that run them."
+                  ? "Model release security, from approval to reported runtime state."
                   : "Technical, organizational, research or privacy inquiries."}
               </p>
               <p className="v8-note cnt-closed">Vraelis Contour is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.</p>

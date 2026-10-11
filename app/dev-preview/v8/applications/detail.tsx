@@ -132,7 +132,7 @@ export function AppDetail({ page }: { page: AppPage }) {
           {page.contact ? (
             <Band title={page.contact.title} lead={page.contact.lead} actions={<><Button to={page.contact.to} arrow>Join us</Button><Button to="/contour/status" kind="soft">Development status</Button></>} />
           ) : (
-            <JoinBand lead="Tell us how you release models today." />
+            <JoinBand />
           )}
         </Wrap>
       </Section>

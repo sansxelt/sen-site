@@ -143,8 +143,8 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     related: ["security-evidence", "machine-trust", "model-integrity"],
     contact: {
       to: "/contact?topic=government",
-      title: "Talk to us about release evidence.",
-      lead: "Tell us what a reviewer needs to read.",
+      title: "Release evidence a reviewer can read.",
+      lead: "Join us in building it for government and institutional review.",
     },
   },
 

@@ -224,7 +224,7 @@ export default function Company() {
 
       <Section>
         <Wrap>
-          <JoinBand lead="If you release models into systems others operate, we want to hear how." />
+          <JoinBand />
         </Wrap>
       </Section>
     </div>

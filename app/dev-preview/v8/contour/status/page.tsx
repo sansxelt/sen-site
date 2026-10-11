@@ -189,7 +189,7 @@ export default function ContourStatusPage() {
 
       <Section tight>
         <Wrap>
-          <JoinBand lead="Tell us how you release models today." secondary={{ to: "/contour", label: "Vraelis Contour" }} />
+          <JoinBand secondary={{ to: "/contour", label: "Vraelis Contour" }} />
         </Wrap>
       </Section>
     </div>

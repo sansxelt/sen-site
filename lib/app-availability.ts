@@ -17,6 +17,11 @@ const at = (path: string, root: string) => path === root || path.startsWith(`${r
 
 export function isClosedProductPage(path: string, host: string): boolean {
   if (APP_ACCESS_OPEN) return false;
+  // Real API routes are never pages. "api" is in APP_ROOTS for the console's /api page, so without this every
+  // /api/<route> call counted as a closed page and was redirected to /beta: the contact form and data-rights
+  // requests posted into a redirect and nothing arrived (found 2026-10-10). Closed APIs are refused separately,
+  // with a 503, by isClosedProductApi.
+  if (path.startsWith("/api/")) return false;
   const appHost = isWorkspaceHost(host) || host === "app.vraelis.com" || host === "console.vraelis.com" || host.startsWith("app.localhost");
   return (appHost && !at(path, "/api")) || isAppPath(path)
     || ["/rank/app", "/dev-preview/v6/app", "/dev-preview/v6/signin", "/dev-preview/recorded-app", "/console", "/r", "/rank/r",

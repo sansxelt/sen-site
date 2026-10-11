@@ -189,7 +189,7 @@ export default function ContourPage() {
 
       <Section tight>
         <Wrap>
-          <JoinBand lead="Tell us how you release models today." />
+          <JoinBand />
         </Wrap>
       </Section>
     </div>
