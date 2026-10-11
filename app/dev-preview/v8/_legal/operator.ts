@@ -9,19 +9,26 @@
  * Until all three are set, the section shows "to be confirmed", which is right on the review deployment and wrong on
  * vraelis.com. So a production build with v8 public refuses to render these pages with any of them missing (the build
  * fails rather than publishing a placeholder). A review build (VRAELIS_REVIEW_LABEL) is exempt. */
-export const OPERATOR: { name: string | null; noticeAddress: string | null; governingLaw: string | null } = {
-  name: null,
+// Founder, 2026-10-11: the operator is Foremake, Inc (no individuals named, as on x.ai); no postal address, notices go
+// by email; governed by California, USA law, with EU residents keeping their mandatory local consumer protections and
+// the global terms applying everywhere else.
+export const OPERATOR: { name: string | null; noticeAddress: string | null; noticesByEmail: boolean; governingLaw: string | null } = {
+  name: "Foremake, Inc",
   noticeAddress: null,
-  governingLaw: null,
+  noticesByEmail: true,
+  governingLaw: "the State of California, USA",
 };
 
-
 export function operatorMissing(): string[] {
-  return (Object.entries(OPERATOR) as [string, string | null][]).filter(([, v]) => !v?.trim()).map(([k]) => k);
+  const missing: string[] = [];
+  if (!OPERATOR.name?.trim()) missing.push("name");
+  if (!OPERATOR.noticeAddress?.trim() && !OPERATOR.noticesByEmail) missing.push("noticeAddress");
+  if (!OPERATOR.governingLaw?.trim()) missing.push("governingLaw");
+  return missing;
 }
 
 export function assertOperatorPublishable() {
   const live = process.env.VERCEL_ENV === "production" && process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1" && !process.env.VRAELIS_REVIEW_LABEL;
   const missing = operatorMissing();
-  if (live && missing.length) throw new Error(`v8 policies: operator details missing (${missing.join(", ")}); set them in app/dev-preview/v8/_legal/operator.tsx before publishing`);
+  if (live && missing.length) throw new Error(`v8 policies: operator details missing (${missing.join(", ")}); set them in app/dev-preview/v8/_legal/operator.ts before publishing`);
 }

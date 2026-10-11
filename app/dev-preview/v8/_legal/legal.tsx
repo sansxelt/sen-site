@@ -80,9 +80,13 @@ export function OperatorSection({ controller = false }: { controller?: boolean }
     <>
       <H>Who operates Vraelis</H>
       <P>Vraelis, Foremake, Inc and Overlym are brands. None of them is incorporated: &ldquo;Inc&rdquo; is part of the Foremake, Inc brand name and does not mean that a corporation has been formed. Foremake, Inc is the umbrella brand behind Vraelis and Overlym. Vraelis develops AI cybersecurity software, and Vraelis Contour, its first product, is in private development. Overlym is a separate fintech venture in development.</P>
-      <P>This site and the services described on these pages are operated by {OPERATOR.name ?? TBC}, who is responsible for them. On these pages, &ldquo;Vraelis&rdquo;, &ldquo;we&rdquo; and &ldquo;us&rdquo; mean that operator.{controller ? " The operator is the controller of the personal data this policy describes." : ""}</P>
-      <P>Legal notices and privacy requests: {OPERATOR.noticeAddress ?? TBC}, or by email to <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</P>
-      {controller ? null : <P>Governing law and courts: {OPERATOR.governingLaw ?? TBC}.</P>}
+      <P>This site and the services described on these pages are operated by {OPERATOR.name ?? TBC}, which is responsible for them. On these pages, &ldquo;Vraelis&rdquo;, &ldquo;we&rdquo; and &ldquo;us&rdquo; mean {OPERATOR.name ?? TBC}.{controller ? ` ${OPERATOR.name ?? TBC} is the controller of the personal data this policy describes.` : ""}</P>
+      {OPERATOR.noticeAddress
+        ? <P>Legal notices and privacy requests: {OPERATOR.noticeAddress}, or by email to <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</P>
+        : OPERATOR.noticesByEmail
+          ? <P>Legal notices and privacy requests are handled by email: legal notices to <A href="mailto:help@vraelis.com">help@vraelis.com</A>, privacy requests to <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</P>
+          : <P>Legal notices and privacy requests: {TBC}.</P>}
+      {controller ? null : <P>Governing law and courts: these terms are governed by the laws of {OPERATOR.governingLaw ?? TBC}, without regard to conflict-of-laws rules, and disputes go to the state and federal courts located in California. If you live in the European Union, you also keep the protection of the mandatory consumer laws of the country where you live, and you may bring a claim in its courts. Everywhere else, these global terms apply as written.</P>}
     </>
   );
 }
