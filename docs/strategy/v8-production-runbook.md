@@ -85,3 +85,37 @@ Production environment on `sen-site` today: `NEXT_PUBLIC_VRAELIS_V6_PUBLIC=1`, `
 7. DVIDS military footage on the homepage and a DoD non-endorsement line.
 8. Earlier-product docs ("Earlier references"): keep public with banners, or unpublish.
 9. Whether "QA" should read "internal QA".
+
+## www.vraelis.com migration (prepared, not executed)
+
+Today www.vraelis.com is attached to the older Vercel project `vraelis`. That project builds the same repository and
+branch as production (`sen-site`, `main`) but without `NEXT_PUBLIC_VRAELIS_V6_PUBLIC`, so www shows the retired Rank pages
+(matched path `/rank`), and every push to `main` redeploys it. Both vraelis.com and www.vraelis.com are verified at Vercel
+through Cloudflare (`configuredBy: http`), so moving www between projects in the same team needs no DNS change.
+
+Steps (minutes apart, so www is unserved for seconds at most):
+1. `vraelis` > Settings > Domains: remove `www.vraelis.com`. API: `DELETE /v9/projects/vraelis/domains/www.vraelis.com`.
+2. `sen-site` > Settings > Domains: add `www.vraelis.com` as a redirect to `vraelis.com`, status 308. API:
+   `POST /v10/projects/sen-site/domains {"name":"www.vraelis.com","redirect":"vraelis.com","redirectStatusCode":308}`.
+3. Check: `curl -I https://www.vraelis.com/contour` returns 308 to `https://vraelis.com/contour` (path kept).
+Leave `data.vraelis.com` on `vraelis` and every other domain unchanged.
+Rollback: remove www from `sen-site`, add it back to `vraelis` (same two calls reversed).
+This can run before or after the v8 promotion; before is fine (www then redirects to today's vraelis.com).
+
+## Contact-form rate-limit data (measured 2026-10-11, read-only)
+
+Table `vraelis_rate_limits` (Supabase): `key` (route + IP or route + email, stored in clear), `count`, `window_start`.
+Nothing ever deletes rows. On 2026-10-11 it held 591 rows, the oldest 125 days old; 486 were older than 7 days.
+Contact form rows: 7 keyed by IP (`contact:<ip>`, 10-minute window) and 1 by email (`contact-to:<email>`, 1-hour window).
+Most rows come from other routes (CSP reports, funnel, the closed v1 API, sign-in and two-step). The longest window any
+limiter uses is one day (`two-step-verify-day`, `two-step-recovery-used`). Limiter errors also log the key (an IP or an
+email) to the server logs through `captureError`.
+
+Proposal: keep rows 7 days after their window starts (seven times the longest window), then delete them. Cleanup, in
+Supabase SQL (pg_cron), daily at 04:30 UTC:
+
+    select cron.schedule('vraelis-rate-limit-retention', '30 4 * * *',
+      $$delete from vraelis_rate_limits where window_start < now() - interval '7 days'$$);
+
+Then the privacy page can say: "These keys are deleted 7 days after the window they belong to." Optional hardening: store
+an HMAC of the IP or email instead of the value (no lookup ever needs the raw value back).
