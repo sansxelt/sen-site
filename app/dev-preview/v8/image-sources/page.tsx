@@ -26,10 +26,10 @@ const RECORDINGS = [
 const FILM_SHOTS: { shot: string; source: string; url: string; rights: string; commons?: string }[] = [
   { shot: "Warehouse robotic arm", source: "Ocelotwood, Pexels 16938947", url: "https://www.pexels.com/video/16938947/", rights: "Pexels License" },
   { shot: "Software on screen", source: "cottonbro, Pexels 5473798", url: "https://www.pexels.com/video/5473798/", rights: "Pexels License" },
-  { shot: "LS3 quadruped research robot with Marines, July 10, 2014", source: "Sgt. William Holdaway, DVIDS 349764", url: "https://www.dvidshub.net/video/349764/ls3-action-along-side-3-3-marines", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:349764-LS3_in_action_along_side_3-3_Marines.webm" },
-  { shot: "MQ-9 training flight over Nevada, July 15, 2019", source: "Senior Airman Haley Stevens, DVIDS 708466", url: "https://www.dvidshub.net/video/708466/mq-9-reaper-aerial-video", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:MQ-9_Reaper_aerial_video_DOD_107212162-5e1342c0d88af.webm" },
-  { shot: "AH-64 Apache capability demonstration, Latvia, May 2, 2025", source: "Sgt. Charlie Duke, DVIDS 962366", url: "https://www.dvidshub.net/video/962366", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:AH-64_Apache_Capability_Demostration_(962366).webm" },
-  { shot: "Apache live-fire training, Ustka, Poland, August 27, 2025", source: "Sgt. Jamie Robinson, DVIDS 975462", url: "https://www.dvidshub.net/video/975462/12th-combat-aviation-brigade-employs-spike-nlos-missile-system-historic-live-fire-event", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:U.S._Army_AH-64E_Apache_Guardian_Launching_a_SPIKE_NLOS_Missile.webm" },
+  { shot: "LS3 legged robot experiment with 3rd Battalion, 3rd Marines, Kahuku Training Area, Hawaii, 2014", source: "U.S. Marine Corps video by Sgt. William L. Holdaway, U.S. Marine Corps Forces, Pacific. DVIDS 349764 (VIRIN 140715-M-CP369-001)", url: "https://www.dvidshub.net/video/349764/ls3-action-along-side-3-3-marines", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:349764-LS3_in_action_along_side_3-3_Marines.webm" },
+  { shot: "MQ-9 Reaper training flight, Nevada Test and Training Range, July 15, 2019", source: "U.S. Air Force video by Senior Airman Haley Stevens, 432nd Wing. DVIDS 708466 (VIRIN 190715-F-UA265-393)", url: "https://www.dvidshub.net/video/708466/mq-9-reaper-aerial-video", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:MQ-9_Reaper_aerial_video_DOD_107212162-5e1342c0d88af.webm" },
+  { shot: "AH-64 Apache demonstration, Lielvarde Air Base, Latvia, May 2, 2025", source: "U.S. Army video by Sgt. Charlie Duke, Combat Aviation Brigade, 1st Armored Division. DVIDS 962366 (VIRIN 250502-A-UP538-3633)", url: "https://www.dvidshub.net/video/962366", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:AH-64_Apache_Capability_Demostration_(962366).webm" },
+  { shot: "SPIKE NLOS live fire from an AH-64E, Ustka, Poland, August 2025", source: "U.S. Army video by Sgt. Jamie Robinson, 12th Combat Aviation Brigade. DVIDS 975462 (VIRIN 250827-A-FL725-6037)", url: "https://www.dvidshub.net/video/975462/12th-combat-aviation-brigade-employs-spike-nlos-missile-system-historic-live-fire-event", rights: "U.S. federal government work, public domain", commons: "https://commons.wikimedia.org/wiki/File:U.S._Army_AH-64E_Apache_Guardian_Launching_a_SPIKE_NLOS_Missile.webm" },
 ];
 
 function Out({ to, children }: { to: string; children: ReactNode }) {
@@ -115,7 +115,7 @@ export default function ImageSources() {
           <div className="v8-head imgs-head">
             <span className="v8-eyebrow">Films</span>
             <h2 className="v8-h2">Systems films.</h2>
-            <p className="v8-body">Silent original edits of these six clips (files /home/systems-film-*, posters from the same edits). No U.S. government relationship or endorsement is implied.</p>
+            <p className="v8-body">Silent original edits of these six clips (files /home/systems-film-*, posters from the same edits). The appearance of U.S. Department of War (DoW) visual information does not imply or constitute DoW endorsement. Vraelis has no relationship with the U.S. Department of War or any military service.</p>
           </div>
           <div className="v8-table-wrap imgs-table-wrap">
             <table className="v8-table imgs-table">
