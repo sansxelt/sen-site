@@ -5,7 +5,7 @@ import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
 import { COMPANY_LINE, CONTOUR, FACTS, FOUNDER, RESEARCH, WORK_LINE, href } from "../_kit/site";
 import { formatDay } from "../_content/news";
-import { CURRENT, EARLIER } from "../changelog/history";
+import { CURRENT } from "../changelog/history";
 import "./company.css";
 
 export const metadata = v8meta({
@@ -15,7 +15,9 @@ export const metadata = v8meta({
 });
 
 // x.ai's /company order: mission h1, proof cards, what we do, people, values ("At our core"), then the year-grouped
-// history ("Our path of progress") fed from the same record as /changelog. One h1: the company line. The founder
+// history ("Our path of progress") fed from the same record as /changelog. Only the current record (NEWS) is listed
+// here: the earlier product's titles are in the present tense and read as claims without the changelog's context
+// (2026-10-11 audit), so that record is one link to /changelog#earlier-direction. One h1: the company line. The founder
 // keeps the #nishanth-dasari anchor that lib/entity.ts publishes as his schema.org @id. Founder facts and profile
 // links are only those already on the live /company page.
 const LINKEDIN = "https://www.linkedin.com/in/beamed/";
@@ -42,8 +44,8 @@ const PRINCIPLES = [
   },
   {
     n: "03",
-    title: "The builder is not the only judge.",
-    body: `${FACTS.tests.value} ${FACTS.tests.label}: experiment behaviour, not production readiness.`,
+    title: "Results are reproduced before we state them.",
+    body: `${FACTS.tests.value} ${FACTS.tests.label}. Not production readiness and not independent review.`,
   },
 ];
 
@@ -111,7 +113,7 @@ export default function Company() {
               </div>
               <div className="v8-tags cmp-tags">
                 <Tag kind="impl">Working in the experiment: signed bindings, ONNX Runtime 1.23.2 on CPU</Tag>
-                <Tag kind="meas">Measured: {FACTS.tests.value} internal tests offline</Tag>
+                <Tag kind="meas">Measured: {FACTS.tests.value} experiment tests, pinned network-disabled harness, reproduced by QA</Tag>
                 <Tag kind="prop">Proposed: a Kubernetes collector</Tag>
                 <Tag kind="hyp">Hypothesis: release, platform and security engineers</Tag>
               </div>
@@ -202,19 +204,10 @@ export default function Company() {
                     ))}
                   </ol>
                   <div className="cmp-earlier">
-                    <h4 className="cmp-earlier__t">Earlier direction</h4>
-                    <p className="v8-small">The earlier browser-testing product, kept as history.</p>
+                    <h4 className="cmp-earlier__t">Earlier product (retired)</h4>
+                    <p className="v8-small">The record of the earlier browser-testing product is kept as history on the changelog.</p>
+                    <TextLink to="/changelog#earlier-direction" muted>Read the earlier record</TextLink>
                   </div>
-                  <ol className="cmp-rows cmp-rows--earlier">
-                    {EARLIER.map((e) => (
-                      <li key={e.id}>
-                        <Link href={href(`/changelog#${e.id}`)} className="cmp-row">
-                          <span className="cmp-row__t">{e.title}</span>
-                          <time dateTime={e.date}>{formatDay(e.date)}</time>
-                        </Link>
-                      </li>
-                    ))}
-                  </ol>
                 </div>
               </div>
             </div>

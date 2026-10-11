@@ -8,12 +8,14 @@ import "./changelog.css";
 
 export const metadata = v8meta({
   title: "Changelog",
-  description: "Dated entries from Vraelis, newest first, followed by the earlier record of the browser-testing product, kept as history.",
+  description: "Dated entries from Vraelis, newest first, followed by the record of the retired browser-testing product, kept as history.",
   path: "/changelog",
 });
 
 // x.ai's three-tier news index: one featured entry with its picture, the rest as cards, then a dense dated list.
-// The dense list is the earlier direction, kept as history with its original anchors (see ./history.ts).
+// The dense list is the earlier direction, kept as history with its original anchors (see ./history.ts). Each row's
+// title is its past-tense summary: the original titles are in the present tense of a product that is retired
+// (2026-10-11 audit), so they are not shown here.
 export default function Changelog() {
   const [featured, ...rest] = CURRENT;
   return (
@@ -79,16 +81,15 @@ export default function Changelog() {
         <Wrap>
           <div className="clg-earlier__grid">
             <div className="v8-head clg-earlier__head">
-              <h2 className="v8-h2">Earlier direction</h2>
-              <p className="v8-body">The earlier browser-testing product, kept as history.</p>
+              <h2 className="v8-h2">Earlier product (retired)</h2>
+              <p className="v8-body">The earlier browser-testing product, kept as history. It is no longer offered.</p>
             </div>
             <ol className="clg-list">
               {EARLIER.map((e) => (
                 <li key={e.id} id={e.id} className="clg-row clg-anchor">
                   <time className="clg-row__date" dateTime={e.date}>{formatDay(e.date)}</time>
                   <div className="clg-row__main">
-                    <h3 className="clg-row__title">{e.title}</h3>
-                    <p className="clg-row__sum">{e.summary}</p>
+                    <h3 className="clg-row__title">{e.summary}</h3>
                   </div>
                 </li>
               ))}

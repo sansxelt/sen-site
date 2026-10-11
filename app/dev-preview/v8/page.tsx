@@ -132,7 +132,8 @@ export default function Home() {
                 <Button to="/docs" kind="soft">Read the docs</Button>
               </div>
               <div className="v8-facts">
-                {Object.values(FACTS).map((f) => (
+                {/* The earlier suite's count (testsEarlier) is dated history and stays on /contour/status only. */}
+                {[FACTS.tests, FACTS.runtime, FACTS.observations].map((f) => (
                   <div key={f.value}><b>{f.value}</b><span>{f.label}</span></div>
                 ))}
               </div>

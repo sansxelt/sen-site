@@ -14,9 +14,9 @@ export const metadata = v8meta({
 
 const SOURCES = {
   brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
-  qaTests: { label: "Startup QA reply d9815366", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on QA's own pinned Docker build. Runtime policy enforcement checked." },
-  qaRejection: { label: "Startup QA reply c3e28cf", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). Codex checked the retained test log against its SHA-256 (441d44b4…08c5)." },
-  qaApp: { label: "Startup QA reply 8a2173c7", line: "Evidence app review: five findings, each addressed in the current version." },
+  qaTests: { label: "QA review of the runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on QA's own pinned Docker build. Runtime policy enforcement checked." },
+  qaRejection: { label: "QA review, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
+  qaApp: { label: "QA review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
   spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
 } as const;
 type Source = keyof typeof SOURCES;
@@ -70,7 +70,7 @@ const LIMITS = [
 ];
 
 const DOES_NOT = [
-  "Production readiness, Stage 1 or independent human review",
+  "Production readiness, a formal product milestone or independent human review",
   "External signature verification: receipt integrity is covered by signature tests inside the suite",
   "Heartbeat freshness: the policy's age limit bounds how old an approval may be, not how fresh a report is",
   "Customer need or demand",

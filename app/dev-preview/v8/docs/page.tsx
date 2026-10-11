@@ -107,7 +107,7 @@ export default async function DocsHome() {
                 <span className="v8-badge">Reference experiment</span>
               </div>
               <p className="v8-dh-product__id">Model release security</p>
-              <p className="v8-dh-product__p">{CONTOUR.headline} {CONTOUR.name} connects an approved model release to the runtime that receives it, and shows whether that runtime reports loading what was approved.</p>
+              <p className="v8-dh-product__p">{CONTOUR.headline} {CONTOUR.name} is built to connect an approved model release to the runtime that receives it. In the reference experiment, it shows whether that runtime reports loading what was approved.</p>
               <div className="v8-dh-product__actions">
                 <A to="/docs/contour" className="v8-btn v8-btn--solid v8-btn--sm">Read the docs</A>
                 <A to="/docs/status" className="v8-btn v8-btn--ghost v8-btn--sm">Development status</A>
