@@ -98,7 +98,10 @@ export async function POST(request: NextRequest) {
     // we await it and surface real failures.  The confirmation email to
     // the user is best-effort, if it fails (e.g. their inbox bounces),
     // we don't want to lose the actual support request.
-    await sendSupportEmail({ email, name, subject, message: routedMessage, to, channel });
+    // A review deployment (VRAELIS_REVIEW_LABEL set, e.g. the *.vercel.app build sent for review) marks its inquiries
+    // so they are never mistaken for ones from vraelis.com.
+    const review = process.env.VRAELIS_REVIEW_LABEL?.trim();
+    await sendSupportEmail({ email, name, subject: review ? `[${review}] ${subject}` : subject, message: routedMessage, to, channel });
     // The confirmation goes to an address the CALLER named — the relay surface. Its own per-mailbox
     // budget, canonicalised so gmail dot/+tag aliases share one bucket, and allowStrict so a limiter
     // outage denies the send rather than reopening the relay. Suppression is silent: the support email

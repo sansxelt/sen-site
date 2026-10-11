@@ -1,0 +1,17 @@
+// Inline scripts and their constants, kept out of the client modules: a server layout that imports a constant from a
+// "use client" file receives a client reference, not the string, so the script would never run.
+export const INTRO_STYLE_ID = "v8-intro-pending";
+// 76px is the measured travel for Manrope 600 at 21px; the component corrects it once fonts are ready.
+/** The intro's starting state: the word shown, the nav moved out of its way. Also re-applied by Brand on a replay. */
+export const INTRO_CSS = ".v8 .v8-brand__word{opacity:1}.v8 .v8-nav{transform:translateX(var(--v8-shift,76px))}";
+// Plays on every full page load, as the x.ai demo's does (founder 2026-10-10: "logo w text gone" after a once-per-visit
+// limit); client-side page changes keep the header, so it does not replay between pages.
+export const INTRO_SCRIPT = `(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;var s=document.createElement("style");s.id="${INTRO_STYLE_ID}";s.textContent=${JSON.stringify(INTRO_CSS)};document.head.appendChild(s);setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},20000)}catch(e){}})();`;
+/** Layered entrances: sections are hidden before first paint until RevealOnRoute has marked their layers; the timer
+ *  shows them anyway if that never happens. */
+export const REVEAL_STYLE_ID = "v8-reveal-pending";
+export const REVEAL_SCRIPT = `(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;var s=document.createElement("style");s.id="${REVEAL_STYLE_ID}";s.textContent="#v8-main section:not(.v8-hero),#v8-main>:not(section):not(:has(section)){opacity:0}";document.head.appendChild(s);setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},3000)}catch(e){}})();`;
+export const THEME_STYLE_ID = "v8-theme-light";
+export const THEME_KEY = "vraelis-theme";
+export const LIGHT_TOKENS = "html:root[data-theme]{color-scheme:light !important;--scroll-thumb:#66666E;--scroll-thumb-hover:#4B4B53;--scroll-thumb-active:#35353D;--scroll-track:#E4E4E7;background:#FFFFFF !important}html:root[data-theme] body{background:#FFFFFF !important}.v8{--ground:#FFFFFF;--s1:#F6F6F7;--s2:#EEEEF0;--s3:#E4E4E7;--ink:#0A0A0B;--ink-2:rgba(10,10,11,.8);--ink-3:rgba(10,10,11,.62);--ink-4:rgba(10,10,11,.58);--line:rgba(10,10,11,.08);--line-2:rgba(10,10,11,.13);--line-3:rgba(10,10,11,.24);--glass:rgba(255,255,255,.84);--panel:rgba(255,255,255,.98);--fade:rgba(246,246,247,.94);--stage:#F2F2F5;--solid-hover:#2A2A2E;--go:#0A0A0B;--accent:#E0531A;--accent-2:#F08A3E;--accent-deep:#A82C12;--accent-ink:#C2410C;--wait:#9A6700;--stop:#C2410C;color-scheme:light}.v8 ::selection{background:#0A0A0B;color:#FAFAFA}";
+export const THEME_SCRIPT = `(function(){try{var t=null;try{t=sessionStorage.getItem("${THEME_KEY}")}catch(e){}if(!t){try{t=localStorage.getItem("${THEME_KEY}")}catch(e){}}if(!t&&matchMedia("(prefers-color-scheme: light)").matches)t="light";if(t==="light"){var s=document.createElement("style");s.id="${THEME_STYLE_ID}";s.textContent=${JSON.stringify(LIGHT_TOKENS)};document.head.appendChild(s)}}catch(e){}})();`;

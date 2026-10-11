@@ -1,0 +1,79 @@
+/* /company (v8). x.ai's company page: mission h1, proof cards, what we do, people, three rules, and the
+   year-grouped history. Scoped under .v8 .cmp; kit tokens only; no dots, status said in words. */
+
+.v8 .cmp .v8-page-hero .v8-h1 { max-width: 24ch; }
+
+/* Proof cards (x.ai's four under the mission). */
+.v8 .cmp-proof-sec { padding-bottom: var(--section); }
+.v8 .cmp-proof { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.v8 .cmp-proof__card { position: relative; display: grid; align-content: start; gap: 8px; min-height: 168px; padding: 22px 22px 52px; }
+.v8 .cmp-proof__card b { color: var(--ink); font: 500 17px/1.3 var(--display); letter-spacing: -.01em; }
+.v8 .cmp-proof__card > span:not(.cmp-proof__go) { color: var(--ink-3); font-size: 14px; line-height: 1.5; }
+.v8 .cmp-proof__go { position: absolute; left: 22px; bottom: 20px; color: var(--ink-2); }
+.v8 .cmp-proof__card:hover .v8-arrow::after { width: 10px; }
+@media (max-width: 1024px) { .v8 .cmp-proof { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .v8 .cmp-proof { grid-template-columns: minmax(0, 1fr); } .v8 .cmp-proof__card { min-height: 0; } }
+
+/* What we do. */
+.v8 .cmp-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 5vw, 80px); align-items: end; }
+.v8 .cmp-intro .v8-head { max-width: 640px; }
+.v8 .cmp-intro__text { display: grid; gap: 14px; }
+.v8 .cmp-areas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.v8 .cmp-areas > a { aspect-ratio: 4 / 5; }
+.v8 .cmp-areas .v8-photo__label b { font-size: clamp(19px, 1.5vw, 22px); }
+@media (max-width: 1024px) { .v8 .cmp-areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } .v8 .cmp-areas > a { aspect-ratio: 4 / 3; } }
+@media (max-width: 900px) { .v8 .cmp-intro { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .v8 .cmp-areas { grid-template-columns: minmax(0, 1fr); } .v8 .cmp-areas > a { aspect-ratio: 16 / 10; } }
+
+/* Tags that carry a sentence wrap instead of overflowing a phone. */
+.v8 .cmp-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.v8 .cmp-tags .v8-tag { white-space: normal; line-height: 1.35; }
+
+/* People and ownership. */
+.v8 .cmp-people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.v8 .cmp-person { display: grid; gap: 12px; align-content: start; scroll-margin-top: calc(var(--header-h) + 24px); }
+.v8 .cmp-person__name { font-size: clamp(24px, 2.2vw, 30px); }
+.v8 .cmp-links { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.v8 .cmp-links li { border-bottom: 1px solid var(--line); }
+.v8 .cmp-links--plain li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 13px 0; color: var(--ink); font-weight: 500; }
+.v8 .cmp-links--plain small { color: var(--ink-3); font-size: 13px; font-weight: 400; text-align: right; }
+.v8 .cmp-ext { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 0; color: var(--ink); font-weight: 500; transition: color .15s; }
+.v8 .cmp-ext svg { flex: none; color: var(--ink-3); transition: transform .2s var(--ease), color .15s; }
+.v8 .cmp-ext:hover svg { color: var(--ink); transform: translate(2px, -2px); }
+@media (max-width: 860px) { .v8 .cmp-people { grid-template-columns: minmax(0, 1fr); } }
+
+/* How we work: three numbered rules (x.ai's "At our core"). */
+.v8 .cmp-rules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.v8 .cmp-rules li { display: grid; gap: 12px; align-content: start; padding: 26px 28px 8px 0; }
+.v8 .cmp-rules li + li { padding-left: 28px; border-left: 1px solid var(--line); }
+.v8 .cmp-rules__n { color: var(--ink-4); font: 500 13px/1 var(--display); font-variant-numeric: tabular-nums; }
+.v8 .cmp-rules .cmp-tags { margin-top: 4px; }
+@media (max-width: 900px) {
+  .v8 .cmp-rules { grid-template-columns: minmax(0, 1fr); }
+  .v8 .cmp-rules li, .v8 .cmp-rules li + li { padding: 24px 0; border-left: 0; }
+  .v8 .cmp-rules li + li { border-top: 1px solid var(--line); }
+}
+
+/* Our path of progress: the head beside a year-grouped list of dated rows. */
+.v8 .cmp-history { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+.v8 .cmp-history__head { position: sticky; top: calc(var(--header-h) + 32px); }
+.v8 .cmp-year { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 0 24px; }
+.v8 .cmp-year__label { padding-top: 13px; color: var(--ink); font: 500 22px/1 var(--display); letter-spacing: -.01em; }
+.v8 .cmp-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.v8 .cmp-rows li { border-bottom: 1px solid var(--line); }
+.v8 .cmp-row { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding: 13px 0; color: var(--ink); transition: color .15s; }
+.v8 .cmp-row__t { min-width: 0; font-size: 15px; line-height: 1.45; text-wrap: pretty; }
+.v8 .cmp-row time { flex: none; color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.v8 .cmp-row:hover .cmp-row__t { text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; }
+
+.v8 .cmp-earlier { display: grid; gap: 4px; justify-items: start; margin: 34px 0 12px; }
+.v8 .cmp-earlier__t { color: var(--ink); font: 500 15px/1.3 var(--sans); letter-spacing: 0; }
+@media (max-width: 900px) {
+  .v8 .cmp-history { grid-template-columns: minmax(0, 1fr); }
+  .v8 .cmp-history__head { position: static; }
+}
+@media (max-width: 560px) {
+  .v8 .cmp-year { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .v8 .cmp-year__label { padding-top: 0; }
+  .v8 .cmp-row { flex-direction: column; gap: 2px; }
+}

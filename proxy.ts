@@ -5,6 +5,7 @@ import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib
 import { v6GroundAtTop, type Ground } from "./lib/v6-routes";
 import { stealthConfigured, verifyStealthCookie, STEALTH_COOKIE } from "./lib/stealth";
 import { APP_ACCESS_OPEN, isWorkspaceHost, isClosedProductApi, isClosedProductPage } from "./lib/app-availability";
+import { DOCS_MAIN_HEADER, DOCS_TREE, docsMainOrigin } from "./lib/docs-host";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -153,6 +154,7 @@ function groundFor(target: string): Ground {
   if (target === "/dev-preview/v6" || target.startsWith("/dev-preview/v6/")) {
     return v6GroundAtTop(target.slice("/dev-preview/v6".length) || "/");
   }
+  if (target === "/dev-preview/v8" || target.startsWith("/dev-preview/v8/")) return "graphite"; // v8 is black throughout
   // Anything the maps did not claim renders the 404, which follows the site onto white (2026-09-30). Left as
   // cream, the browser painted a pale first frame behind a near-black page: the same flash that was fixed
   // everywhere else, on the one surface the router cannot describe in advance because its path matched
@@ -164,6 +166,8 @@ function groundFor(target: string): Ground {
 function withGround(req: NextRequest, target: string) {
   const headers = new Headers(req.headers);
   headers.set(GROUND_HEADER, groundFor(target));
+  // Only the docs-host branch may say a request came in on the docs host (see lib/docs-host.ts).
+  headers.delete(DOCS_MAIN_HEADER);
   return { request: { headers } };
 }
 
@@ -209,6 +213,122 @@ function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
   return noindexWhileStealthed(NextResponse.rewrite(url, withGround(req, pathname)), req.nextUrl.pathname);
 }
 
+// ── THE DOCS HOST (docs.vraelis.com) ────────────────────────────────────────────────────────────────
+//
+// The founder asked for the docs as their own part of the site, at docs.vraelis.com (2026-10-10). They are the
+// same route tree as /dev-preview/v8/docs, served at the root of the docs host by rewrite, so there is one set of
+// pages and the existing in-tree addresses keep working. The rules, in order:
+//   /dev-preview/v8/docs/x and /docs/x  308 to /x on this host (an old address keeps its place)
+//   /yc                                 the reviewer entrance, as on the main host (the curtain needs its cookie)
+//   /api/*, /icon, /apple-icon, /og/*   pass through (machine endpoints and the root icons)
+//   /, /<slug>, /md/<file>              the docs: home, a page, a Markdown twin; also /search-index, /ask, /llms.txt
+//   anything deeper                     308 to the same path on the main site (a stray site link still lands)
+// Every docs response carries the main site's origin in DOCS_MAIN_HEADER, which is how the pages know to point
+// "back to Vraelis" and non-docs links at the main site, and to link docs pages as /<slug>. While v8 is a
+// preview the whole host is noindex, as /dev-preview/v8 is.
+const v8Public = () => process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
+
+// ── V8 PROMOTED (NEXT_PUBLIC_VRAELIS_V8_PUBLIC=1) ──────────────────────────────────────────────────────
+//
+// With the flag on, the v8 tree (app/dev-preview/v8) IS the site: its top-level routes are served at clean paths,
+// /dev-preview/v8/* redirects to them, the previous generation's addresses redirect to their v8 successors, and any
+// other page path lands on v8's own 404 rather than on an older site. Machine endpoints are untouched. With the flag
+// off (today's production) none of this runs. First used for the review deployment the founder asked for
+// (2026-10-10): a separate *.vercel.app project, never vraelis.com.
+const V8_ROOTS = new Set(["acceptable-use", "applications", "changelog", "company", "contact", "contour", "cookies",
+  "data-rights", "docs", "image-sources", "legal", "partners", "partnerships", "privacy", "refunds", "research",
+  "security", "subprocessors", "terms", "trademark"]);
+const v8Owns = (path: string) => v8Public() && (path === "/" || V8_ROOTS.has(path.split("/")[1] ?? ""));
+/** The previous site's public addresses and where each now lives in v8 (308, permanent). */
+const V8_SUCCESSORS: Record<string, string> = {
+  "/platform": "/contour", "/method": "/contour", "/how-it-works": "/contour", "/product": "/contour",
+  "/beta": "/contact", "/enterprise": "/contact", "/demo": "/contact", "/sso": "/contact", "/free-report": "/contour",
+  "/infrastructure": "/applications/critical-infrastructure", "/solutions": "/applications", "/use-cases": "/applications",
+  "/developers": "/docs", "/guides": "/docs", "/learn": "/docs", "/about": "/company", "/careers": "/company",
+  "/news": "/changelog", "/blog": "/changelog", "/policies": "/legal", "/status": "/contour/status",
+};
+const V8_SUCCESSOR_PREFIXES: [string, string][] = [["/guides/", "/docs"], ["/solutions/", "/applications"], ["/use-cases/", "/applications"], ["/developers/", "/docs"], ["/learn/", "/docs"], ["/blog/", "/changelog"], ["/news/", "/changelog"]];
+/** Paths that are not pages and keep their own handling under the flag. */
+const v8Machine = (path: string) => path.startsWith("/api/") || path === "/yc" || path === "/og" || path.startsWith("/og/")
+  || path === "/icon" || path === "/apple-icon" || path.startsWith("/icon/") || path.startsWith("/apple-icon/")
+  || path === "/v1" || path.startsWith("/v1/") || path === "/mcp" || path.startsWith("/.well-known/")
+  || path === "/curtain" || path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt" || path === "/llms-full.txt"
+  // Account recovery (reset-password, its confirm link, email verification) stays operational under v8: the links in
+  // emails already sent point here. The sign-in pages among them are closed earlier, by isClosedProductPage. The
+  // retired installers keep answering 410 rather than becoming a v8 404 (found while preparing the promotion,
+  // 2026-10-11: without this, v8 rewrote every one of these into its own 404).
+  || path.startsWith("/auth/") || path === "/install" || path === "/install.ps1";
+/** The docs host's origin when the docs live on their own host, or "" when they are served at /docs on this one. */
+function v8DocsHostOrigin(): string {
+  const env = process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN;
+  if (env === "local" || env === "") return "";
+  if (env) return env.replace(/\/$/, "");
+  return process.env.VERCEL_ENV === "production" ? "https://docs.vraelis.com" : "";
+}
+function v8Promoted(req: NextRequest, path: string, host: string): NextResponse | null {
+  if (path === "/dev-preview/v8" || path.startsWith("/dev-preview/v8/")) {
+    const url = req.nextUrl.clone();
+    url.pathname = path.slice("/dev-preview/v8".length) || "/";
+    return NextResponse.redirect(url, 308);
+  }
+  if (v8Machine(path)) return null;
+  // With a separate docs host configured (production: docs.vraelis.com; a review build: its docs alias), the docs
+  // live only there: /docs/x on the main host is a permanent redirect to /x on the docs host. Without one
+  // (NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN=local) the docs are served here at /docs, as before.
+  if ((path === "/docs" || path.startsWith("/docs/")) && v8DocsHostOrigin()) {
+    return NextResponse.redirect(`${v8DocsHostOrigin()}${path.slice("/docs".length) || "/"}${req.nextUrl.search}`, 308);
+  }
+  const successor = V8_SUCCESSORS[path] ?? V8_SUCCESSOR_PREFIXES.find(([p]) => path.startsWith(p))?.[1];
+  if (successor) {
+    const url = req.nextUrl.clone();
+    url.pathname = successor;
+    return NextResponse.redirect(url, 308);
+  }
+  const res = go(req, "/dev-preview/v8" + (path === "/" ? "" : path), "rewrite");
+  // A review deployment on *.vercel.app is never indexed.
+  if (host.endsWith(".vercel.app") || !v8Public()) res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return res;
+}
+function docsNoindex(res: NextResponse) {
+  // A review build (VRAELIS_REVIEW_LABEL, the *.vercel.app deployment sent for review) is never indexed either.
+  if (!v8Public() || stealthConfigured() || process.env.VRAELIS_REVIEW_LABEL) res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return res;
+}
+function docsHost(req: NextRequest, path: string, main: string) {
+  for (const old of [DOCS_TREE, "/docs"]) {
+    if (path === old || path.startsWith(`${old}/`)) {
+      const url = req.nextUrl.clone();
+      url.pathname = path.slice(old.length) || "/";
+      return docsNoindex(NextResponse.redirect(url, 308));
+    }
+  }
+  if (path === "/yc") return docsNoindex(go(req, "/api/yc", "rewrite"));
+  const parts = path.split("/").filter(Boolean);
+  // Machine endpoints pass through. A bare /api is a docs page (the earlier references' "api"), not an endpoint.
+  const endpoint = parts[0] === "api" || parts[0] === "og" ? parts.length > 1 : ["icon", "apple-icon"].includes(parts[0] ?? "");
+  if (endpoint) return NextResponse.next(withGround(req, path));
+  // A site page typed on the docs host (docs.vraelis.com/company) belongs to the main site. "contour" and "research"
+  // are docs pages as well, so they stay here.
+  const sitePage = parts.length === 1 && V8_ROOTS.has(parts[0]) && !["contour", "research", "docs"].includes(parts[0]);
+  const isDocs = !sitePage && (parts.length <= 1 || (parts.length === 2 && parts[0] === "md"));
+  if (!isDocs) {
+    const to = `${main}${path}${req.nextUrl.search}`;
+    // Next shortens a redirect that names its own origin to a bare path. On Vercel that origin is the request's host
+    // (docs.vraelis.com), so https://vraelis.com stays absolute; locally every loopback name counts as the server's
+    // own origin, and docs.localhost would redirect to itself forever. Locally, then, a link instead of a redirect.
+    if (/^http:\/\/localhost/.test(main)) {
+      return docsNoindex(new NextResponse(`<!doctype html><meta charset="utf-8"><title>Not on the docs host</title><p>This page is on the main site: <a href="${to.replace(/"/g, "%22")}">${to.replace(/</g, "&lt;")}</a></p>`, { status: 404, headers: { "content-type": "text/html; charset=utf-8" } }));
+    }
+    return docsNoindex(NextResponse.redirect(to, 308));
+  }
+  const url = req.nextUrl.clone();
+  url.pathname = DOCS_TREE + (parts.length ? `/${parts.join("/")}` : "");
+  const headers = new Headers(req.headers);
+  headers.set(GROUND_HEADER, "graphite");
+  headers.set(DOCS_MAIN_HEADER, main);
+  return docsNoindex(NextResponse.rewrite(url, { request: { headers } }));
+}
+
 function goAbs(req: NextRequest, absolute: string) {
   const url = new URL(absolute, req.nextUrl);
   url.search = req.nextUrl.search;
@@ -221,6 +341,9 @@ export default function proxy(req: NextRequest) {
   const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
   const isProd = host.endsWith("vraelis.com");
   const workspaceHost = isWorkspaceHost(host);
+  const docsMain = docsMainOrigin(host); // the main site's origin when this is docs.vraelis.com (or docs.localhost)
+  // /llms.txt is in the matcher only so the docs host can serve its own (docs/llms.txt); the main host's is untouched.
+  if (path === "/llms.txt" && !docsMain) return NextResponse.next();
 
   // The design review renders real account components locally, never on a deployment.
   if (process.env.NODE_ENV !== "development" && (path === "/dev-preview/auth-entry" || path.startsWith("/dev-preview/auth-entry/"))) {
@@ -259,7 +382,11 @@ export default function proxy(req: NextRequest) {
       return response;
     }
   }
-  if (isClosedProductPage(path, host)) {
+  // Docs slugs share words with closed console roots (/limits, /api, /cli, /review), so the docs host skips this.
+  // v8 claims its paths on the MAIN host only. app.vraelis.com (and the workspace host) keep their closed-product
+  // rule for every path, "/" included, so a promoted v8 can never open the console there.
+  const v8Claims = v8Owns(path) && !isAppHost && !workspaceHost;
+  if (!docsMain && !v8Claims && isClosedProductPage(path, host)) {
     const url = new URL("/beta", isProd ? "https://vraelis.com" : req.nextUrl.origin.replace("app.localhost", "localhost"));
     const response = NextResponse.redirect(url, 307);
     response.headers.set("cache-control", "no-store");
@@ -348,8 +475,15 @@ export default function proxy(req: NextRequest) {
     const headers = new Headers(req.headers);
     headers.set(GROUND_HEADER, "paper");
     headers.set(CURTAIN_PATH_HEADER, path);
-    return noindexWhileStealthed(NextResponse.rewrite(url, { request: { headers } }), path);
+    headers.delete(DOCS_MAIN_HEADER);
+    const curtained = noindexWhileStealthed(NextResponse.rewrite(url, { request: { headers } }), path);
+    // The homepage exemption above is vraelis.com's; the docs host's "/" is not that page.
+    return docsMain ? docsNoindex(curtained) : curtained;
   }
+
+  // The docs host serves only the docs (see docsHost above). After the curtain, so stealth covers it exactly
+  // as it covers the main host, and before every main-host rule.
+  if (docsMain) return docsHost(req, path, docsMain);
 
   // 00) The PUBLIC API namespace. /v1/* is the versioned surface machines call; it is served by the route
   //     handlers under /api/v1/*. Rewritten rather than redirected so a client never has to follow a hop
@@ -415,8 +549,19 @@ export default function proxy(req: NextRequest) {
   //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
   if (path.startsWith("/api/")) return NextResponse.next(); // CSRF already enforced at the top
 
+  if (v8Public()) {
+    const promoted = v8Promoted(req, path, host);
+    if (promoted) return promoted;
+  }
+
   // The newer presentation remains an unindexed review preview after the layout rollback.
   if (path === "/dev-preview/v7" || path.startsWith("/dev-preview/v7/")) {
+    const response = NextResponse.next(withGround(req, path));
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
+  // The x.ai-structured rebuild (2026-10-10), reviewed here before any public route moves onto it.
+  if (path === "/dev-preview/v8" || path.startsWith("/dev-preview/v8/")) {
     const response = NextResponse.next(withGround(req, path));
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     return response;
@@ -635,6 +780,8 @@ export const config = {
   // dotted path (e.g. /learn/a.b) BYPASS every retirement redirect and render a retired route. A real page
   // path can contain a dot, so we must not skip the proxy for it.
   matcher: ["/((?!_next/|[^?]*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|woff2?|ttf|otf|eot|pdf|mp4|webm|wasm)(?:$|\\?)).*)",
+    "/llms.txt", // only for the docs host's own llms.txt; the main host's passes straight through (see proxy())
+    "/docs/llms.txt", // the docs' llms.txt at /docs when v8 is promoted without the docs host (review builds)
     "/api/:path*", "/rank/app/:path*", "/dev-preview/v6/app/:path*", "/dev-preview/recorded-app/:path*",
     "/:product(app|console|systems|verifications|guarantees|review|records|usage|applications|passes|issues|repairs|deployments|activity|team|organization|connections|plans|credits|billing|account|checkout|limits|cli|admin|new|r)/:path*"],
 };

@@ -53,6 +53,7 @@ export const PREFERENCE_LOCAL_KEYS: readonly string[] = [
   "vraelis:scratchpad-open", // the console notes panel: open or closed
   "vraelis:scratchpad-view", // the console notes panel: docked, floating or expanded
   "vraelis-locale",          // the language picked in the language switch
+  "vraelis-theme",           // light or dark, picked in the v8 footer
 ];
 /** Preference cookies. Cleared host-only and on .vraelis.com, since either may have been set. */
 export const PREFERENCE_COOKIE_NAMES: readonly string[] = [
@@ -135,11 +136,13 @@ export const LEGAL_PATHS = [
   "/subprocessors", "/data-rights", "/security", "/limitations",
 ] as const;
 const V6_TREE = "/dev-preview/v6";
+const V8_TREE = "/dev-preview/v8"; // the v8 preview's legal pages, read the same way
 
 export function isLegalPath(pathname: string | null | undefined): boolean {
   let p = (pathname || "/").split(/[?#]/)[0];
   if (p.length > 1) p = p.replace(/\/+$/, "") || "/";
   if (p.startsWith(V6_TREE + "/")) p = p.slice(V6_TREE.length);
+  else if (p.startsWith(V8_TREE + "/")) p = p.slice(V8_TREE.length);
   return (LEGAL_PATHS as readonly string[]).includes(p);
 }
 

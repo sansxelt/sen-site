@@ -1,8 +1,26 @@
-# Systems film: real footage, original edit
+# Systems film: civilian footage, original edit
 
-This 25-second silent loop opens with an Apache live-fire training launch, then moves through an Apache flyby, an MQ-9 training flight, a military research robot, industrial robotics and software. The launch begins within the first second; the loading poster shows its ignition frame. It is an original edit; no Scale, Anduril or Palantir assets are used.
+The v8 homepage Applications tile plays /home/systems-film-civil.mp4 (poster /home/systems-poster-civil.jpg). It is a 24.5-second silent loop with no military material: a robot arm on a production line, a factory floor with mobile robots, a drone view of a power substation, a civilian quadcopter in flight, a drone view of a solar farm, a warehouse robot arm stacking pallets, and software on screen. It is an original edit; every clip is from Pexels under the Pexels License (https://www.pexels.com/license/), chosen without recognisable faces or prominent brand logos.
 
-The field shots illustrate the systems whose software matters. They do not depict Vraelis hardware, customers, deployed military capability or a relationship with the U.S. government. Vraelis currently checks live web apps and control panels in a real browser.
+The shots illustrate the kinds of systems whose software matters. They do not depict Vraelis hardware, customers or deployments, and no endorsement or relationship with any creator, manufacturer or operator is implied. Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems; its first product, Vraelis Contour, is in private development.
+
+| Shot | Pexels title | Creator | Source | Rights |
+|---|---|---|---|---|
+| Robot arm on a production line | Industrial Robot Arm in High-Tech Factory | Usman AbdulrasheedGambo | [Pexels 32386532](https://www.pexels.com/video/industrial-robot-arm-in-high-tech-factory-32386532/) | [Pexels License](https://www.pexels.com/license/) |
+| Factory floor with mobile robots | Futuristic Factory Floor with Advanced Machinery | Usman AbdulrasheedGambo | [Pexels 32386627](https://www.pexels.com/video/futuristic-factory-floor-with-advanced-machinery-32386627/) | Pexels License |
+| Drone view of a power substation | Aerial View on Power Station | Thanh Văn | [Pexels 10416553](https://www.pexels.com/video/aerial-view-on-power-station-10416553/) | Pexels License |
+| Civilian quadcopter in flight | Flying Drone in Cloudy Sky | Grisha Grishkoff | [Pexels 4446375](https://www.pexels.com/video/flying-drone-in-cloudy-sky-4446375/) | Pexels License |
+| Drone view of a solar farm | Drone Footage of a Solar Farm | Roman Odintsov | [Pexels 7042814](https://www.pexels.com/video/drone-footage-of-a-solar-farm-7042814/) | Pexels License |
+| Warehouse robot arm stacking pallets | (title not recorded) | Ocelotwood | [Pexels 16938947](https://www.pexels.com/video/16938947/) | Pexels License |
+| Software on screen | (title not recorded) | cottonbro studio | [Pexels 5473798](https://www.pexels.com/video/5473798/) | Pexels License |
+
+Rebuild using `python3 scripts/field-film/compose-civil.py /path/to/source-clips` (set FFMPEG if ffmpeg is not on PATH). Download each original from https://www.pexels.com/download/video/<id>/ and name it `robot-line.mp4` (32386532), `agv-floor.mp4` (32386627), `substation.mp4` (10416553), `drone.mp4` (4446375), `solar.mp4` (7042814), `robot.mp4` (16938947), `code.mp4` (5473798). Output: H.264 High, yuv420p, 60 fps, faststart, 1600×900, about 8.2 MB; the poster is the frame at 0.8 s. Same treatment as the earlier edits: cover crop, light grade, deliberate hard cuts, no frame freezing or fades, soundtracks removed.
+
+# Earlier edits (not shown on the v8 site)
+
+The other /home/systems-film-* files and their posters are earlier edits. systems-film-opening*, systems-film-field* and systems-film-smooth* include the U.S. military public-domain footage credited below (field and smooth also show a burned-in U.S. Army logo), and systems-film.mp4 (built by app/film/systems/compose.py) also shows military vehicles and aircraft; systems-film-defense* and systems-film-spatial* are interface renders. The opening edit is still used by the older v6 preview hero; the v8 site plays none of these files.
+
+The opening edit is a 25-second silent loop that opens with an Apache live-fire training launch, then moves through an Apache flyby, an MQ-9 training flight, a military research robot, industrial robotics and software. It is an original edit; no Scale, Anduril or Palantir assets are used. The field shots illustrate the systems whose software matters. They do not depict Vraelis hardware, customers, deployed military capability or a relationship with the U.S. government.
 
 | Shot | Source and rights |
 |---|---|

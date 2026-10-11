@@ -3,6 +3,7 @@ import { publishedArticles } from "@/app/rank/research/_articles";
 import { V6_EXACT, CLEAN_EXACT, v6Public } from "@/proxy";
 import { CURRENT_DOC_SLUGS } from "@/app/dev-preview/v6/_content/docs";
 import { stealthConfigured } from "@/lib/stealth";
+import { sitemapEntries, v8IsSite } from "@/app/dev-preview/v8/_kit/machine";
 
 // The sitemap is DERIVED FROM THE ROUTING, not written alongside it.
 //
@@ -87,6 +88,10 @@ const RETIRED_PRESENTATION = new Set([
 const SUPERSEDED_BY_V6 = new Set(["/how-it-works", "/free-report", "/demo", "/sso"]);
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // With v8 promoted and no curtain, the sitemap is v8's own page and docs registries (app/dev-preview/v8/_kit/machine.ts).
+  if (v8IsSite() && !stealthConfigured()) {
+    return sitemapEntries().map(({ url, priority }) => ({ url, priority, changeFrequency: "monthly" as const }));
+  }
 
   // ── WHILE THE CURTAIN IS DOWN, ADVERTISE ONLY WHAT IS ACTUALLY INDEXABLE ────────────────────────────
   //

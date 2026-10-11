@@ -141,9 +141,12 @@
     "ai:security:test": "tsx scripts/ai-security-policy-verify.ts",
     "contact:intake:test": "tsx scripts/contact-intake-verify.ts",
     "i18n:coverage:test": "tsx scripts/i18n-coverage-verify.ts",
-    "i18n:version": "tsx scripts/i18n-version.ts"
+    "i18n:version": "tsx scripts/i18n-version.ts",
+    "v8:paths:test": "tsx scripts/v8-promotion-paths-verify.ts",
+    "v8:operator:test": "tsx scripts/v8-operator-verify.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.78",
     "@anthropic-ai/sdk": "^0.90.0",
     "@auth/core": "^0.41.2",
     "@mcap/core": "2.3.0",
@@ -156,6 +159,7 @@
     "@stripe/stripe-js": "^5.0.0",
     "@supabase/supabase-js": "^2.103.0",
     "@vercel/speed-insights": "^2.0.0",
+    "ai": "^7.0.137",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
     "geist": "^1.7.0",
@@ -165,8 +169,8 @@
     "next": "16.2.3",
     "next-auth": "^5.0.0-beta.30",
     "openai": "^6.34.0",
-    "postprocessing": "^6.39.2",
     "pdf-parse": "^1.1.1",
+    "postprocessing": "^6.39.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
@@ -183,7 +187,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
-    "playwright": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -192,6 +195,7 @@
     "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "playwright": "^1.61.1",
     "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
