@@ -37,7 +37,7 @@
 .v8 .v8-rx .rx-flowfig { margin: 0; display: grid; gap: 14px; }
 .v8 .v8-rx .rx-flowfig figcaption { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
 .v8 .v8-rx .rx-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
-.v8 .v8-rx .rx-flow li { position: relative; display: grid; gap: 12px; align-content: start; padding: clamp(20px, 2vw, 26px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(255,255,255,.035); }
+.v8 .v8-rx .rx-flow li { position: relative; display: grid; gap: 12px; align-content: start; padding: clamp(20px, 2vw, 26px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 color-mix(in srgb, var(--ink) 3.5%, transparent); }
 .v8 .v8-rx .rx-flow li + li::before { content: ""; position: absolute; left: -18px; top: 38px; width: 18px; border-top: 1px solid var(--line-3); }
 .v8 .v8-rx .rx-flow li + li::after { content: ""; position: absolute; left: -7px; top: 35px; width: 6px; height: 6px; border-top: 1px solid var(--line-3); border-right: 1px solid var(--line-3); transform: rotate(45deg); }
 .v8 .v8-rx .rx-flow h3 { font-size: clamp(18px, 1.4vw, 21px); line-height: 1.3; }
@@ -94,7 +94,7 @@
 .v8 .v8-rx .rx-connect { align-items: start; }
 .v8 .v8-rx .rx-map { margin: 0; display: grid; gap: 12px; }
 .v8 .v8-rx .rx-map figcaption { color: var(--ink-3); font-size: 13px; line-height: 1.5; }
-.v8 .v8-rx .rx-map__box { padding: clamp(20px, 2.4vw, 32px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 rgba(255,255,255,.035); }
+.v8 .v8-rx .rx-map__box { padding: clamp(20px, 2.4vw, 32px); border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 color-mix(in srgb, var(--ink) 3.5%, transparent); }
 .v8 .v8-rx .rx-map__root { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 14px; padding: 0 0 18px; color: var(--ink); font: 500 clamp(19px, 1.6vw, 22px)/1.2 var(--display); letter-spacing: -.014em; }
 .v8 .v8-rx .rx-map__root small { color: var(--ink-3); font: 400 13px/1.3 var(--sans); letter-spacing: 0; }
 .v8 .v8-rx .rx-map ul { position: relative; list-style: none; margin: 0 0 0 10px; padding: 0 0 0 26px; display: grid; }
