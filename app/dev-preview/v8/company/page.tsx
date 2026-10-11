@@ -10,7 +10,7 @@ import "./company.css";
 
 export const metadata = v8meta({
   title: "Vraelis | Company and founder Nishanth Dasari",
-  description: `${COMPANY_LINE} Founded by ${FOUNDER}. Part of Foremake, the holding company behind Vraelis and Overlym.`,
+  description: `${COMPANY_LINE} Founded by ${FOUNDER}. Part of Foremake, the holding company behind Vraelis and Overlym, a separate company in development.`,
   path: "/company",
 });
 
@@ -113,7 +113,7 @@ export default function Company() {
               </div>
               <div className="v8-tags cmp-tags">
                 <Tag kind="impl">Working in the experiment: signed bindings, ONNX Runtime 1.23.2 on CPU</Tag>
-                <Tag kind="meas">Measured: {FACTS.tests.value} experiment tests, pinned network-disabled harness, reproduced by QA</Tag>
+                <Tag kind="meas">Measured: {FACTS.tests.value} experiment tests, pinned network-disabled harness, reproduced by internal automated testing</Tag>
                 <Tag kind="prop">Proposed: a Kubernetes collector</Tag>
                 <Tag kind="hyp">Hypothesis: release, platform and security engineers</Tag>
               </div>
@@ -148,7 +148,7 @@ export default function Company() {
                 <h3 className="v8-h3 cmp-person__name">Foremake</h3>
                 <ul className="cmp-links cmp-links--plain">
                   <li><span>Vraelis</span><small>This company</small></li>
-                  <li><span>Overlym</span><small>A separate Foremake company</small></li>
+                  <li><span>Overlym</span><small>A separate Foremake company, in development</small></li>
                 </ul>
               </div>
             </div>

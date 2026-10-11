@@ -64,7 +64,7 @@ export const CONTOUR = {
   status: "In private development.",
   audience: "Release, platform and security engineers at suppliers and system integrators.",
 } as const;
-export const FOREMAKE = "Vraelis is part of Foremake, the holding company behind Vraelis and Overlym.";
+export const FOREMAKE = "Vraelis is part of Foremake, the holding company behind Vraelis and Overlym, a separate company in development.";
 export const FOUNDER = "Nishanth Dasari";
 
 /** The caption every Contour screen carries. Captures come from the read-only app reading the recorded trace. */
@@ -99,9 +99,9 @@ export const STATUS = {
 } as const;
 
 export const FACTS = {
-  tests: { value: "133 of 133", label: "experiment tests at the runtime rejection-diagnostics revision, in the pinned network-disabled harness, reproduced by QA on a separate build on October 10, 2026 (Pacific)", kind: "meas" as Kind },
+  tests: { value: "133 of 133", label: "experiment tests at the runtime rejection-diagnostics revision, in the pinned network-disabled harness, reproduced by internal automated testing on a separate build on October 10, 2026 (Pacific)", kind: "meas" as Kind },
   /** History: the earlier suite. 133 supersedes its count; they are never added together. */
-  testsEarlier: { value: "131 of 131", label: "experiment tests at the earlier runtime-policy revision, reproduced by QA", kind: "meas" as Kind },
+  testsEarlier: { value: "131 of 131", label: "experiment tests at the earlier runtime-policy revision, reproduced by internal automated testing", kind: "meas" as Kind },
   runtime: { value: "ONNX Runtime 1.23.2", label: "on CPU, the one supported runtime", kind: "impl" as Kind },
   observations: { value: "4 recorded", label: "observations in the captured run", kind: "impl" as Kind },
 } as const;

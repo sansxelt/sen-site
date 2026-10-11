@@ -14,9 +14,9 @@ export const metadata = v8meta({
 
 const SOURCES = {
   brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
-  qaTests: { label: "QA review of the runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on QA's own pinned Docker build. Runtime policy enforcement checked." },
-  qaRejection: { label: "QA review, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
-  qaApp: { label: "QA review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
+  qaTests: { label: "Internal automated testing, runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on a separate pinned Docker build. Runtime policy enforcement checked." },
+  qaRejection: { label: "Internal automated testing, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
+  qaApp: { label: "Internal automated review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
   spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
 } as const;
 type Source = keyof typeof SOURCES;
@@ -186,7 +186,7 @@ export default function ContourStatusPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Tests</span>
               <h2 className="v8-h2">What the tests do not show</h2>
-              <p className="v8-lead">133 of 133 is the experiment&apos;s runtime rejection-diagnostics revision, run in a pinned, network-disabled harness and reproduced by QA on October 10, 2026 (Pacific). It supersedes the earlier 131 of 131 at the runtime-policy revision; it is not 133 additional tests. The evidence app&apos;s own tests are a separate suite, and no counts are added together.</p>
+              <p className="v8-lead">133 of 133 is the experiment&apos;s runtime rejection-diagnostics revision, run in a pinned, network-disabled harness and reproduced by internal automated testing on October 10, 2026 (Pacific). It supersedes the earlier 131 of 131 at the runtime-policy revision; it is not 133 additional tests. The evidence app&apos;s own tests are a separate suite, and no counts are added together.</p>
             </div>
             <ul className="ct-list ct-list--plain ct-notshown">{DOES_NOT.map((s) => <li key={s}>{s}</li>)}</ul>
           </div>

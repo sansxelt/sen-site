@@ -175,7 +175,7 @@ export const PRODUCTS_OVERVIEW: Page = {
     { t: "facts", rows: [
       ["Status", "Controlled synthetic ONNX CPU experiment"],
       ["Runtime", "ONNX Runtime 1.23.2, CPUExecutionProvider"],
-      ["Tests", "133 of 133, runtime rejection-diagnostics revision, reproduced by QA"],
+      ["Tests", "133 of 133, runtime rejection-diagnostics revision, reproduced by internal automated testing"],
       ["Access", "Not for public use"],
       ["Built for", "Release, platform and security engineers at suppliers and system integrators"],
     ] },

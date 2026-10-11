@@ -22,9 +22,9 @@ const GROUPS: Record<string, string> = {
   "The record": "The record",
 };
 
-const BROWSER_BANNER = { label: "Earlier implementation reference.", text: "This page describes the earlier browser-testing product. It is kept as history and is not current." };
+const BROWSER_BANNER = { label: "Historical. This product is retired.", text: "This page describes the earlier browser-testing product and is kept only as history. Its service, API, console and accounts are closed: do not run the install commands or call the endpoints shown here." };
 // The recorded-reports page described a different earlier component, so its banner names that one.
-const RECORDED_BANNER = { label: "Earlier implementation reference.", text: "This page describes the earlier recorded-evidence component. It is kept as history and is not current." };
+const RECORDED_BANNER = { label: "Historical. This component is retired.", text: "This page describes the earlier recorded-evidence component and is kept only as history. It is not current and not available." };
 
 function convert(b: V6Block): Block | null {
   switch (b.t) {
