@@ -152,7 +152,8 @@ export function PrivacyChoices() {
   }, [ready, saved, pathname, openDialog]);
 
   const showBar = ready && saved === null && legal && !corner;
-  const showCorner = ready && saved === null && corner && !dismissed;
+  // Under Global Privacy Control every optional category is already off, so there is nothing to ask: no card.
+  const showCorner = ready && saved === null && corner && !dismissed && !gpc;
 
   // The bar sits over the foot of the page, so the page gets that much room at its end: the footer and the
   // last paragraph of the policy stay readable above it.
@@ -225,10 +226,8 @@ export function PrivacyChoices() {
             <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" /></svg>
           </button>
           <p className="vr-pc__corner-p">
-            Essential storage keeps Vraelis working and is always on. Optional storage measures performance and stays off
-            unless you allow it. Read the <a href={cookiesHref}>cookie policy</a> and <a href={privacyHref}>privacy policy</a>.
+            Essential cookies keep Vraelis working. Optional ones stay off unless you allow them. <a href={cookiesHref}>Cookie policy</a>
           </p>
-          {gpc && <p className="vr-pc__gpc vr-pc__gpc--bar">Your browser sends Global Privacy Control, so optional categories stay off.</p>}
           <div className="vr-pc__corner-actions">
             <button type="button" className="vr-pc__corner-link" onClick={() => openDialog(false)} aria-haspopup="dialog">Settings</button>
             <span className="vr-pc__corner-pair">
