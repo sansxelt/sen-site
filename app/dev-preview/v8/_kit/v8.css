@@ -131,13 +131,12 @@ html:has(.v8) { --nav-h: 76px; }
 .v8-glue { white-space: nowrap; }
 
 /* ── Buttons ────────────────────────────────────────────────────────────────────────────────────────── */
-.v8-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 18px; border-radius: 999px; border: 0; font: 500 14.5px/1.2 var(--sans); white-space: nowrap; cursor: pointer; transition: filter .15s var(--ease-std), background-color .15s var(--ease-std), box-shadow .15s var(--ease-std), color .15s; }
+.v8-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 18px; border-radius: 10px; border: 0; font: 500 14.5px/1.2 var(--sans); white-space: nowrap; cursor: pointer; transition: filter .15s var(--ease-std), background-color .15s var(--ease-std), box-shadow .15s var(--ease-std), color .15s; }
 .v8 .v8-btn--solid, .v8 .v8-btn--solid:hover, .v8 .v8-btn--solid:focus-visible { background: var(--ink); color: var(--ground); }
-.v8 .v8-btn--solid:hover { background: var(--solid-hover); }
 .v8-btn--soft { background: var(--s2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
-.v8-btn--soft:hover { background: var(--s3); box-shadow: inset 0 0 0 1px var(--line-3); }
+.v8-btn--soft:hover { box-shadow: inset 0 0 0 1px var(--line-3); }
 .v8-btn--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
-.v8-btn--ghost:hover { box-shadow: inset 0 0 0 1px var(--line-3); background: color-mix(in srgb, var(--ink) 3.0%, transparent); }
+.v8-btn--ghost:hover { box-shadow: inset 0 0 0 1px var(--line-3); }
 .v8-btn--sm { min-height: 36px; padding: 7px 14px; font-size: 13.5px; }
 .v8-btn--lg { min-height: 48px; padding: 12px 22px; font-size: 15px; }
 .v8-btn--block { width: 100%; }
@@ -193,10 +192,10 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-caret { width: 6px; height: 6px; border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor; transform: translateY(-2px) rotate(45deg); opacity: .6; transition: transform .25s var(--ease); }
 [aria-expanded="true"] > .v8-caret { transform: translateY(1px) rotate(225deg); }
 .v8-header__end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.v8-split { position: relative; display: inline-flex; border-radius: 999px; background: var(--ink); color: var(--ground); }
+.v8-split { position: relative; display: inline-flex; border-radius: 10px; background: var(--ink); color: var(--ground); }
 .v8-split > a, .v8-split > button { display: inline-flex; align-items: center; min-height: 38px; border: 0; background: none; color: inherit; font: 500 14px/1 var(--sans); cursor: pointer; }
-.v8-split > a { padding: 0 14px 0 17px; border-radius: 999px 0 0 999px; }
-.v8-split > button { padding: 0 13px 0 11px; border-left: 1px solid rgba(10,10,11,.18); border-radius: 0 999px 999px 0; }
+.v8-split > a { padding: 0 14px 0 17px; border-radius: 10px 0 0 10px; }
+.v8-split > button { padding: 0 13px 0 11px; border-left: 1px solid rgba(10,10,11,.18); border-radius: 0 10px 10px 0; }
 .v8-split > a:hover, .v8-split > button:hover { background: rgba(10,10,11,.08); }
 .v8-burger { display: none; width: 40px; height: 40px; border-radius: 999px; border: 0; background: var(--s2); color: var(--ink); cursor: pointer; place-items: center; }
 .v8-burger span { position: relative; display: block; width: 16px; height: 1.6px; background: currentColor; }
@@ -540,3 +539,23 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .hm-band__name { flex: none; color: var(--ink-3); font: 500 clamp(20px, 2vw, 28px)/1.4 var(--display); letter-spacing: -.01em; white-space: nowrap; }
 @keyframes hm-band { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .hm-band__track { animation: none; } }
+
+/* SCALE'S BUTTON HOVER (founder, 2026-10-11: "have the hover animation that scale AI has for lotta buttons"; also
+   "more rectangular, not too much", so 10px corners instead of pills). A layer of the button's own text colour, at
+   low opacity, waits just under the button and slides up over it on hover or keyboard focus (scale.com: 300ms,
+   ease-out). The fill itself no longer changes on hover; the sliding tint is the hover. Shared by every action
+   button: .v8-btn, the split Join us buttons, and the docs header's Join us and Ask AI. */
+.v8-btn, .v8-split > a, .v8-split > button,
+.v8 .v8-dhd__join, .v8 .v8-dhd__joinmore, .v8 .v8-docs-askbtn { position: relative; overflow: hidden; isolation: isolate; }
+.v8-btn::before, .v8-split > a::before, .v8-split > button::before,
+.v8 .v8-dhd__join::before, .v8 .v8-dhd__joinmore::before, .v8 .v8-docs-askbtn::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: .16;
+  transform: translateY(101%); transition: transform .3s cubic-bezier(0, 0, .2, 1); pointer-events: none;
+}
+.v8-btn:hover::before, .v8-btn:focus-visible::before, .v8-split > a:hover::before, .v8-split > button:hover::before,
+.v8 .v8-dhd__join:hover::before, .v8 .v8-dhd__joinmore:hover::before, .v8 .v8-docs-askbtn:hover::before,
+.v8 .v8-dhd__join:focus-visible::before, .v8 .v8-dhd__joinmore:focus-visible::before, .v8 .v8-docs-askbtn:focus-visible::before { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .v8-btn::before, .v8-split > a::before, .v8-split > button::before,
+  .v8 .v8-dhd__join::before, .v8 .v8-dhd__joinmore::before, .v8 .v8-docs-askbtn::before { transition: none; }
+}

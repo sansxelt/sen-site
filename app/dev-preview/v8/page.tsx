@@ -11,11 +11,15 @@ import { PARTNERS, showsLogo } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
 
-export const metadata = v8meta({
-  title: `Vraelis | ${TAGLINE.replace(/\.$/, "")}`,
-  description: `${TAGLINE} ${WORK_LINE}`,
-  path: "/",
-});
+// The browser tab just says Home (founder, 2026-10-11); link previews keep the tagline, which says what Vraelis is.
+export const metadata = {
+  ...v8meta({
+    title: `Vraelis | ${TAGLINE.replace(/\.$/, "")}`,
+    description: `${TAGLINE} ${WORK_LINE}`,
+    path: "/",
+  }),
+  title: { absolute: "Vraelis | Home" },
+};
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.

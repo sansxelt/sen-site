@@ -20,8 +20,9 @@
 //   - Every email carries a hidden preheader, the line an inbox shows under the subject.
 //
 // THE FORMAT (2026-10-11, founder pointing at a SpaceXAI login notice: "not the worst but study this"):
-//   - The mark alone (the diamond, no wordmark) at the top: dark facets on white, its own light facets in dark
-//     mode. The sender name already says Vraelis.
+//   - The mark alone (the diamond, no wordmark) at the top, the real silver diamond in both modes. A darkened
+//     version was tried and rejected the same evening (founder: "what the hell is this"): it is not the logo.
+//     The sender name already says Vraelis.
 //   - A 600px column, larger and airier type (16px at 1.75), one body colour, no grey paragraphs mid-letter.
 //   - A medium-weight heading, the greeting on its own line, details as plain "Label: value" lines with the label
 //     in bold, no table rules.
@@ -189,7 +190,7 @@ export function shell(content: string, opts: ShellOptions): string {
       <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
         <tr><td style="padding:0 0 40px;">
-          <a href="https://vraelis.com" style="text-decoration:none;"><img class="vx-logo-light" src="${ASSET_ORIGIN}/email/mark-ink@2x.png" width="32" height="30" alt="Vraelis" style="display:block;width:32px;height:30px;border:0;outline:none;color:${INK};font-family:${FONT};font-size:18px;font-weight:600;line-height:30px;"><img class="vx-logo-dark" src="${ASSET_ORIGIN}/email/mark@2x.png" width="32" height="30" alt="" style="display:none;width:32px;height:30px;border:0;outline:none;mso-hide:all;"></a>
+          <a href="https://vraelis.com" style="text-decoration:none;"><img class="vx-logo-light" src="${ASSET_ORIGIN}/email/mark@2x.png" width="32" height="30" alt="Vraelis" style="display:block;width:32px;height:30px;border:0;outline:none;color:${INK};font-family:${FONT};font-size:18px;font-weight:600;line-height:30px;"><img class="vx-logo-dark" src="${ASSET_ORIGIN}/email/mark@2x.png" width="32" height="30" alt="" style="display:none;width:32px;height:30px;border:0;outline:none;mso-hide:all;"></a>
         </td></tr>
         <tr><td class="vx-text" style="font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};">
           ${content}
