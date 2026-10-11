@@ -116,7 +116,7 @@ export default async function DocsHome() {
             <dl className="v8-dh-spec">
               <div><dt>Status</dt><dd>Controlled synthetic ONNX CPU experiment</dd></div>
               <div><dt>Runtime</dt><dd>ONNX Runtime 1.23.2, CPUExecutionProvider</dd></div>
-              <div><dt>Tests</dt><dd>131 of 131 reproduced offline by QA</dd></div>
+              <div><dt>Tests</dt><dd>131 of 131, runtime-policy revision, reproduced offline by QA</dd></div>
               <div><dt>Access</dt><dd>Not for public use</dd></div>
             </dl>
           </article>

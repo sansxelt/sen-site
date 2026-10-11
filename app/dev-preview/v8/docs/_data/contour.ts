@@ -86,7 +86,7 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "kinds", items: [
         { kind: "impl", text: "Signed release and approval bindings, runtime policy enforcement for ONNX Runtime 1.23.2 with exactly CPUExecutionProvider, real CPU inference, and desired against reported loaded observations in baseline and reconcile modes." },
         { kind: "impl", text: "A read-only evidence app over the recorded trace." },
-        { kind: "meas", text: "131 of 131 internal tests pass offline, and Startup QA reproduced this on its own pinned Docker build. This measures automated behaviour inside the experiment. It is not production readiness or customer demand." },
+        { kind: "meas", text: "131 of 131 internal tests pass offline on the runtime-policy revision, and Startup QA reproduced this on its own pinned Docker build on October 10, 2026. This measures automated behaviour inside the experiment. It is not production readiness or customer demand." },
         { kind: "prop", text: "A Kubernetes collector, in specification v1.3. The proposal has not been applied." },
         { kind: "not", label: "Not built yet", text: "Heartbeat freshness, live fault runs, a latency study and adapters for customer runtimes." },
         { kind: "not", text: "Hardware attestation. Worker reports are self-reports, not independent attestation." },
@@ -369,7 +369,7 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "ul", items: [
         "How a model behaves, or that it has no backdoor. A signature endorses bytes; it does not describe behaviour.",
         "What a compromised host is running. The host and worker are trusted in the experiment, and the loaded identity is a self-report.",
-        "Production readiness. The 131 passing tests measure automated behaviour inside the experiment.",
+        "Production readiness. The 131 passing tests (runtime-policy revision) measure automated behaviour inside the experiment.",
         "Customer demand. No customer has used Vraelis Contour.",
         "Anything about machines in the field. The model is synthetic, and the runtime is a CPU session in a lab environment named `non-actuating-lab`.",
       ] },

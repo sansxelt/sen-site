@@ -1,5 +1,6 @@
 // Machine-readable public index. Company, product and current guides use the site's own sources.
 import { stealthConfigured, verifyStealthCookie } from "@/lib/stealth";
+import { llmsTxt, v8IsSite } from "@/app/dev-preview/v8/_kit/machine";
 import { SUPPORT } from "@/app/dev-preview/v6/_system/positioning";
 import { SECURITY_PAGES } from "@/app/dev-preview/v6/_content/security-direction";
 import { PRIMARY_SECTORS } from "@/app/dev-preview/v6/_content/sectors";
@@ -11,6 +12,8 @@ export function GET(req: Request) {
   if (stealthConfigured() && !verifyStealthCookie(cookie ? decodeURIComponent(cookie) : undefined)) {
     return new Response("Not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   }
+  // With v8 promoted, the index comes from v8's own registries (app/dev-preview/v8/_kit/machine.ts).
+  if (v8IsSite()) return new Response(llmsTxt(), { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" } });
   const lines = [
     "# Vraelis", "", `> ${SUPPORT}`, "",
     "Vraelis is in private development. Public workspace access is closed. These references do not describe an available deployment.", "",

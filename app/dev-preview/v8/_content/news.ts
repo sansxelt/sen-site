@@ -24,7 +24,7 @@ export const NEWS: NewsItem[] = [
     id: "2026-10-10-qa-131",
     date: "2026-10-10",
     kind: "Engineering",
-    title: "QA reproduces 131 of 131 experiment tests offline",
+    title: "QA reproduces 131 of 131 experiment tests (runtime-policy revision)",
     summary: "QA rebuilt the pinned harness offline and reproduced every experiment test.",
     image: { src: "/v8/contour/app-policy-1200.webp", alt: "The runtime policy in the Vraelis Contour app: ONNX Runtime 1.23.2 and CPUExecutionProvider.", w: 1200, h: 750 },
     to: "/contour/status",

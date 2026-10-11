@@ -42,7 +42,7 @@ const tagText = (kind: Kind, label: string) => {
 
 /** One short line per workflow step; the tags under each carry what works and what is proposed. */
 const STEP_LINE: Record<string, string> = {
-  "01": "Model, preprocessing and configuration, by digest.",
+  "01": "Model and configuration, by digest. Preprocessing identity is proposed.",
   "02": "The exact release, where it may run, and an age limit.",
   "03": "The runtime checks the policy before it serves.",
   "04": "Approved beside reported loaded, field by field.",

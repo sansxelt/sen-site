@@ -153,7 +153,7 @@ const GUIDES: Page[] = [
       { t: "p", text: "Performance drift can have operational causes. Use qualified baselines before attributing an anomaly to an attack." },
       { t: "p", text: "These are research areas. Vraelis does not claim universal attack detection and publishes no detection or accuracy numbers." },
       { t: "h2", text: "How Vraelis Contour is evaluated today" },
-      { t: "p", text: "The evaluation is narrow. 131 internal tests pass offline, and Startup QA reproduced that on its own pinned build. That measures automated behaviour inside the experiment. A latency study and live fault runs are not built." },
+      { t: "p", text: "The evaluation is narrow. 131 internal tests pass offline on the runtime-policy revision, and Startup QA reproduced that on its own pinned build on October 10, 2026. That measures automated behaviour inside the experiment. A latency study and live fault runs are not built." },
       { t: "h2", text: "Read the underlying guidance" },
       { t: "p", text: "[NIST adversarial machine learning taxonomy](https://www.nist.gov/publications/adversarial-machine-learning-taxonomy-and-terminology-attacks-and-mitigations-0)" },
     ],

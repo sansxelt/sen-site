@@ -180,7 +180,7 @@ export default function ContourStatusPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Tests</span>
               <h2 className="v8-h2">What the tests do not show</h2>
-              <p className="v8-lead">131 of 131, and the evidence app&apos;s 14 trace tests, are automated behaviour in the experiment.</p>
+              <p className="v8-lead">131 of 131 is the experiment&apos;s runtime-policy revision, reproduced by QA on October 10, 2026. The evidence app&apos;s own tests are a separate suite; the two are never added together.</p>
             </div>
             <ul className="ct-list ct-list--plain ct-notshown">{DOES_NOT.map((s) => <li key={s}>{s}</li>)}</ul>
           </div>

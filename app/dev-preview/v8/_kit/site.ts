@@ -99,13 +99,13 @@ export const STATUS = {
 } as const;
 
 export const FACTS = {
-  tests: { value: "131 of 131", label: "experiment tests pass offline, reproduced by QA", kind: "meas" as Kind },
+  tests: { value: "131 of 131", label: "experiment tests, runtime-policy revision, reproduced offline by QA on October 10, 2026", kind: "meas" as Kind },
   runtime: { value: "ONNX Runtime 1.23.2", label: "on CPU, the one supported runtime", kind: "impl" as Kind },
   observations: { value: "4 recorded", label: "observations in the captured run", kind: "impl" as Kind },
 } as const;
 
 export const WORKFLOW = [
-  { n: "01", title: "Identify the release", body: "Artifact integrity and configuration integrity: the model, its configuration and, later, its preprocessing are named by digest.", kinds: [["impl", "Model and configuration digests"], ["prop", "Preprocessing identity"]] as [Kind, string][], shot: "crop-release-identity" },
+  { n: "01", title: "Identify the release", body: "Artifact integrity and configuration integrity: the model and its configuration are named by digest. Preprocessing identity is proposed.", kinds: [["impl", "Model and configuration digests"], ["prop", "Preprocessing identity"]] as [Kind, string][], shot: "crop-release-identity" },
   { n: "02", title: "Bind approval to the release and destination", body: "Release authorization with destination-bound approval: one exact release, one named environment, an age limit.", kinds: [["impl", "Signed bindings in the experiment"]] as [Kind, string][], shot: "crop-release-approval" },
   { n: "03", title: "Integrate with a supported runtime", body: "The receiving runtime checks its runtime policy before it serves. Today that is ONNX Runtime 1.23.2 on CPU.", kinds: [["impl", "ONNX Runtime 1.23.2, CPU"], ["prop", "Customer runtime adapters"]] as [Kind, string][], shot: "app-policy" },
   { n: "04", title: "Compare approved and reported", body: "Runtime identity beside the approved release, field by field, so a version mismatch is visible.", kinds: [["impl", "Evidence app"]] as [Kind, string][], shot: "crop-pair-pending" },
