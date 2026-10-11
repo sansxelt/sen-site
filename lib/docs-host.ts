@@ -13,8 +13,16 @@
 
 export const DOCS_MAIN_HEADER = "x-vraelis-docs-main";
 
-/** Where the docs live once the host is set up: canonical links and the Markdown twins point here. */
-export const DOCS_ORIGIN = "https://docs.vraelis.com";
+/** The main site's public origin. A review deployment sets NEXT_PUBLIC_VRAELIS_SITE_ORIGIN to its own address. */
+export const SITE_ORIGIN = (process.env.NEXT_PUBLIC_VRAELIS_SITE_ORIGIN || "https://vraelis.com").replace(/\/$/, "");
+
+/** Where the docs live once the host is set up: canonical links and the Markdown twins point here. With
+ *  NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN=local (a review deployment without the docs host) they are the site's /docs path. */
+export const DOCS_ORIGIN = (() => {
+  const env = process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN;
+  if (env === "local" || env === "") return `${SITE_ORIGIN}/docs`;
+  return (env || "https://docs.vraelis.com").replace(/\/$/, "");
+})();
 
 /** The physical route tree both hosts render. */
 export const DOCS_TREE = "/dev-preview/v8/docs";

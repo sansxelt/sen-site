@@ -2,12 +2,12 @@ import { CAPTURES, captureSrc } from "../../_kit/blocks";
 import { CAPTURE_CAPTION, KIND_LABEL, STATUS, WORKFLOW } from "../../_kit/site";
 import { PAGES, TABS, headingIds, tabOf } from "./pages";
 import type { Block, Page, SearchEntry } from "./types";
-import { DOCS_ORIGIN } from "@/lib/docs-host";
+import { DOCS_ORIGIN, SITE_ORIGIN } from "@/lib/docs-host";
 
 // Text forms of the docs: inline markup parsing, the Markdown twins (and Copy for LLM), plain text, and the
 // section-level search index. Everything is derived from PAGES, so the twin and the page cannot disagree.
 
-const SITE = "https://vraelis.com";
+const SITE = SITE_ORIGIN;
 /** A site path as an absolute address: docs paths on the docs' own host (lib/docs-host.ts), the rest on the main site. */
 const abs = (path: string) => (path === "/docs" || path.startsWith("/docs/") || path.startsWith("/docs#") ? DOCS_ORIGIN + (path.slice(5) || "/") : SITE + path);
 

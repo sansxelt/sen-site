@@ -12,8 +12,10 @@ export const localHref = (path: string) => (path === "/" ? V8_BASE || "/" : `${V
 /** THE DOCS' PUBLIC ADDRESS. The docs are their own host, docs.vraelis.com (lib/docs-host.ts). Once v8 is public on
  *  the production deployment, every site link to /docs goes there; anywhere else (local, Vercel previews, the
  *  /dev-preview/v8 review) it stays on the docs' path on this deployment, so it works without the subdomain.
- *  NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN overrides both (e.g. a preview docs domain); set it to "" to keep links local. */
-const DOCS_PUBLIC_ORIGIN = (process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN ?? (
+ *  NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN overrides both (e.g. a preview docs domain); set it to "local" (or "") to keep
+ *  links on this deployment, as the *.vercel.app review build does. */
+const DOCS_ENV = process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN;
+const DOCS_PUBLIC_ORIGIN = (DOCS_ENV === "local" ? "" : DOCS_ENV ?? (
   process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1" && process.env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "https://docs.vraelis.com" : ""
 )).replace(/\/$/, "");
 const isDocsPath = (path: string) => path === "/docs" || /^\/docs[/?#]/.test(path);
