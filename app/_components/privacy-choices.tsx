@@ -35,6 +35,22 @@ import "./privacy-choices.css";
 
 const COOKIES_PAGE = `${V6_BASE}/cookies`;
 
+// THE V8 SITE ASKS LIKE x.ai DOES (founder, 2026-10-10). On the v8 marketing surface the question is a small card in
+// the corner that never blocks the page: Settings opens the full dialog, and Essential only and Accept all are the
+// same button in the same ink, so refusing stays exactly as easy as accepting. Closing the card is not a choice:
+// nothing optional runs until one is made, and the card returns on the next page load. Everywhere else (the live v6
+// site, sign-in, the console) keeps the dialog and the legal-page bar above.
+const V8_TREE = "/dev-preview/v8";
+const v8Public = process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
+function cornerSurface(pathname: string) {
+  if (pathname === V8_TREE || pathname.startsWith(`${V8_TREE}/`)) return true;
+  if (!v8Public || typeof window === "undefined") return false;
+  if (window.location.hostname.startsWith("app.")) return false;
+  return !/^\/(app|signin|signup|auth|rank|account|billing)(\/|$)/.test(pathname);
+}
+const v8Href = (path: string) => (v8Public ? path : `${V8_TREE}${path}`);
+const ALL_ON: PrivacyChoice = Object.freeze({ preferences: true, analytics: true, advertising: true });
+
 const CATEGORY: Record<OptionalCategory, { title: string; short: string; body: string }> = {
   preferences: {
     title: "Preferences",
@@ -75,7 +91,9 @@ export function PrivacyChoices() {
 
   // Must the person answer before they can use this page? Read live, never from state, because the dialog's
   // own close handler runs between renders.
-  const mustAnswer = useCallback(() => readPrivacyChoice() === null && !isLegalPath(window.location.pathname), []);
+  const mustAnswer = useCallback(() => readPrivacyChoice() === null && !isLegalPath(window.location.pathname) && !cornerSurface(window.location.pathname), []);
+  const [corner, setCorner] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   const sync = useCallback(() => {
     const s = readPrivacyChoice();
@@ -123,14 +141,18 @@ export function PrivacyChoices() {
   useEffect(() => {
     if (!ready) return;
     const onLegal = isLegalPath(window.location.pathname);
+    const onCorner = cornerSurface(window.location.pathname);
     setLegal(onLegal);
+    setCorner(onCorner);
     const d = dialog.current;
     if (!d || saved !== null) return;
+    if (onCorner) { if (d.open && forced.current) { forced.current = false; d.close(); } return; }
     if (!onLegal) openDialog(true);
     else if (d.open && forced.current) { forced.current = false; d.close(); }
   }, [ready, saved, pathname, openDialog]);
 
-  const showBar = ready && saved === null && legal;
+  const showBar = ready && saved === null && legal && !corner;
+  const showCorner = ready && saved === null && corner && !dismissed;
 
   // The bar sits over the foot of the page, so the page gets that much room at its end: the footer and the
   // last paragraph of the policy stay readable above it.
@@ -162,7 +184,9 @@ export function PrivacyChoices() {
 
   if (!ready) return null;
   const answered = saved !== null;
-  const closable = answered || legal;
+  const closable = answered || legal || corner;
+  const privacyHref = corner ? v8Href("/privacy") : V6_PRIVACY;
+  const cookiesHref = corner ? v8Href("/cookies") : COOKIES_PAGE;
 
   return (
     <div className="vr-pc" data-choice={saved ? serializePrivacyChoice(saved) : "none"}>
@@ -191,6 +215,26 @@ export function PrivacyChoices() {
               <button type="button" className="vr-pc__btn" onClick={() => save(ESSENTIAL_ONLY)}>Essential only</button>
               <button type="button" className="vr-pc__btn" onClick={() => save(draft)}>Save my choices</button>
             </div>
+          </div>
+        </section>
+      )}
+
+      {showCorner && (
+        <section className="vr-pc__corner" aria-label="Privacy choices">
+          <button type="button" className="vr-pc__corner-x" aria-label="Close for now" onClick={() => setDismissed(true)}>
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" /></svg>
+          </button>
+          <p className="vr-pc__corner-p">
+            Essential storage keeps Vraelis working and is always on. Optional storage measures performance and stays off
+            unless you allow it. Read the <a href={cookiesHref}>cookie policy</a> and <a href={privacyHref}>privacy policy</a>.
+          </p>
+          {gpc && <p className="vr-pc__gpc vr-pc__gpc--bar">Your browser sends Global Privacy Control, so optional categories stay off.</p>}
+          <div className="vr-pc__corner-actions">
+            <button type="button" className="vr-pc__corner-link" onClick={() => openDialog(false)} aria-haspopup="dialog">Settings</button>
+            <span className="vr-pc__corner-pair">
+              <button type="button" className="vr-pc__corner-btn" onClick={() => save(ESSENTIAL_ONLY)}>Essential only</button>
+              <button type="button" className="vr-pc__corner-btn" onClick={() => save(ALL_ON)}>Accept all</button>
+            </span>
           </div>
         </section>
       )}
@@ -258,8 +302,8 @@ export function PrivacyChoices() {
           {/* Plain anchors, not <Link>: on app.vraelis.com these paths redirect to the site, and a client-side
               navigation across that redirect is a cross-origin fetch that fails. */}
           <p className="vr-pc__links">
-            <a href={V6_PRIVACY}>Read the privacy policy</a>
-            <a href={COOKIES_PAGE}>Read the cookie policy</a>
+            <a href={privacyHref}>Read the privacy policy</a>
+            <a href={cookiesHref}>Read the cookie policy</a>
           </p>
         </div>
         <div className="vr-pc__actions">

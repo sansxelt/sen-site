@@ -23,40 +23,40 @@ export type HistoryRow = { id: string; date: string; title: string; summary: str
 
 /** One line for each earlier entry, keyed by its v6 anchor. Past tense, plain, no claims about today. */
 const SUMMARY: Record<string, string> = {
-  "2026-10-05-recorded-task-evidence-now-in-the-app": "The earlier app gained a local beta that compared a request, a service response, a device report and a control-panel report for one task.",
-  "2026-10-03-real-pictures-real-evidence": "The site replaced rebuilt app windows with licensed photographs and screenshots of the software being checked.",
-  "2026-10-03-the-site-rebuilt-around-sectors": "The site was reorganised around sector pages, each walking through a check recorded on a Vraelis demo app.",
-  "2026-10-02-the-homepage-film-and-menus-with-a-picture-for-e": "A remade homepage film, part rendered and part licensed footage, and menus with a picture beside each link.",
-  "2026-10-02-a-real-check-of-a-simulated-mission-console": "One recorded browser check of Larkspur, a simulated mission console Vraelis built as a demo fixture.",
-  "2026-10-02-console-onboarding-questions-and-guarantees-that": "The earlier console asked new accounts three optional setup questions and dated each guarantee's last check.",
-  "2026-10-01-black-site-docs-and-console": "The site, docs, sign-in and console moved to one black ground, with result colours tuned for it.",
-  "2026-10-01-two-step-verification": "Accounts in the earlier console could turn on two-step verification with an authenticator app or emailed codes.",
-  "2026-10-01-twelve-languages": "One language switch changed the site, docs, sign-in and console together, across twelve languages.",
-  "2026-09-30-privacy-choices": "The site began asking before storing or sending anything optional, with each optional category off until turned on.",
-  "2026-09-30-a-lighter-console-one-typeface-and-docs-with-rea": "The earlier console moved to a light theme, the site moved to one typeface, and five docs pages gained screenshots from real runs.",
-  "2026-09-28-vraelis-now-answers-coding-agents-directly": "The earlier product could run as an MCP server, so a coding assistant could request a browser check and read the result.",
-  "2026-09-27-vraelis-and-bytedance": "Vraelis and ByteDance, the company behind TikTok, became official partners, centred on ByteDance's Seed models. The partnership does not cover Vraelis Contour. The record is at Partners.",
-  "2026-09-18-the-typescript-sdk-now-follows-the-verification-": "A TypeScript SDK for the earlier verification workflow, built and tested in the repository and never published.",
-  "2026-09-17-vraelis-and-reddit": "Vraelis entered an advertising partnership with Reddit, focused on Reddit Ads. It does not cover Vraelis Contour. The record is at Partners.",
-  "2026-09-07-verified-now-means-the-evidence-earned-it": "The earlier console stopped showing a result before its decision was derived, and drew decision states from one shared system.",
-  "2026-08-25-the-launch-paths-were-re-attacked-before-they-we": "A security review of the earlier product's launch surface, with the issues it found closed and the database changes rehearsed.",
-  "2026-08-10-three-surfaces-that-disagreed-with-the-ground-th": "Fixes to sign-in, invite and error screens still drawn in a retired palette, and to in-page anchor offsets.",
-  "2026-08-03-the-refusal-now-runs-on-every-path-that-starts-a": "The earlier product's refusal to charge for a check it could not build was applied to every path that starts a run.",
-  "2026-08-03-a-tab-whose-table-has-no-writer": "A tab that could only ever be empty was hidden until something writes to its table.",
-  "2026-08-03-the-nudge-emails-judged-a-balance-in-a-denominat": "Balance emails in the earlier product were corrected to count only the unit a check could be paid with.",
-  "2026-07-30-the-last-false-verified": "An internal sweep closed cases where the earlier product could record a broken application as passing.",
-  "2026-07-30-a-run-refuses-an-address-that-does-not-resolve": "The earlier product began checking that a hostname resolves before admitting a run.",
-  "2026-07-30-a-single-verification-can-be-paid-for-on-its-own": "The earlier product allowed paying for a single check without a subscription.",
-  "2026-07-28-plans-priced-on-what-stays-proven-and-a-way-off-": "The earlier product's plans were reworded around what they kept checked, with a cancellation path.",
-  "2026-07-28-the-cli-installs-as-a-command": "A one-line installer for the earlier product's command-line tool on macOS, Linux and Windows.",
-  "2026-07-26-one-site-one-console-one-design": "The public site and the earlier console were brought into one visual design.",
-  "2026-07-25-a-model-may-author-a-requirement-but-only-a-pers": "Authorship and review became separate records, so a requirement a model wrote could not approve itself.",
-  "2026-07-23-canonical-verification-result-page": "Each check in the earlier product gained one read-only result page.",
-  "2026-07-23-webhooks-verification-completed": "External systems could receive an event when a check in the earlier product finished.",
-  "2026-07-22-reviewed-plans-approved-once-and-consumed-exactl": "A dry run produced a fixed plan that a person approved before a run used exactly that plan.",
-  "2026-07-22-a-full-failed-to-verified-repair-loop-on-a-real-": "A failed check, a repair and a recheck closed end to end on a live application, with the failed record kept.",
-  "2026-07-21-the-verification-primitive": "The earlier product's core became one call: a claimed outcome and a deployment in, a recorded decision out.",
-  "2026-07-20-toward-continuous-agent-oversight": "A stated direction for the earlier product, following agent activity continuously. It was not shipped.",
+  "2026-10-05-recorded-task-evidence-now-in-the-app": "A local beta compared four reports of one task.",
+  "2026-10-03-real-pictures-real-evidence": "Rebuilt app windows gave way to photographs and real screenshots.",
+  "2026-10-03-the-site-rebuilt-around-sectors": "The site was reorganised around sector pages.",
+  "2026-10-02-the-homepage-film-and-menus-with-a-picture-for-e": "A remade homepage film, and menus with pictures.",
+  "2026-10-02-a-real-check-of-a-simulated-mission-console": "A recorded check of Larkspur, a simulated demo console.",
+  "2026-10-02-console-onboarding-questions-and-guarantees-that": "Optional setup questions and last-check dates in the console.",
+  "2026-10-01-black-site-docs-and-console": "The site, docs and console moved to one black ground.",
+  "2026-10-01-two-step-verification": "Two-step verification for console accounts.",
+  "2026-10-01-twelve-languages": "One language switch, twelve languages.",
+  "2026-09-30-privacy-choices": "Optional storage and sending became off until turned on.",
+  "2026-09-30-a-lighter-console-one-typeface-and-docs-with-rea": "A light console, one typeface, and docs screenshots from real runs.",
+  "2026-09-28-vraelis-now-answers-coding-agents-directly": "The earlier product ran as an MCP server for coding assistants.",
+  "2026-09-27-vraelis-and-bytedance": "Official partnership on ByteDance's Seed models. It does not cover Vraelis Contour.",
+  "2026-09-18-the-typescript-sdk-now-follows-the-verification-": "A TypeScript SDK, built and tested, never published.",
+  "2026-09-17-vraelis-and-reddit": "Advertising partnership on Reddit Ads. It does not cover Vraelis Contour.",
+  "2026-09-07-verified-now-means-the-evidence-earned-it": "No result shown before its decision was derived.",
+  "2026-08-25-the-launch-paths-were-re-attacked-before-they-we": "A security review of the launch surface, issues closed.",
+  "2026-08-10-three-surfaces-that-disagreed-with-the-ground-th": "Sign-in, invite and error screens moved off a retired palette.",
+  "2026-08-03-the-refusal-now-runs-on-every-path-that-starts-a": "No charge for an unbuildable check, on every run path.",
+  "2026-08-03-a-tab-whose-table-has-no-writer": "A tab that could only be empty was hidden.",
+  "2026-08-03-the-nudge-emails-judged-a-balance-in-a-denominat": "Balance emails counted only the payable unit.",
+  "2026-07-30-the-last-false-verified": "A sweep closed cases that recorded a broken app as passing.",
+  "2026-07-30-a-run-refuses-an-address-that-does-not-resolve": "Runs required a hostname that resolves.",
+  "2026-07-30-a-single-verification-can-be-paid-for-on-its-own": "A single check could be bought without a subscription.",
+  "2026-07-28-plans-priced-on-what-stays-proven-and-a-way-off-": "Plans reworded, with a cancellation path.",
+  "2026-07-28-the-cli-installs-as-a-command": "A one-line installer for the command-line tool.",
+  "2026-07-26-one-site-one-console-one-design": "The site and console shared one design.",
+  "2026-07-25-a-model-may-author-a-requirement-but-only-a-pers": "A requirement a model wrote could not approve itself.",
+  "2026-07-23-canonical-verification-result-page": "One read-only result page per check.",
+  "2026-07-23-webhooks-verification-completed": "An event fired when a check finished.",
+  "2026-07-22-reviewed-plans-approved-once-and-consumed-exactl": "A person approved a fixed plan before a run used it.",
+  "2026-07-22-a-full-failed-to-verified-repair-loop-on-a-real-": "Fail, repair and recheck, end to end on a live app.",
+  "2026-07-21-the-verification-primitive": "One call: claimed outcome in, recorded decision out.",
+  "2026-07-20-toward-continuous-agent-oversight": "A stated direction toward continuous agent oversight, not shipped.",
 };
 
 /** A fallback for an entry added to the v6 record later: its first sentence, cut short. */
@@ -64,7 +64,7 @@ const firstSentence = (body: string[]) => {
   const first = body[0] ?? "";
   const end = first.indexOf(". ");
   const s = end === -1 ? first : first.slice(0, end + 1);
-  return s.length > 180 ? `${s.slice(0, 177).trimEnd()}...` : s;
+  return s.length > 90 ? `${s.slice(0, 87).trimEnd()}...` : s;
 };
 
 /** The earlier record, newest first, as rows. */

@@ -13,10 +13,10 @@ export const metadata = v8meta({
 // table cannot drift from the ledger on the homepage and /contour; only the sources live here.
 
 const SOURCES = {
-  brief: { label: "Founder brief, 10 October 2026", line: "The founder's statement of what is implemented, what is unfinished, and what Vraelis never claims." },
-  qaTests: { label: "Startup QA reply d9815366", line: "Startup QA reproduced the 131 internal tests offline on its own pinned Docker build, and checked the runtime policy enforcement." },
-  qaApp: { label: "Startup QA reply 8a2173c7", line: "Startup QA reviewed the read-only evidence app and reported five findings. The current version of the app addresses each of them." },
-  spec: { label: "Specification v1.3", line: "An internal proposal for the next stage of the work, including the Kubernetes collector. Proposed, not applied, not frozen." },
+  brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
+  qaTests: { label: "Startup QA reply d9815366", line: "The 131 tests, reproduced offline on QA's own pinned Docker build. Runtime policy enforcement checked." },
+  qaApp: { label: "Startup QA reply 8a2173c7", line: "Evidence app review: five findings, each addressed in the current version." },
+  spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
 } as const;
 type Source = keyof typeof SOURCES;
 
@@ -52,33 +52,25 @@ const GROUPS: { title: string; rows: [string, Row][] }[] = [
 
 /* The recorded toolchain, as the evidence app's Policy screen shows it (the capture beside it). */
 const TOOLCHAIN = [
-  { what: "ONNX Runtime", value: "1.23.2", bound: "Part of the signed runtime policy. Also pinned by the test harness." },
-  { what: "Execution provider", value: "CPUExecutionProvider", bound: "Part of the signed runtime policy, exactly this provider and no other." },
-  { what: "Node.js", value: "24.19.0", bound: "Pinned by the test harness. Not part of the signed policy." },
-  { what: "Python", value: "3.12.14", bound: "Recorded and pinned by the harness. Not part of the signed policy." },
+  { what: "ONNX Runtime", value: "1.23.2", bound: "Signed runtime policy, also pinned by the harness" },
+  { what: "Execution provider", value: "CPUExecutionProvider", bound: "Signed runtime policy, this provider only" },
+  { what: "Node.js", value: "24.19.0", bound: "Harness pin, not in the signed policy" },
+  { what: "Python", value: "3.12.14", bound: "Recorded and pinned by the harness, not in the signed policy" },
 ];
 
 const LIMITS = [
-  { t: "Self-reports", b: "The loaded identity comes from the worker inside the managed session. The host and the worker are trusted. Nothing observes the runtime independently." },
-  { t: "Structural checks, not signatures", b: "When the evidence app opens a trace it checks structure and internal consistency. It does not verify signatures, so a self-consistent edited trace passes. Opened files are labelled imported, not verified." },
-  { t: "No attestation", b: "There is no hardware attestation. No report on this site is presented as proof of what a machine runs." },
-  { t: "Synthetic models", b: "The models are synthetic ONNX models made for the experiment. No production or customer model has been through it." },
-  { t: "One CPU runtime", b: "ONNX Runtime 1.23.2 with CPUExecutionProvider and nothing else. No GPU provider, no other runtime, no customer runtime adapter." },
-  { t: "One recorded run, in a lab", b: "The captures come from one recorded run in a non-actuating lab environment that controls no equipment. Live fault runs and heartbeat freshness are not done." },
+  { t: "Self-reports", b: "The worker reports what it loaded. Host and worker are trusted." },
+  { t: "Structure, not signatures", b: "Opening a trace checks structure only, so an edited, self-consistent trace passes. It is labelled imported." },
+  { t: "Synthetic models", b: "No production or customer model has been through it." },
+  { t: "One run, in a lab", b: "One recorded run, in a lab that controls no equipment." },
 ];
 
-const SHOWS = [
-  "131 of 131 internal tests pass offline.",
-  "Startup QA reproduced that result on its own pinned Docker build.",
-  "The experiment enforces its runtime policy: ONNX Runtime 1.23.2, exactly CPUExecutionProvider.",
-  "The evidence app's 14 trace tests pass, including refusing to import a pending, wrong runtime or missing evidence observation as matched.",
-];
 const DOES_NOT = [
-  "That Vraelis Contour is ready for production.",
-  "That any customer needs it, or would pay for it.",
-  "How it behaves with real models, other runtimes or other hardware.",
-  "How it behaves under live faults, or how fast it is.",
-  "What a machine actually runs, beyond what its worker reports.",
+  "Production readiness",
+  "Customer need or demand",
+  "Behaviour with real models, other runtimes or other hardware",
+  "Behaviour under live faults, or speed",
+  "What a machine runs, beyond its worker's report",
 ];
 
 function StatusTag({ status }: { status: Row["status"] }) {
@@ -91,7 +83,7 @@ export default function ContourStatusPage() {
       <PageHero
         eyebrow="Development status"
         title={`Where ${CONTOUR.name} stands.`}
-        lead={<>What works inside the controlled ONNX reference experiment, what is being built, and what we do not claim. Every line names its source. {CONTOUR.name} is in private development, and product access is closed.</>}
+        lead={<>{CONTOUR.name} is in private development. Every line names its source.</>}
         actions={<>
           <Button to="/contact?topic=contour" arrow>Join us</Button>
           <Button to="/contour" kind="soft">{CONTOUR.name} overview</Button>
@@ -150,7 +142,6 @@ export default function ContourStatusPage() {
               <div className="v8-head">
                 <span className="v8-eyebrow">Recorded toolchain</span>
                 <h2 className="v8-h2">What the experiment runs on</h2>
-                <p className="v8-lead">Two values are part of the signed runtime policy. The rest are recorded and pinned by the test harness, which is not the same thing.</p>
               </div>
               <div className="v8-table-wrap">
                 <table className="v8-table ct-data">
@@ -173,7 +164,6 @@ export default function ContourStatusPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Limits</span>
               <h2 className="v8-h2">Limits of the evidence</h2>
-              <p className="v8-lead">What the recorded evidence can and cannot carry. These limits apply to every capture and number on this site.</p>
             </div>
             <div className="ct-limits">
               {LIMITS.map((l) => (
@@ -189,28 +179,17 @@ export default function ContourStatusPage() {
           <div className="v8-stack--lg">
             <div className="v8-head">
               <span className="v8-eyebrow">Tests</span>
-              <h2 className="v8-h2">What the tests show and do not show</h2>
-              <p className="v8-lead">131 of 131 is automated behaviour inside the experiment. It is not production readiness, and it is not customer demand.</p>
+              <h2 className="v8-h2">What the tests do not show</h2>
+              <p className="v8-lead">131 of 131, and the evidence app&apos;s 14 trace tests, are automated behaviour in the experiment.</p>
             </div>
-            <div className="ct-tests">
-              <div className="v8-box">
-                <div className="v8-actions"><Tag kind="meas" /></div>
-                <h3>What they show</h3>
-                <ul className="ct-list ct-list--plain">{SHOWS.map((s) => <li key={s}>{s}</li>)}</ul>
-              </div>
-              <div className="v8-box">
-                <div className="v8-actions"><Tag kind="not" /></div>
-                <h3>What they do not show</h3>
-                <ul className="ct-list ct-list--plain">{DOES_NOT.map((s) => <li key={s}>{s}</li>)}</ul>
-              </div>
-            </div>
+            <ul className="ct-list ct-list--plain ct-notshown">{DOES_NOT.map((s) => <li key={s}>{s}</li>)}</ul>
           </div>
         </Wrap>
       </Section>
 
       <Section tight>
         <Wrap>
-          <JoinBand secondary={{ to: "/contour", label: "Vraelis Contour" }} />
+          <JoinBand lead="Tell us how you release models today." secondary={{ to: "/contour", label: "Vraelis Contour" }} />
         </Wrap>
       </Section>
     </div>

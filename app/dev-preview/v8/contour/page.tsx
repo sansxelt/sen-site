@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Chapters, RiseWords } from "../_kit/client";
 import { Button, CAPTURES, Faq, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { CAPTURE_CAPTION, CAPTURE_SCOPE, CONTOUR, KIND_LABEL, OBSERVATIONS, WORKFLOW, href, type Kind } from "../_kit/site";
+import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, WORKFLOW, href, type Kind } from "../_kit/site";
 import { HeroStage, ObservationTabs, type Lift, type ObservationView } from "./contour-client";
 import "./contour.css";
 
@@ -40,17 +40,23 @@ const tagText = (kind: Kind, label: string) => {
   return `${KIND_LABEL[kind]}: ${/^[A-Z][a-z]/.test(l) ? l.charAt(0).toLowerCase() + l.slice(1) : l}`;
 };
 
+/** One short line per workflow step; the tags under each carry what works and what is proposed. */
+const STEP_LINE: Record<string, string> = {
+  "01": "Model, preprocessing and configuration, by digest.",
+  "02": "The exact release, where it may run, and an age limit.",
+  "03": "The runtime checks the policy before it serves.",
+  "04": "Approved beside reported loaded, field by field.",
+  "05": "Every observation, including the ones that confirm nothing.",
+};
+
 const FOR = [
-  "Release engineers who decide which model, preprocessing and configuration ship, and where.",
-  "Platform engineers who own the runtime that receives a release.",
-  "Security engineers who need a record of what was approved, what was reported loaded, and what could not be confirmed.",
+  { t: "Release engineers", b: "which model ships, and where" },
+  { t: "Platform engineers", b: "the runtime that receives it" },
+  { t: "Security engineers", b: "the record of what was approved and loaded" },
 ];
 const NOT = [
-  { t: "It does not attest hardware.", b: "There is no hardware attestation. The host and the worker are trusted." },
-  { t: "It does not independently observe a cluster.", b: "Runtime reports are worker self-reports from the managed session." },
-  { t: "It does not establish that a model behaves well.", b: "A signature authenticates an endorsement of particular bytes, not benign behaviour." },
-  { t: "It does not grant a supplier permission to change a customer's system.", b: "A supplier's signature says who endorsed a release. Whether it may change a customer's system is the customer's decision." },
-  { t: "It does not support other runtimes.", b: "In the experiment, only ONNX Runtime 1.23.2 on CPU. Adapters for customer runtimes are not built." },
+  { t: "No verdict on model behaviour.", b: "A signature endorses bytes, not behaviour." },
+  { t: "No permission to change a customer's system.", b: "That stays the customer's decision." },
 ];
 
 export default function ContourPage() {
@@ -68,7 +74,7 @@ export default function ContourPage() {
         center
         eyebrow={CONTOUR.name}
         title={<RiseWords text={CONTOUR.headline} />}
-        lead={<>{CONTOUR.line} {CONTOUR.name} is in private development, and product access is closed.</>}
+        lead={CONTOUR.line}
         actions={<>
           <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
           <Button to="/docs" kind="soft" size="lg">Read the documentation</Button>
@@ -98,16 +104,14 @@ export default function ContourPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Workflow</span>
               <h2 className="v8-h2">How it works</h2>
-              <p className="v8-lead">Five steps, from naming the exact release to keeping the record of what happened. Each step says what works in the experiment and what is only proposed.</p>
             </div>
             <Chapters
-              caption={<span>{CAPTURE_CAPTION}</span>}
               items={WORKFLOW.map((s) => {
                 const c = CAPTURES[s.shot];
                 return {
                   n: s.n,
                   title: s.title,
-                  body: s.body,
+                  body: STEP_LINE[s.n],
                   tags: <>{s.kinds.map(([k, label]) => <Tag key={label} kind={k}>{tagText(k, label)}</Tag>)}</>,
                   image: { src: captureSrc(s.shot), alt: c.alt, w: c.w, h: c.h },
                 };
@@ -123,10 +127,9 @@ export default function ContourPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Recorded evidence</span>
               <h2 className="v8-h2">Four recorded observations</h2>
-              <p className="v8-lead">One captured run of the reference experiment, as the read-only evidence app shows it. These are recorded worker self-reports from the experiment: not hardware attestation, and not a customer deployment.</p>
+              <p className="v8-lead">One captured run, 10 October 2026. Each report is a worker self-report.</p>
             </div>
             <ObservationTabs items={observations} label="Recorded observations" />
-            <p className="v8-small">{CAPTURE_SCOPE} Captured 10 October 2026 at 07:41:29 UTC.</p>
           </div>
         </Wrap>
       </Section>
@@ -138,18 +141,16 @@ export default function ContourPage() {
               <div className="v8-head">
                 <span className="v8-eyebrow">Audience</span>
                 <h2 className="v8-h2">Who it is for</h2>
-                <p className="v8-lead">Release, platform and security engineers at suppliers and system integrators who ship model updates into systems other people operate.</p>
               </div>
               <ul className="ct-list">
-                {FOR.map((f) => <li key={f}>{f}</li>)}
+                {FOR.map((f) => <li key={f.t}><b>{f.t}:</b> {f.b}</li>)}
               </ul>
-              <p className="ct-aside"><Tag kind="hyp" /> This is our working hypothesis about who needs it, not a list of customers.</p>
+              <p className="ct-aside"><Tag kind="hyp" /> At suppliers and system integrators. Not a customer list.</p>
             </div>
             <div className="ct-col">
               <div className="v8-head">
                 <span className="v8-eyebrow">Scope</span>
                 <h2 className="v8-h2">What it does not do</h2>
-                <p className="v8-lead">The limits of what the experiment shows, in plain terms.</p>
               </div>
               <ul className="ct-list ct-list--not">
                 {NOT.map((n) => <li key={n.t}><b>{n.t}</b> {n.b}</li>)}
@@ -165,8 +166,7 @@ export default function ContourPage() {
             <div className="v8-head--row v8-head">
               <div className="v8-head" style={{ maxWidth: 640 }}>
                 <span className="v8-eyebrow">Where we are</span>
-                <h2 className="v8-h2">What works today, and where.</h2>
-                <p className="v8-lead">The first column runs inside the controlled experiment, and nowhere else.</p>
+                <h2 className="v8-h2">Where it stands</h2>
               </div>
               <TextLink to="/contour/status">Development status and sources</TextLink>
             </div>
@@ -180,12 +180,9 @@ export default function ContourPage() {
           <Faq
             title={<>Questions about {CONTOUR.name}</>}
             items={[
-              { q: `Is ${CONTOUR.name} available?`, a: <>No. {CONTOUR.name} is in private development and product access is closed. If you release models into systems other people operate, <Link className="v8-under" href={href("/contact?topic=contour")}>join us</Link> and tell us how you do it today.</> },
-              { q: "Which runtimes does it support?", a: "In the experiment, ONNX Runtime 1.23.2 with CPUExecutionProvider only. Adapters for customer runtimes are not built." },
-              { q: "Is a runtime report proof of what is loaded?", a: "No. It is a worker self-report from the managed session: the worker states which release it loaded. It is not hardware attestation and not independent observation." },
-              { q: "What happens when the runtime stops reporting?", a: <>The observation is recorded as evidence unavailable, with its reason code (<span className="v8-mono">RUNTIME_UNAVAILABLE</span> in the captured run). The approved release stays on record. Nothing is inferred about what is loaded.</> },
-              { q: "Does it roll back automatically?", a: "In baseline mode the runtime keeps serving what it loaded until an explicit reload. The experiment also has a reconcile mode. Recovery is an explicit, recorded action: in the captured run, the reload to cpu-2 is its own observation." },
-              { q: "Where is the source?", a: "The experiment's source code is private. This site shows recorded evidence from the experiment and captures of the read-only evidence app." },
+              { q: `Is ${CONTOUR.name} available?`, a: <>No. Product access is closed. <Link className="v8-under" href={href("/contact?topic=contour")}>Join us</Link> to tell us how you release models.</> },
+              { q: "Does it roll back automatically?", a: "No. Baseline mode serves what it loaded until an explicit, recorded reload. The experiment also has a reconcile mode." },
+              { q: "Where is the source?", a: "Private. This site shows recorded evidence and captures of the evidence app." },
             ]}
           />
         </Wrap>
@@ -193,7 +190,7 @@ export default function ContourPage() {
 
       <Section tight>
         <Wrap>
-          <JoinBand />
+          <JoinBand lead="Tell us how you release models today." />
         </Wrap>
       </Section>
     </div>

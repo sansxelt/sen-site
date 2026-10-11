@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { AreasLine, AutoVideo, CodeTabs } from "./_kit/client";
-import { Button, Ledger, Section, Tag, TextLink, Wrap, cx, captureSrc } from "./_kit/blocks";
+import { AutoVideo, CodeTabs, RiseWords } from "./_kit/client";
+import { KeywordMorph } from "./_kit/keyword";
+import { Button, Ledger, Section, TextLink, Wrap, captureSrc } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
-import { AREAS, CAPTURE_SCOPE, CONTOUR, FACTS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
+import { CONTOUR, FACTS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { NEWS, formatDay } from "./_content/news";
-import { PARTNERS, PARTNERS_NOTE } from "./_content/partners";
+import { PARTNERS } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
 
@@ -27,11 +28,12 @@ export default function Home() {
               <span><b>{CONTOUR.name}</b> <span style={{ color: "var(--ink-3)" }}>in private development</span></span>
               <i aria-hidden="true"><span className="v8-arrow" /></i>
             </Link>
-            <h1 className="v8-hero-title" style={{ maxWidth: "22ch" }}>
-              <AreasLine before="AI security for" areas={AREAS} joiners={[",", "and"]} after="." />
+            <h1 className="v8-hero-title">
+              <span className="v8-sr">{TAGLINE}</span>
+              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
+              <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={["defense.", "critical infrastructure.", "autonomous systems."]} /></span>
             </h1>
-            <p className="v8-lead v8-fade" style={{ ["--d" as string]: ".55s" }}>{WORK_LINE} {CONTOUR.name}, our first product, compares what was approved with what a runtime reports loading.</p>
-            <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 6 }}>
+            <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 30 }}>
               <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
               <Button to="/contour" kind="soft" size="lg">Explore Vraelis Contour</Button>
             </div>
@@ -67,20 +69,18 @@ export default function Home() {
             </Link>
             <Link href={href("/research")} className="v8-tile v8-tile--wide">
               <ul className="v8-tile__list">
-                {RESEARCH.map((r) => <li key={r.slug}>{r.title}<small>Research area</small></li>)}
+                {RESEARCH.map((r) => <li key={r.slug}>{r.title}</li>)}
               </ul>
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Research</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/docs")} className="v8-tile v8-tile--wide">
               <div style={{ padding: "26px 22px 0", display: "grid", gap: 10 }}>
                 <p className="v8-h3" style={{ color: "var(--ink)" }}>How Vraelis Contour works, in detail.</p>
-                <p className="v8-small">The release workflow, the evidence model, the experiment&apos;s limits, and earlier implementation references.</p>
               </div>
               <div className="v8-tile__search" aria-hidden="true">Search the documentation<kbd>Ctrl K</kbd></div>
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Documentation</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
           </div>
-          <p className="v8-small" style={{ marginTop: 14 }}>{CAPTURE_SCOPE} The film is licensed editorial footage of application areas.</p>
         </Wrap>
       </section>
 
@@ -91,7 +91,7 @@ export default function Home() {
               <div className="v8-head">
                 <span className="v8-eyebrow">For release engineers</span>
                 <h2 className="v8-h2">{CONTOUR.headline}</h2>
-                <p className="v8-lead">{CONTOUR.line} Every observation keeps the approved identity, the identity the runtime reports, and whether the runtime satisfied its policy.</p>
+                <p className="v8-lead">{CONTOUR.line}</p>
               </div>
               <div className="v8-actions">
                 <Button to="/contour" arrow>See how it works</Button>
@@ -156,7 +156,6 @@ export default function Home() {
             <div className="v8-head--row v8-head">
               <div className="v8-head" style={{ maxWidth: 620 }}>
                 <span className="v8-eyebrow">Partners</span>
-                <p className="v8-body">Official partnerships with ByteDance, around its Seed models, and Reddit, around Reddit Ads. {PARTNERS_NOTE}</p>
               </div>
               <TextLink to="/partners" muted>All partners</TextLink>
             </div>
@@ -176,25 +175,20 @@ export default function Home() {
             <div className="v8-paths">
               <div className="v8-box">
                 <h3 className="v8-h3" style={{ fontSize: 24 }}>Discuss {CONTOUR.name}</h3>
-                <p className="v8-body">For release, platform and security engineers at suppliers and system integrators.</p>
                 <ul className="v8-checks">
-                  <li>Walk through the reference experiment and its recorded evidence</li>
-                  <li>Map how your models move from approval to the systems that run them</li>
-                  <li>Agree which evidence would matter in your release path</li>
+                  <li>Walk through the reference experiment</li>
+                  <li>Map your release path</li>
+                  <li>Agree what evidence matters</li>
                 </ul>
                 <Button to="/contact?topic=contour" arrow>Join us</Button>
               </div>
               <div className="v8-box">
                 <h3 className="v8-h3" style={{ fontSize: 24 }}>Research collaboration</h3>
-                <p className="v8-body">For teams studying how AI systems are secured where they run.</p>
                 <ul className="v8-checks">
-                  {RESEARCH.map((r) => <li key={r.slug}>{r.title}: {r.line.charAt(0).toLowerCase() + r.line.slice(1)}</li>)}
+                  {RESEARCH.map((r) => <li key={r.slug}>{r.title}</li>)}
                 </ul>
                 <Button to="/contact?topic=research" kind="ghost">Contact research</Button>
               </div>
-            </div>
-            <div className={cx("v8-actions")} style={{ justifyContent: "center" }}>
-              <Tag kind="not">Product access is closed while Vraelis Contour is in private development</Tag>
             </div>
           </div>
         </Wrap>

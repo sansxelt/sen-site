@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { Button, Capture, JoinBand, PageHero, PhotoCard, Section, Tag, TextLink, Wrap } from "../_kit/blocks";
 import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
-import { COMPANY_LINE, CONTOUR, FACTS, FOREMAKE, FOUNDER, RESEARCH, WORK_LINE, href } from "../_kit/site";
+import { COMPANY_LINE, CONTOUR, FACTS, FOUNDER, RESEARCH, WORK_LINE, href } from "../_kit/site";
 import { formatDay } from "../_content/news";
-import { CURRENT, DIRECTION_DAY, EARLIER, longDay } from "../changelog/history";
+import { CURRENT, EARLIER } from "../changelog/history";
 import "./company.css";
 
 export const metadata = v8meta({
@@ -22,28 +22,28 @@ const LINKEDIN = "https://www.linkedin.com/in/beamed/";
 const FOREMAKE_PROFILE = "https://foremake.com/nishanth";
 
 const PROOF = [
-  { title: CONTOUR.name, line: "Model release security, from approval to reported runtime state. In private development.", to: "/contour" },
-  { title: "Research", line: "Four workstreams: model integrity, adversarial threats, machine trust and security evidence.", to: "/research" },
-  { title: "Applications", line: "Defense, critical infrastructure and autonomous systems, as intended application areas.", to: "/applications" },
-  { title: "Changelog", line: "Every dated entry, newest first, with the earlier record kept as history.", to: "/changelog" },
+  { title: CONTOUR.name, line: CONTOUR.line, to: "/contour" },
+  { title: "Research", line: "Four research workstreams.", to: "/research" },
+  { title: "Applications", line: "Intended areas: defense, critical infrastructure, autonomous systems.", to: "/applications" },
+  { title: "Changelog", line: "Every dated entry, newest first.", to: "/changelog" },
 ];
 
 const PRINCIPLES = [
   {
     n: "01",
     title: "Implemented and proposed stay apart.",
-    body: "Every claim says what it is: working in the experiment, measured, proposed, or a hypothesis. A proposal is never written up as built, and a result inside the experiment is never written up as production readiness.",
+    body: "Every claim carries one of these labels.",
     tags: true,
   },
   {
     n: "02",
     title: "Records are kept in order.",
-    body: "Observations keep their order and their time, including the ones that could not confirm anything. The changelog keeps its earlier entries too, labelled for what they describe.",
+    body: "Observations keep their order and time, including the ones that confirmed nothing.",
   },
   {
     n: "03",
     title: "The builder is not the only judge.",
-    body: `Our own tests are not the last word: ${FACTS.tests.value} ${FACTS.tests.label}. That shows the experiment behaves as specified, not production readiness. A runtime's report of what it loaded is a self-report, and we label it as one.`,
+    body: `${FACTS.tests.value} ${FACTS.tests.label}: experiment behaviour, not production readiness.`,
   },
 ];
 
@@ -63,7 +63,7 @@ export default function Company() {
       <PageHero
         eyebrow="Company"
         title={<RiseWords text={COMPANY_LINE} />}
-        lead={<>Founded by {FOUNDER} and part of Foremake. {CONTOUR.name}, our first product, is in private development.</>}
+        lead={<>Our first product, {CONTOUR.name}, is in private development.</>}
         actions={<><Button to="/contact?topic=contour" arrow>Join us</Button><Button to="/contact" kind="soft">Contact</Button></>}
       />
 
@@ -90,14 +90,12 @@ export default function Company() {
                 <h2 className="v8-h2">{WORK_LINE}</h2>
               </div>
               <div className="cmp-intro__text">
-                <p className="v8-lead">These four are research areas and workstreams, not products. Each has different proof requirements, and the research has to establish where a proposed control works and where it stops.</p>
-                <p className="v8-body">Defense, critical infrastructure and autonomous systems are intended application areas. Vraelis has no customer deployments in them.</p>
+                <p className="v8-lead">Research areas, not products.</p>
               </div>
             </div>
             <div className="cmp-areas">
               {RESEARCH.map((r) => <PhotoCard key={r.slug} photoKey={r.photo} to={`/research/${r.slug}`} title={r.title} line={r.line} />)}
             </div>
-            <p className="v8-small">Research areas, not products. Photographs are licensed editorial context.</p>
           </div>
         </Wrap>
       </Section>
@@ -107,23 +105,22 @@ export default function Company() {
           <div className="v8-split-sec cmp-product">
             <div className="v8-stack--lg">
               <div className="v8-head">
-                <span className="v8-eyebrow">Our first product, in private development</span>
+                <span className="v8-eyebrow">Our first product</span>
                 <h2 className="v8-h2">{CONTOUR.name}</h2>
-                <p className="v8-lead">{CONTOUR.headline} {CONTOUR.line}</p>
-                <p className="v8-body">Today it is a controlled synthetic ONNX CPU experiment with signed release and approval bindings, runtime policy enforcement and a read-only evidence app over the recorded trace. Our buyer hypothesis is release, platform and security engineers at suppliers and system integrators.</p>
+                <p className="v8-lead">{CONTOUR.headline}</p>
               </div>
               <div className="v8-tags cmp-tags">
                 <Tag kind="impl">Working in the experiment: signed bindings, ONNX Runtime 1.23.2 on CPU</Tag>
                 <Tag kind="meas">Measured: {FACTS.tests.value} internal tests offline</Tag>
                 <Tag kind="prop">Proposed: a Kubernetes collector</Tag>
-                <Tag kind="hyp">Hypothesis: who buys it</Tag>
+                <Tag kind="hyp">Hypothesis: release, platform and security engineers</Tag>
               </div>
               <div className="v8-actions">
                 <Button to="/contour" arrow>Explore {CONTOUR.name}</Button>
                 <Button to="/contour/status" kind="soft">Development status</Button>
               </div>
             </div>
-            <Capture name="app-destination-pending" small />
+            <Capture name="app-destination-pending" small caption="Inside the controlled ONNX reference experiment. Read-only evidence app." />
           </div>
         </Wrap>
       </Section>
@@ -139,7 +136,6 @@ export default function Company() {
               <div id="nishanth-dasari" className="v8-box cmp-person">
                 <span className="v8-eyebrow">Founder</span>
                 <h3 className="v8-h3 cmp-person__name">{FOUNDER}</h3>
-                <p className="v8-body">{FOUNDER} is the founder of Vraelis. {COMPANY_LINE}</p>
                 <ul className="cmp-links">
                   <li><External to={LINKEDIN}>Nishanth on LinkedIn</External></li>
                   <li><External to={FOREMAKE_PROFILE}>Nishanth Dasari&apos;s Foremake profile</External></li>
@@ -148,7 +144,6 @@ export default function Company() {
               <div id="foremake" className="v8-box cmp-person">
                 <span className="v8-eyebrow">Holding company</span>
                 <h3 className="v8-h3 cmp-person__name">Foremake</h3>
-                <p className="v8-body">{FOREMAKE}</p>
                 <ul className="cmp-links cmp-links--plain">
                   <li><span>Vraelis</span><small>This company</small></li>
                   <li><span>Overlym</span><small>A separate Foremake company</small></li>
@@ -190,7 +185,6 @@ export default function Company() {
             <div className="v8-head cmp-history__head">
               <span className="v8-eyebrow">History</span>
               <h2 className="v8-h2">Our path of progress</h2>
-              <p className="v8-body">Every dated entry, newest first. Entries before {longDay(DIRECTION_DAY)} describe the earlier browser-testing product and are kept as history.</p>
               <TextLink to="/changelog" muted>Open the changelog</TextLink>
             </div>
             <div className="cmp-years">
@@ -209,7 +203,7 @@ export default function Company() {
                   </ol>
                   <div className="cmp-earlier">
                     <h4 className="cmp-earlier__t">Earlier direction</h4>
-                    <p className="v8-small">These entries describe the earlier browser-testing product.</p>
+                    <p className="v8-small">The earlier browser-testing product, kept as history.</p>
                   </div>
                   <ol className="cmp-rows cmp-rows--earlier">
                     {EARLIER.map((e) => (
@@ -230,7 +224,7 @@ export default function Company() {
 
       <Section>
         <Wrap>
-          <JoinBand />
+          <JoinBand lead="If you release models into systems others operate, we want to hear how." />
         </Wrap>
       </Section>
     </div>

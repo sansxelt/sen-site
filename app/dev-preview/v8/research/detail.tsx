@@ -1,4 +1,4 @@
-import { Button, Capture, CAPTURES, Head, PageHero, Section, Tag, TextLink, Wrap, cx } from "../_kit/blocks";
+import { Button, Capture, CAPTURES, Head, PageHero, Section, TextLink, Wrap, cx } from "../_kit/blocks";
 import { RESEARCH } from "../_kit/site";
 import type { ResearchPage } from "./content";
 import { Flow, FramedPhoto, KindList, OpenGrid, Questions, RelatedResearch, ResearchBand, Split } from "./parts";
@@ -24,11 +24,11 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
         <Wrap>
           {page.studyAs === "flow" ? (
             <div className="v8-stack--lg">
-              <Head eyebrow="What we study" title={page.studyTitle} lead={page.studyLead} />
+              <Head eyebrow="What we study" title={page.studyTitle} />
               <Flow items={page.study} caption={page.studyCaption} />
             </div>
           ) : (
-            <Split head={<Head eyebrow="What we study" title={page.studyTitle} lead={page.studyLead} />}>
+            <Split head={<Head eyebrow="What we study" title={page.studyTitle} />}>
               <Questions items={page.study} />
             </Split>
           )}
@@ -51,7 +51,7 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
               </div>
             </div>
           ) : (
-            <Split head={<Head eyebrow="What exists today" title={ex.title}><div><Tag kind="not">No product claim</Tag></div></Head>}>
+            <Split head={<Head eyebrow="What exists today" title={ex.title} />}>
               <div className="rx-prose">
                 {ex.paragraphs.map((p) => <p key={p}>{p}</p>)}
                 <div className="v8-actions">
@@ -65,7 +65,7 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
 
       <Section rule id="open">
         <Wrap>
-          <Split head={<Head eyebrow="Open questions" title="What is still open." lead="Questions we have not answered. None of them is solved by anything Vraelis has built." />}>
+          <Split head={<Head eyebrow="Open questions" title="What is still open." />}>
             <OpenGrid items={page.open} />
           </Split>
         </Wrap>

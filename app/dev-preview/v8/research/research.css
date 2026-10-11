@@ -110,12 +110,3 @@
 .v8 .v8-rx .rx-map li[data-rel="informs"] b { color: var(--ink-2); }
 .v8 .v8-rx .rx-map p { color: var(--ink-3); font-size: 14.5px; line-height: 1.55; text-wrap: pretty; }
 @media (max-width: 560px) { .v8 .v8-rx .rx-map li { grid-template-columns: minmax(0, 1fr); } }
-
-/* Research overview: the labels every research page uses. */
-.v8 .v8-rx .rx-legend { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
-.v8 .v8-rx .rx-legend > div { display: grid; gap: 14px; align-content: start; padding: 20px; border-radius: var(--r-lg); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
-.v8 .v8-rx .rx-legend > div > .v8-tag { justify-self: start; }
-.v8 .v8-rx .rx-legend p { color: var(--ink-3); font-size: 14px; line-height: 1.55; text-wrap: pretty; }
-@media (max-width: 1180px) { .v8 .v8-rx .rx-legend { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 760px) { .v8 .v8-rx .rx-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 480px) { .v8 .v8-rx .rx-legend { grid-template-columns: minmax(0, 1fr); } }

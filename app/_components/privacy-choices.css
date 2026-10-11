@@ -204,3 +204,19 @@ html:has(.vr-pc__bar) body { padding-bottom: var(--vr-pc-bar-h, 0px); }
    underlines its links as links inside a sentence; the control is underlined the same way to match them. */
 [data-surface="app"] .auth-split__foot .vr-pc-trigger { color: var(--fg-4); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 [data-surface="app"] .auth-split__foot .vr-pc-trigger:hover { color: var(--fg-1); }
+
+/* The v8 corner card (x.ai's shape). Never blocks the page; Essential only and Accept all are one button style. */
+.vr-pc__corner { position: fixed; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 90; width: min(440px, calc(100vw - 32px)); padding: 18px 20px 16px; border-radius: 16px; background: rgba(18,18,20,.97); color: rgba(250,250,250,.78); box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 24px 60px -18px rgba(0,0,0,.85); backdrop-filter: blur(14px); font: 400 14px/1.55 var(--font-brand-sans), system-ui, sans-serif; animation: vr-pc-rise .35s cubic-bezier(.22,1,.36,1) both; }
+@keyframes vr-pc-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.vr-pc__corner-p { margin: 0 24px 14px 0; }
+.vr-pc__corner-p a { color: #FAFAFA; text-decoration: underline; text-decoration-color: rgba(255,255,255,.3); text-underline-offset: 3px; }
+.vr-pc__corner-x { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 999px; background: none; color: rgba(250,250,250,.6); cursor: pointer; }
+.vr-pc__corner-x:hover { color: #FAFAFA; background: rgba(255,255,255,.07); }
+.vr-pc__corner-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vr-pc__corner-link { border: 0; background: none; padding: 6px 2px; color: rgba(250,250,250,.78); font: 500 13.5px/1 inherit; font-family: inherit; text-decoration: underline; text-decoration-color: rgba(255,255,255,.3); text-underline-offset: 3px; cursor: pointer; }
+.vr-pc__corner-link:hover { color: #FAFAFA; }
+.vr-pc__corner-pair { display: inline-flex; gap: 8px; }
+.vr-pc__corner-btn { min-height: 36px; padding: 8px 15px; border: 0; border-radius: 999px; background: #FAFAFA; color: #0A0A0B; font: 500 13.5px/1 inherit; font-family: inherit; cursor: pointer; transition: background .15s; }
+.vr-pc__corner-btn:hover { background: #E4E4E7; }
+.vr-pc__corner :focus-visible { outline: 2px solid #8B7CFF; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .vr-pc__corner { animation: none; } }

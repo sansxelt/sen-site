@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, Mark } from "./logo";
-import { FOOTER, FOREMAKE, JOIN, MENUS, href, type Menu } from "./site";
+import { ThemeToggle } from "./theme";
+import { FOOTER, JOIN, MENUS, href, type Menu } from "./site";
 
 // THE V8 HEADER. x.ai's shape: a 64px frosted bar whose bottom rule fades in over the first 72px of scroll, menus
 // that open on hover with a short intent delay or on click, and a mega panel whose preview pane swaps to the
@@ -81,6 +82,11 @@ export function V8Header() {
     on(); window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
+  // Every page starts at the top, on navigation and on reload (x.ai); a link to a section still lands on it.
+  useEffect(() => {
+    try { history.scrollRestoration = "manual"; } catch { /* old browsers */ }
+    if (!location.hash) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [pathname]);
   // A route change closes everything.
   useEffect(() => { setOpen(null); setDrawer(false); }, [pathname]);
   // Escape closes the open menu and returns focus to its trigger.
@@ -165,21 +171,28 @@ export function V8Footer() {
         <div className="v8-footer__grid">
           <div className="v8-footer__brand">
             <Link href={href("/")} className="v8-lockup" aria-label="Vraelis home"><Mark />Vraelis</Link>
-            <p className="v8-small" style={{ maxWidth: "30ch" }}>AI security for defense, critical infrastructure and autonomous systems.</p>
-            <p className="v8-small" style={{ maxWidth: "34ch", color: "var(--ink-4)" }}>{FOREMAKE}</p>
+            <p className="v8-small" style={{ color: "var(--ink-4)" }}>© 2026 Vraelis</p>
           </div>
           {FOOTER.map((col) => (
             <div key={col.title}>
               <h2>{col.title}</h2>
-              <ul>{col.links.map((l) => <li key={l.label}><Link href={href(l.to)}>{l.label}</Link></li>)}</ul>
+              <ul>
+                {col.links.map((l) => <li key={l.label}><Link href={href(l.to)}>{l.label}</Link></li>)}
+                {col.title === "Legal" ? <li><PrivacyChoicesButton /></li> : null}
+              </ul>
             </div>
           ))}
         </div>
         <div className="v8-footer__bottom">
-          <span>© 2026 Vraelis</span>
+          <div className="v8-footer__legal">
+            <ThemeToggle />
+            <a className="v8-affil" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/v8/brand/foremake-logo.jpg" alt="" width={22} height={22} />Affiliated with Foremake, Inc
+            </a>
+          </div>
           <nav aria-label="Footer">
             <a href="https://www.linkedin.com/company/vraelis" rel="noopener noreferrer" target="_blank">LinkedIn</a>
-            <PrivacyChoicesButton />
           </nav>
         </div>
       </div>

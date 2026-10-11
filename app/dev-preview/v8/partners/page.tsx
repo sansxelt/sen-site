@@ -45,9 +45,9 @@ export default function PartnersPage() {
                 </Link>
               ))}
               <div className="v8-box" style={{ display: "grid", gap: 14, alignContent: "start" }}>
-                <h2 className="v8-h3">What these partnerships are, and are not</h2>
-                <p className="v8-body">{PARTNERS_NOTE} Each record names its date and scope without claiming endorsement, exclusivity, performance or access to private data.</p>
-                <TextLink to="/changelog">Both entries in the changelog</TextLink>
+                <h2 className="v8-h3">What they are not</h2>
+                <p className="v8-body">{PARTNERS_NOTE}</p>
+                <TextLink to="/changelog">Changelog entries</TextLink>
               </div>
             </div>
           </div>

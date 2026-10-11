@@ -1,5 +1,5 @@
 import { Band, Button, Capture, CAPTURES, Head, JoinBand, PageHero, Section, Tag, TextLink, Wrap, cx } from "../_kit/blocks";
-import { APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, WORKFLOW } from "../_kit/site";
+import { APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, KIND_LABEL, WORKFLOW, type Kind } from "../_kit/site";
 import { FramedPhoto, NotList, RelatedResearch, Split } from "../research/parts";
 import type { AppPage } from "./content";
 import "./applications.css";
@@ -7,6 +7,12 @@ import "./applications.css";
 // One application area's page: hero with its photograph, the "intended, not deployed" note, why release integrity
 // matters there, how Vraelis Contour is intended to apply (the five workflow steps, each tagged with what exists in
 // the experiment), Vraelis's position (defense only), what we do not claim, related research, and Join us.
+/** Step tags say their status in words ("Proposed: customer runtime adapters"), so no legend is needed. */
+const tagText = (kind: Kind, label: string) => {
+  const l = label.replace(/ in the experiment$/, "");
+  return `${KIND_LABEL[kind]}: ${/^[A-Z][a-z]/.test(l) ? l.charAt(0).toLowerCase() + l.slice(1) : l}`;
+};
+
 export function AppDetail({ page }: { page: AppPage }) {
   const area = APPLICATIONS.find((a) => a.slug === page.slug)!;
   const cap = CAPTURES[page.capture];
@@ -26,14 +32,14 @@ export function AppDetail({ page }: { page: AppPage }) {
 
       <section className="rx-notebar" aria-label="About this page">
         <Wrap>
-          <p className="v8-note"><b>{APPLICATIONS_NOTE}</b> Nothing on this page describes a deployment, a customer or a partner.</p>
+          <p className="v8-note"><b>{APPLICATIONS_NOTE}</b></p>
         </Wrap>
       </section>
 
       <Section rule id="why">
         <Wrap>
           <div className="v8-stack--lg">
-            <Head eyebrow="Why model release integrity matters here" title={page.whyTitle} />
+            <Head eyebrow="Why it matters" title={page.whyTitle} />
             <div className="v8-grid-3 rx-why">
               {page.why.map((w, i) => (
                 <div key={w.title} className="v8-box">
@@ -54,11 +60,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         <Wrap>
           <div className="v8-stack--lg">
             <div className="v8-head--row v8-head">
-              <Head
-                eyebrow={`How ${CONTOUR.name} is intended to apply`}
-                title="Five steps, from release identity to preserved evidence."
-                lead={`Intended, not deployed. The labels mark what works today inside the controlled synthetic ONNX CPU experiment behind ${CONTOUR.name}, and what is only proposed.`}
-              />
+              <Head eyebrow={`How ${CONTOUR.name} would apply`} title="Five steps, release to record." />
               <TextLink to="/contour#how">How {CONTOUR.name} works</TextLink>
             </div>
             <div className={cx("rx-apply", wide && "rx-apply--wide")}>
@@ -67,9 +69,9 @@ export function AppDetail({ page }: { page: AppPage }) {
                   <li key={w.n}>
                     <span className="rx-n" aria-hidden="true">{w.n}</span>
                     <h3>{w.title}</h3>
-                    <p>{page.steps[i]}</p>
+                    {page.steps[i] ? <p>{page.steps[i]}</p> : null}
                     <div className="rx-tags">
-                      {w.kinds.map(([k, label]) => <Tag key={label} kind={k}>{label}</Tag>)}
+                      {w.kinds.map(([k, label]) => <Tag key={label} kind={k}>{tagText(k, label)}</Tag>)}
                     </div>
                   </li>
                 ))}
@@ -86,7 +88,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         <Section rule id="position">
           <Wrap>
             <div className="v8-stack--lg">
-              <Head eyebrow="Our position" title={page.stance.title} lead={page.stance.lead} />
+              <Head eyebrow="Our position" title={page.stance.title} lead={page.stance.lead || undefined} />
               <div className="v8-grid-3">
                 {page.stance.cards.map((c) => (
                   <div key={c.title} className="v8-box rx-stance">
@@ -102,7 +104,7 @@ export function AppDetail({ page }: { page: AppPage }) {
 
       <Section rule id="limits">
         <Wrap>
-          <Split head={<Head eyebrow="Limits" title="What we do not claim." lead={`${CONTOUR.name} is in private development, and product access is closed.`} />}>
+          <Split head={<Head eyebrow="Limits" title="What we do not claim." />}>
             <NotList items={page.notClaimed} />
             <div className="v8-actions" style={{ marginTop: 22 }}>
               <TextLink to="/contour/status">Development status</TextLink>
@@ -130,7 +132,7 @@ export function AppDetail({ page }: { page: AppPage }) {
           {page.contact ? (
             <Band title={page.contact.title} lead={page.contact.lead} actions={<><Button to={page.contact.to} arrow>Join us</Button><Button to="/contour/status" kind="soft">Development status</Button></>} />
           ) : (
-            <JoinBand />
+            <JoinBand lead="Tell us how you release models today." />
           )}
         </Wrap>
       </Section>

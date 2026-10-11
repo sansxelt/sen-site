@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import "./_kit/v8.css";
 import { V8Footer, V8Header } from "./_kit/shell";
-import { INTRO_SCRIPT } from "./_kit/logo";
+import { INTRO_SCRIPT, THEME_SCRIPT } from "./_kit/scripts";
 import { socialCard } from "@/lib/social-card";
 import { robotsMeta } from "@/lib/stealth";
 import { TAGLINE, COMPANY_LINE } from "./_kit/site";
@@ -39,7 +39,7 @@ export default function V8Layout({ children }: { children: ReactNode }) {
   return (
     <div className={`v8 ${mono.variable}`}>
       {/* Sets the logo intro's starting state before the header paints (see _kit/logo.tsx). */}
-      <script dangerouslySetInnerHTML={{ __html: INTRO_SCRIPT }} />
+      <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT + INTRO_SCRIPT }} />
       <V8Header />
       <main id="v8-main" className="v8-main" tabIndex={-1}>{children}</main>
       <V8Footer />

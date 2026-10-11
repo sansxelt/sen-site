@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button, JoinBand } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { CAPTURE_SCOPE, CONTOUR, href } from "../_kit/site";
+import { CONTOUR, href } from "../_kit/site";
 import { OBSERVATION_2 } from "../_content/evidence";
 import { START_HERE, TABS, getPage, navLabel, tabGroups, tabPages } from "./_data/pages";
 import { CodeBlock } from "./_ui/blocks";
@@ -23,7 +23,7 @@ export default function DocsHome() {
         <section className="v8-docs-hero" aria-labelledby="docs-title">
           <div className="v8-docs-hero__text">
             <h1 id="docs-title" className="v8-docs-hero__title">Documentation<span>for {CONTOUR.name} and our research</span></h1>
-            <p className="v8-docs-hero__lead">How {CONTOUR.name} connects an approved model release to the runtime state it reports, what the reference experiment records, and where it stops. {CONTOUR.name} is in private development, and product access is closed.</p>
+            <p className="v8-docs-hero__lead">How {CONTOUR.name} links an approved release to its reported runtime state, and where it stops.</p>
             <div className="v8-docs-hero__actions">
               <Button to="/docs/overview" arrow>Read the overview</Button>
               <SearchPill size="lg" />
@@ -31,7 +31,7 @@ export default function DocsHome() {
           </div>
           <figure className="v8-docs-hero__code">
             <CodeBlock label="observation 02, reload pending" code={OBSERVATION_2} lang="json" className="v8-docs-code--hero" />
-            <figcaption>A recorded observation from the reference experiment, unchanged. {CAPTURE_SCOPE}</figcaption>
+            <figcaption>Recorded in the controlled ONNX reference experiment, unchanged. Private development.</figcaption>
           </figure>
         </section>
 
@@ -82,11 +82,11 @@ export default function DocsHome() {
 
         <section className="v8-docs-home__sec v8-docs-home__machine" aria-labelledby="markdown">
           <h2 id="markdown" className="v8-docs-home__h">Markdown for AI assistants</h2>
-          <p>Every page has a Markdown twin. Use Copy for LLM on any page to copy it, or View as Markdown to open it. The index of every page is a Markdown file too.</p>
+          <p>Every page has a Markdown twin: use Copy for LLM or View as Markdown.</p>
           <a className="v8-link" href={href("/docs/md/index.md")} target="_blank" rel="noopener">Open the index as Markdown<span className="v8-arrow" aria-hidden="true" /></a>
         </section>
 
-        <JoinBand />
+        <JoinBand lead="If you release models into systems others operate, we want to hear how." />
       </div>
     </div>
   );

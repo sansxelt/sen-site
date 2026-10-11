@@ -42,10 +42,10 @@ export default async function Contact({ searchParams }: { searchParams: Query })
               <h1 className="v8-h1">{contour ? "Tell us how you release models." : "Reach the right team."}</h1>
               <p className="v8-lead">
                 {contour
-                  ? "Tell us how models move from approval to the systems that run them, and which evidence your release path would need. Choose your role so we ask for the details that matter."
-                  : "Send a technical, organizational, research or privacy inquiry. Choose your role and topic so it reaches the right team."}
+                  ? "How models move from approval to the systems that run them."
+                  : "Technical, organizational, research or privacy inquiries."}
               </p>
-              <p className="v8-note cnt-closed">Product access is closed while Vraelis Contour is in private development. This form starts a conversation; it does not create an account or grant access.</p>
+              <p className="v8-note cnt-closed">Product access is closed: Vraelis Contour is in private development.</p>
               <nav className="cnt-routes" aria-label="Start from">
                 {ROUTES.map((r) => {
                   const on = r.topic === topic || (r.topic === "contour" && contour);

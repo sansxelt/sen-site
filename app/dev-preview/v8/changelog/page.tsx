@@ -23,7 +23,7 @@ export default function Changelog() {
           <div className="v8-head" style={{ maxWidth: 760 }}>
             <span className="v8-eyebrow">Changelog</span>
             <h1 className="v8-h1">What changed, and when.</h1>
-            <p className="v8-lead">Dated entries from Vraelis, newest first. Each one is a fact from the repository or the review record.</p>
+            <p className="v8-lead">Dated entries, newest first.</p>
           </div>
         </Wrap>
       </section>
@@ -47,7 +47,7 @@ export default function Changelog() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={featured.image.src} alt={featured.image.alt} width={featured.image.w} height={featured.image.h} fetchPriority="high" decoding="async" data-capture={isCapture(featured.image.src) || undefined} />
               </div>
-              <figcaption>{isCapture(featured.image.src) ? CAPTURE_CAPTION : "Licensed editorial photograph, shown as context."}</figcaption>
+              {isCapture(featured.image.src) ? <figcaption>{CAPTURE_CAPTION}</figcaption> : null}
             </figure>
           </article>
         </Wrap>
@@ -71,7 +71,7 @@ export default function Changelog() {
               </article>
             ))}
           </div>
-          <p className="v8-small clg-note">App pictures are captures of the read-only Vraelis Contour app reading the recorded trace of the controlled ONNX reference experiment, in private development. Photographs are licensed editorial context. Sources are on the <Link className="v8-under" href={href("/image-sources")}>image sources</Link> page.</p>
+          <p className="v8-small clg-note"><Link className="v8-under" href={href("/image-sources")}>Image sources</Link></p>
         </Wrap>
       </section>
 
@@ -80,7 +80,7 @@ export default function Changelog() {
           <div className="clg-earlier__grid">
             <div className="v8-head clg-earlier__head">
               <h2 className="v8-h2">Earlier direction</h2>
-              <p className="v8-body">These entries describe the earlier browser-testing product, including its accounts and pricing, and are kept as history.</p>
+              <p className="v8-body">The earlier browser-testing product, kept as history.</p>
             </div>
             <ol className="clg-list">
               {EARLIER.map((e) => (
@@ -100,7 +100,7 @@ export default function Changelog() {
       <Section rule tight>
         <Wrap>
           <div className="clg-end">
-            <p className="v8-body">This page records the past. What works today, what is being built and what we do not claim is on the development status page.</p>
+            <p className="v8-body">Where things stand today.</p>
             <TextLink to="/contour/status">Development status</TextLink>
           </div>
         </Wrap>

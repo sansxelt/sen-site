@@ -11,7 +11,7 @@ import { FACTS, type Kind } from "../_kit/site";
 export type ResearchSlug = "model-integrity" | "adversarial-threats" | "machine-trust" | "security-evidence";
 export type Point = { title: string; body: string };
 export type Exists =
-  | { kind: "experiment"; title: string; lead: string; items: { kind: Kind; text: string }[]; capture: CaptureName }
+  | { kind: "experiment"; title: string; lead?: string; items: { kind: Kind; text: string }[]; capture: CaptureName }
   | { kind: "direction"; title: string; paragraphs: string[] };
 
 export type ResearchPage = {
@@ -26,15 +26,14 @@ export type ResearchPage = {
   /** "flow" draws the questions as a labelled diagram of boundaries (machine trust). */
   studyAs?: "list" | "flow";
   studyCaption?: string;
-  studyLead?: string;
   exists: Exists;
   open: Point[];
   related: ResearchSlug[];
   links: { label: string; to: string }[];
 };
 
-const TESTS = `${FACTS.tests.value} ${FACTS.tests.label}. That describes the experiment, not production readiness.`;
-const SELF_REPORT = "Hardware attestation. Runtime reports in the experiment are worker self-reports.";
+const TESTS = `${FACTS.tests.value} ${FACTS.tests.label}. Not production readiness.`;
+const SELF_REPORT = "Hardware attestation. Runtime reports are worker self-reports.";
 
 export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
   "model-integrity": {
@@ -42,34 +41,33 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Model integrity",
     description: "A research area, not a product: whether the model that runs is the model that was approved. What we study, what exists in the Vraelis Contour experiment, and what is still open.",
     title: "Know which model is running.",
-    lead: "Model integrity asks whether the model that runs is the model that was approved: the artifact, its preprocessing and its configuration, bound to an approval and compared with what the runtime reports loading. It is a research area, not a product.",
+    lead: "Whether the model that runs is the model that was approved. A research area, not a product.",
     studyTitle: "Four questions about one release.",
     study: [
-      { title: "What exactly is a release?", body: "A model file alone is not the release. Preprocessing and configuration change what the model does, so a release has to name all three, by digest." },
-      { title: "What should an approval bind to?", body: "An approval that names a model but not a destination can be carried somewhere it was never meant to run. We study approvals tied to one release and one destination." },
-      { title: "What can a runtime report about itself?", body: "A runtime can report which release it loaded. That is a self-report. We study what it can establish without hardware attestation, and what it cannot." },
-      { title: "What does a signature prove?", body: "A signature authenticates an endorsement of particular bytes. It does not show that the model does what was intended, or that it has no backdoor." },
+      { title: "What exactly is a release?", body: "The model, its preprocessing and its configuration, each by digest." },
+      { title: "What should an approval bind to?", body: "One release and one destination, so it cannot travel elsewhere." },
+      { title: "What can a runtime report about itself?", body: "Which release it loaded. A self-report, without hardware attestation." },
+      { title: "What does a signature prove?", body: "An endorsement of bytes. Not intended behaviour, not the absence of a backdoor." },
     ],
     exists: {
       kind: "experiment",
-      title: "Model integrity is where Vraelis Contour starts.",
-      lead: "Vraelis Contour, our first product, draws mainly on this area. Inside its controlled synthetic ONNX CPU experiment, in private development:",
+      title: "Where Vraelis Contour starts.",
       items: [
-        { kind: "impl", text: "Each release is named by its model, configuration, release and receipt digests." },
-        { kind: "impl", text: "Signed bindings tie an approval to the exact release and its destination, under a runtime policy with a 60 second age limit." },
-        { kind: "impl", text: "The runtime checks its policy before it serves: ONNX Runtime 1.23.2, CPUExecutionProvider only." },
-        { kind: "impl", text: "The approved identity is compared, field by field, with the identity the runtime reports loading." },
+        { kind: "impl", text: "Releases named by model, configuration, release and receipt digests." },
+        { kind: "impl", text: "Signed bindings tie approval to the exact release and destination, with a 60 second age limit." },
+        { kind: "impl", text: "Runtime policy checked before serving: ONNX Runtime 1.23.2, CPUExecutionProvider only." },
+        { kind: "impl", text: "Approved and reported loaded identity compared field by field." },
         { kind: "meas", text: TESTS },
-        { kind: "prop", text: "Preprocessing identity. The experiment does not record it yet." },
+        { kind: "prop", text: "Preprocessing identity. Not recorded yet." },
         { kind: "not", text: SELF_REPORT },
       ],
       capture: "crop-release-identity",
     },
     open: [
-      { title: "Naming preprocessing", body: "Tokenizers, scaling and feature code change what reaches the model. How to identify them so they can be bound like the model file is open." },
-      { title: "More than one runtime", body: "The experiment supports ONNX Runtime 1.23.2 on CPU only. Other runtimes and accelerators report identity differently, and adapters for them are not built." },
-      { title: "Fresh reports", body: "A report that was true a minute ago may not be true now. Heartbeat freshness for runtime reports is being built, not done." },
-      { title: "A compromised host", body: "A self-report from a compromised host can say anything. That case is outside what the experiment covers." },
+      { title: "Naming preprocessing", body: "How to identify tokenizers, scaling and feature code by digest." },
+      { title: "More than one runtime", body: "Other runtimes and accelerators. No adapters are built." },
+      { title: "Fresh reports", body: "Heartbeat freshness is being built, not done." },
+      { title: "A compromised host", body: "Its self-report can say anything. Outside the experiment." },
     ],
     related: ["security-evidence", "machine-trust", "adversarial-threats"],
     links: [
@@ -83,28 +81,28 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Adversarial threats",
     description: "A research area, not a product: inputs, training data, updates and supply paths built to change what a model does. Research direction with no product claim.",
     title: "Investigate how AI can be manipulated.",
-    lead: "Adversarial threats are inputs, training data, updates and supply paths built to change what a model does. It is a research area, not a product. Nothing Vraelis has built detects or blocks these attacks.",
+    lead: "Inputs, training data, updates and supply paths built to change what a model does. A research area, not a product.",
     studyTitle: "Separate the attack from the conditions.",
     study: [
-      { title: "Which path does the attack use?", body: "A manipulated sensor input, a poisoned training set and a swapped model file are different attacks. Each needs its own threat model and its own test." },
-      { title: "Where does a release check stop?", body: "Binding approval to exact bytes can show that a release changed. It cannot show that the approved bytes were trustworthy to begin with." },
-      { title: "What belongs in the baseline?", body: "Lighting, viewpoint, normal variation and sensor faults change a perception model's output too. They belong in the baseline, so ordinary conditions are not read as an attack." },
-      { title: "Is it drift or an attack?", body: "Performance can change for operational reasons. An anomaly is a reason to investigate. On its own it does not establish an attack." },
-      { title: "What does a countermeasure cost?", body: "A countermeasure that adds latency, memory or compute on an edge device has an operating cost. Missed attacks and false alarms both need measuring." },
+      { title: "Which path does the attack use?", body: "Sensor input, training data and model file each need their own threat model." },
+      { title: "Where does a release check stop?", body: "It shows a release changed, not that the approved bytes were trustworthy." },
+      { title: "What belongs in the baseline?", body: "Lighting, viewpoint, normal variation and sensor faults, so ordinary conditions are not read as attacks." },
+      { title: "Is it drift or an attack?", body: "An anomaly is a reason to investigate, not proof of an attack." },
+      { title: "What does a countermeasure cost?", body: "Latency, memory and compute on the edge, plus misses and false alarms." },
     ],
     exists: {
       kind: "direction",
       title: "Research direction, with no product claim.",
       paragraphs: [
-        "Nothing in the Vraelis Contour experiment tests adversarial inputs, poisoned data or perception attacks. There is no detector, no measured result and no claim of protection against them.",
-        "The one point of contact is the supply path. In the experiment a release is named by digest and its approval is bound to that release, so a different release shows as differing fields when the approved and reported identities are compared. That covers a changed release. It does not cover a manipulated input or a poisoned training set.",
+        "Nothing Vraelis has built tests, detects or blocks these attacks. No detector, no measured result.",
+        "The one overlap is the supply path: in the Vraelis Contour experiment, a changed release shows as differing fields. That does not cover manipulated inputs or poisoned training data.",
       ],
     },
     open: [
-      { title: "Which threats matter where", body: "A perception model on a vehicle and a forecasting model in a control room face different inputs and different attackers. Which to study first depends on the system." },
-      { title: "Adaptive testing", body: "An evaluation built only from fixed examples can overstate a countermeasure. Attacks adapted to the countermeasure are needed before a result means much." },
-      { title: "Reproducible results", body: "An attack result needs its conditions: the model version, the attacker's access, the input path and the expected outcome. Without them it cannot be repeated." },
-      { title: "One record for both", body: "Whether release evidence and input evidence can share one ordered record, so an investigation sees both, is open." },
+      { title: "Which threats matter where", body: "A vehicle and a control room face different attackers." },
+      { title: "Adaptive testing", body: "Fixed examples overstate a countermeasure." },
+      { title: "Reproducible results", body: "Model version, attacker access, input path and expected outcome." },
+      { title: "One record for both", body: "Release and input evidence in one ordered record." },
     ],
     related: ["model-integrity", "machine-trust", "security-evidence"],
     links: [
@@ -118,31 +116,29 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Machine trust",
     description: "A research area, not a product: zero trust described as concrete boundaries. Explicit identity, limited permissions, approval tied to a change and destination, and checks at execution boundaries.",
     title: "Authority must be explicit.",
-    lead: "Machine trust is our research on how AI systems are given authority. We describe zero trust only as concrete boundaries: explicit identity, limited permissions, approval tied to a change and its destination, and checks at execution boundaries. It is a research area, not a product.",
+    lead: "How AI systems are given authority, with zero trust as concrete boundaries. A research area, not a product.",
     studyTitle: "Four boundaries a request should cross.",
     studyAs: "flow",
-    studyLead: "Zero trust, described as the boundaries it is made of. Each one is a question we study, not a control we sell.",
-    studyCaption: "Diagram: the four boundaries machine trust studies, in the order a request meets them. A research model, not a product architecture.",
+    studyCaption: "Diagram: the four boundaries, in the order a request meets them.",
     study: [
-      { title: "Explicit identity", body: "Who is asking? A request should come from a named principal, through a trusted identity source. A label a workload gives itself is not identity." },
-      { title: "Limited permissions", body: "What may it touch? A permission should name the resource and the action. Authority for one machine, environment or version does not carry over to another." },
-      { title: "Approval tied to a change and destination", body: "Who agreed to what, and where? An approval should name the exact change and where it applies, expire, and stay separate from whoever proposed the change." },
-      { title: "Checks at execution boundaries", body: "Where is it enforced? The component that holds access should check the exact request at the moment it acts. A decision made earlier is not enough." },
+      { title: "Explicit identity", body: "Who is asking? A named principal from a trusted source, not a self-applied label." },
+      { title: "Limited permissions", body: "What may it touch? A named resource and action, not carried to other machines." },
+      { title: "Approval tied to a change and destination", body: "Who agreed to what, and where? Exact, expiring, separate from the proposer." },
+      { title: "Checks at execution boundaries", body: "Where is it enforced? At the moment of action, by whatever holds access." },
     ],
     exists: {
       kind: "direction",
       title: "Research direction, with no product claim.",
       paragraphs: [
-        "Vraelis has no identity, access or authorization product, and makes no zero trust claim about any system.",
-        "One narrow boundary of this kind exists inside the Vraelis Contour experiment. Its runtime policy names separate publisher, deployer and approver roles. An approval names one release and one destination and carries a 60 second age limit. The receiving runtime checks the policy before it serves.",
-        "That is one check, at one boundary, in a synthetic experiment. It is not a machine trust system.",
+        "Vraelis has no identity, access or authorization product, and makes no zero trust claim.",
+        "One narrow boundary exists in the Vraelis Contour experiment: separate publisher, deployer and approver roles, approval for one release and destination with a 60 second age limit, checked before serving. One check, not a machine trust system.",
       ],
     },
     open: [
-      { title: "Disconnected operation", body: "When a machine cannot reach its identity or approval service, what should it do? The answer belongs in the owner's operating design, not in a generic rule." },
-      { title: "Single use approval", body: "A permit returned once should not authorize a second execution. How to consume an approval exactly once, at the boundary, is open." },
-      { title: "Two approval domains", body: "A supplier approves a model while an operator approves how and where it runs. How both approvals bind to one release is open." },
-      { title: "Revocation", body: "How quickly a withdrawn approval has to reach every boundary that relies on it, and what happens in between, is open." },
+      { title: "Disconnected operation", body: "What a machine does when it cannot reach its approval service." },
+      { title: "Single use approval", body: "Consuming an approval exactly once, at the boundary." },
+      { title: "Two approval domains", body: "Supplier and operator approvals bound to one release." },
+      { title: "Revocation", body: "How fast a withdrawn approval reaches every boundary." },
     ],
     related: ["model-integrity", "security-evidence", "adversarial-threats"],
     links: [
@@ -156,33 +152,32 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Security evidence",
     description: "A research area, not a product: records a person can read, kept in order, including what could not be confirmed. What exists in the Vraelis Contour experiment, and what is still open.",
     title: "Keep the record, including what could not be confirmed.",
-    lead: "Security evidence is our research on records: kept in order, readable by someone who did not build the system, and plain about what could not be confirmed. It is a research area, not a product.",
+    lead: "Ordered records that someone outside the team can read. A research area, not a product.",
     studyTitle: "What a record has to hold.",
     study: [
-      { title: "What belongs in one observation?", body: "The approved identity, the identity the runtime reports, whether the runtime satisfied its policy, and when the report arrived." },
-      { title: "How is missing evidence recorded?", body: "A runtime that stops reporting has confirmed nothing. The record should say that evidence is unavailable, with a reason, instead of assuming the last state still holds." },
-      { title: "Can a reader tell a self-report from proof?", body: "Every record should carry its scope, so a worker's report about itself is never read as independent attestation." },
-      { title: "How does a record stay in order?", body: "Discrepancies, gaps and the recovery that followed belong in one ordered record, so a later observation never hides an earlier one." },
+      { title: "What belongs in one observation?", body: "Approved identity, reported identity, policy result and arrival time." },
+      { title: "How is missing evidence recorded?", body: "As unavailable, with a reason. Never as the last known state." },
+      { title: "Can a reader tell a self-report from proof?", body: "Only if every record carries its scope." },
+      { title: "How does a record stay in order?", body: "Discrepancies, gaps and recovery in one sequence, nothing hidden." },
     ],
     exists: {
       kind: "experiment",
       title: "Recorded observations, in the experiment.",
-      lead: "Vraelis Contour draws mainly on this area and on model integrity. Its controlled synthetic ONNX CPU experiment keeps a recorded trace, read by a read-only evidence app:",
       items: [
-        { kind: "impl", text: "Four observations from one captured run: matched, reload pending, matched, evidence unavailable." },
-        { kind: "impl", text: "Each observation keeps the approved identity, the reported loaded identity and the runtime policy result." },
-        { kind: "impl", text: "When the worker stopped, the observation recorded evidence unavailable, with the reason code RUNTIME_UNAVAILABLE, instead of a match." },
-        { kind: "impl", text: "The app refuses to import a pending, missing evidence or wrong runtime observation as matched." },
+        { kind: "impl", text: "Four observations from one run: matched, reload pending, matched, evidence unavailable." },
+        { kind: "impl", text: "Each keeps the approved identity, reported loaded identity and policy result." },
+        { kind: "impl", text: "A stopped worker was recorded as evidence unavailable (RUNTIME_UNAVAILABLE), not a match." },
+        { kind: "impl", text: "The app refuses to import pending, missing evidence or wrong runtime observations as matched." },
         { kind: "prop", text: "An investigation workflow over the record." },
-        { kind: "not", text: "Independent attestation. The scope of every record is a worker self-report." },
+        { kind: "not", text: "Independent attestation. Every record is a worker self-report." },
       ],
       capture: "app-observations-unavailable",
     },
     open: [
-      { title: "Edited records", body: "A self-consistent edited trace still validates today, so imported traces have to be marked unverified. How a record can show it was not altered is open." },
-      { title: "Stale reports", body: "When does a report stop being current? Heartbeat freshness for runtime reports is being built, not done." },
-      { title: "Expected silence", body: "A machine that is offline on purpose stops reporting too. How a record tells expected silence from a fault is open." },
-      { title: "Reviewer effort", body: "How long it takes someone outside the team to reach a conclusion from the record has not been measured." },
+      { title: "Edited records", body: "An edited, self-consistent trace still validates today." },
+      { title: "Stale reports", body: "Heartbeat freshness is being built, not done." },
+      { title: "Expected silence", body: "Telling a planned outage from a fault." },
+      { title: "Reviewer effort", body: "Time for an outsider to reach a conclusion. Not measured." },
     ],
     related: ["model-integrity", "machine-trust", "adversarial-threats"],
     links: [

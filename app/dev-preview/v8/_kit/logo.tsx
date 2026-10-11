@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, type MouseEvent } from "react";
+import { INTRO_STYLE_ID } from "./scripts";
 
 // THE LOGO INTRO (founder, 2026-10-10: "what SpaceX AI did ... the text and logo part").
 //
@@ -17,9 +19,6 @@ import { useEffect, useRef } from "react";
 //
 // The mark is the faceted diamond in the live header (public/mark.svg); the founder chose it on 2026-10-10.
 
-export const INTRO_STYLE_ID = "v8-intro-pending";
-// 76px is the measured travel for Manrope 600 at 21px; the component corrects it once fonts are ready.
-export const INTRO_SCRIPT = `(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;var s=document.createElement("style");s.id="${INTRO_STYLE_ID}";s.textContent=".v8 .v8-brand__word{opacity:1}.v8 .v8-nav{transform:translateX(var(--v8-shift,76px))}";document.head.appendChild(s);setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s)},7000)}catch(e){}})();`;
 
 const FACETS: [string, string][] = [
   ["M6.27 2.15 L17.73 2.15 L15.99 8.79 L8.07 8.79 Z", "#EDEDEF"],
@@ -128,8 +127,18 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
     return () => { cancelled = true; finish(); };
   }, [navId]);
 
+  // x.ai's logo: from another page it goes home; on the homepage it glides back to the top, and at the top it reloads.
+  const pathname = usePathname();
+  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    if (pathname !== home && pathname !== `${home}/`) return;
+    e.preventDefault();
+    if (window.scrollY > 4) window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    else window.location.reload();
+  };
+
   return (
-    <Link ref={brand} href={home} className="v8-brand" aria-label="Vraelis home">
+    <Link ref={brand} href={home} className="v8-brand" aria-label="Vraelis home" onClick={onClick}>
       <span className="v8-brand__mark"><Mark gradientId="v8-mark-spec" /></span>
       <span ref={word} className="v8-brand__word" aria-hidden="true">Vraelis</span>
     </Link>

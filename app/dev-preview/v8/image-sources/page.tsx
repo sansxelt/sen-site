@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { EDITORIAL_PHOTOGRAPHS } from "../../v6/_content/editorial-photography";
 import { CAPTURES, Capture, PageHero, Section, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { CAPTURE_SCOPE, href } from "../_kit/site";
+import { href } from "../_kit/site";
 import "./image-sources.css";
 
 export const metadata = v8meta({
@@ -44,7 +44,7 @@ export default function ImageSources() {
       <PageHero
         eyebrow="Resources"
         title="Image sources."
-        lead="Where every picture on this site comes from. Product pictures are captures of a real app. Photographs and films are licensed editorial context for application areas: they do not show Vraelis customers, deployments or hardware."
+        lead="Where every picture comes from. Photographs and films are context, not Vraelis customers, deployments or hardware."
       />
 
       <nav className="imgs-toc" aria-label="On this page">
@@ -63,8 +63,7 @@ export default function ImageSources() {
             <div className="v8-head">
               <span className="v8-eyebrow">Product captures</span>
               <h2 className="v8-h2">Captures of the real app.</h2>
-              <p className="v8-lead">Every app image on this site is a screenshot or recording of the read-only Vraelis Contour app reading the recorded trace from the controlled synthetic ONNX CPU experiment, captured on October 10, 2026. None of them shows a customer deployment.</p>
-              <p className="v8-body">{CAPTURE_SCOPE} Crops are cut from the same captures.</p>
+              <p className="v8-lead">Screenshots and recordings of the read-only app, captured October 10, 2026.</p>
             </div>
             <Capture name="app-overview" small />
           </div>
@@ -82,7 +81,7 @@ export default function ImageSources() {
               </tbody>
             </table>
           </div>
-          <p className="v8-small imgs-after">Full screens also exist at half width, with -1200 before the extension. Posters for the recordings are frames from the same recordings.</p>
+          <p className="v8-small imgs-after">Crops, half-width copies (-1200 before the extension) and recording posters come from the same captures.</p>
         </Wrap>
       </Section>
 
@@ -91,7 +90,7 @@ export default function ImageSources() {
           <div className="v8-head imgs-head">
             <span className="v8-eyebrow">Photographs</span>
             <h2 className="v8-h2">{photos.length} licensed editorial photographs.</h2>
-            <p className="v8-body">Each one comes from Pexels under the <Out to={PEXELS_LICENSE}>Pexels License</Out>, downloaded at 1280 or 1920 pixels wide and shown with browser cropping only. They illustrate subjects. They are not Vraelis equipment, customers, facilities or product evidence, and no endorsement or relationship is implied.</p>
+            <p className="v8-body">From Pexels under the <Out to={PEXELS_LICENSE}>Pexels License</Out>, browser cropping only. No endorsement or relationship is implied.</p>
           </div>
           <div className="v8-table-wrap imgs-table-wrap">
             <table className="v8-table imgs-table">
@@ -116,7 +115,7 @@ export default function ImageSources() {
           <div className="v8-head imgs-head">
             <span className="v8-eyebrow">Films</span>
             <h2 className="v8-h2">Systems films.</h2>
-            <p className="v8-body">The systems films on this site, the files beginning /home/systems-film-, are silent original edits of the six clips below; their posters are frames from the same edits. They illustrate application areas. They do not show Vraelis hardware, customers, deployed military capability or a relationship with the U.S. government.</p>
+            <p className="v8-body">Silent original edits of these six clips (files /home/systems-film-*, posters from the same edits). No U.S. government relationship or endorsement is implied.</p>
           </div>
           <div className="v8-table-wrap imgs-table-wrap">
             <table className="v8-table imgs-table">

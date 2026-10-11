@@ -54,9 +54,9 @@ export const STATUS = {
 } as const;
 
 export const FACTS = {
-  tests: { value: "131 of 131", label: "internal tests pass offline, reproduced by Startup QA on its own pinned build", kind: "meas" as Kind },
-  runtime: { value: "ONNX Runtime 1.23.2", label: "CPUExecutionProvider only, the one runtime the experiment supports", kind: "impl" as Kind },
-  observations: { value: "4 recorded", label: "observations in the captured run: matched, reload pending, matched, unavailable", kind: "impl" as Kind },
+  tests: { value: "131 of 131", label: "experiment tests pass offline, reproduced by QA", kind: "meas" as Kind },
+  runtime: { value: "ONNX Runtime 1.23.2", label: "on CPU, the one supported runtime", kind: "impl" as Kind },
+  observations: { value: "4 recorded", label: "observations in the captured run", kind: "impl" as Kind },
 } as const;
 
 export const WORKFLOW = [
@@ -139,6 +139,6 @@ export const FOOTER: { title: string; links: { label: string; to: string }[] }[]
   { title: "Research", links: [{ label: "Overview", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
   { title: "Company", links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Changelog", to: "/changelog" }, { label: "Contact", to: "/contact" }, { label: "Join us", to: "/contact?topic=contour" }] },
-  { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Privacy", to: "/privacy" }, { label: "Cookies", to: "/cookies" }, { label: "Terms", to: "/terms" }, { label: "Acceptable use", to: "/acceptable-use" }, { label: "Subprocessors", to: "/subprocessors" }] },
-  { title: "Resources", links: [{ label: "Documentation", to: "/docs" }, { label: "Image sources", to: "/image-sources" }, { label: "Data rights", to: "/data-rights" }, { label: "Trademark", to: "/trademark" }] },
+  { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },
+  { title: "Legal", links: [{ label: "Terms", to: "/terms" }, { label: "Privacy", to: "/privacy" }, { label: "Cookies", to: "/cookies" }, { label: "Acceptable use", to: "/acceptable-use" }, { label: "Trademark", to: "/trademark" }, { label: "All policies", to: "/legal" }] },
 ];

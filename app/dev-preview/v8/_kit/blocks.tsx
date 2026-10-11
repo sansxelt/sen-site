@@ -190,6 +190,6 @@ export function Band({ title, lead, actions }: { title: ReactNode; lead?: ReactN
     </div>
   );
 }
-export function JoinBand({ title = "Talk to us about model release security.", lead = "Vraelis Contour is in private development. If you release models into systems other people operate, we would like to hear how you do it today.", secondary = { to: "/contour/status", label: "Development status" }, topic = "contour" }: { title?: ReactNode; lead?: ReactNode; secondary?: { to: string; label: string } | null; topic?: string }) {
+export function JoinBand({ title = "Talk to us about model release security.", lead = "Tell us how you release models today.", secondary = { to: "/contour/status", label: "Development status" }, topic = "contour" }: { title?: ReactNode; lead?: ReactNode; secondary?: { to: string; label: string } | null; topic?: string }) {
   return <Band title={title} lead={lead} actions={<><Button to={`/contact?topic=${topic}`} arrow>Join us</Button>{secondary ? <Button to={secondary.to} kind="soft">{secondary.label}</Button> : null}</>} />;
 }

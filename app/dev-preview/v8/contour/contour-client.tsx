@@ -115,10 +115,7 @@ export function ObservationTabs({ items, label }: { items: ObservationView[]; la
             ))}
           </div>
         </div>
-        <p className="ct-obs__meta">
-          <span>Observation {cur.n}, recorded <span className="v8-mono">{cur.time}</span> UTC on 10 October 2026</span>
-          {cur.reason ? <span>Reason code <span className="v8-mono">{cur.reason}</span></span> : null}
-        </p>
+        <p className="ct-obs__meta">{cur.reason ? <span>Reason code <span className="v8-mono">{cur.reason}</span></span> : null}</p>
       </div>
     </div>
   );

@@ -7,10 +7,8 @@ import "./research.css";
 // Pieces shared by the research and application pages. Server components only. Every class here is styled in
 // research.css under `.v8 .v8-rx`, so a page that uses them wraps itself in `<div className="v8-rx ...">`.
 
-export const PHOTO_NOTE = "Licensed editorial photograph, for context. It does not show Vraelis software or a deployment.";
-
-/** A photograph in a frame for a page hero. Context, never product evidence. */
-export function FramedPhoto({ photoKey, caption = PHOTO_NOTE, position }: { photoKey: string; caption?: ReactNode | false; position?: string }) {
+/** A photograph in a frame for a page hero. Licensed editorial context, never product evidence; no caption by default. */
+export function FramedPhoto({ photoKey, caption = false, position }: { photoKey: string; caption?: ReactNode | false; position?: string }) {
   const p = photo(photoKey);
   return (
     <figure className="rx-photo">
@@ -51,7 +49,7 @@ export function Questions({ items }: { items: Point[] }) {
 }
 
 /** The same questions drawn as boundaries a request meets in order. A labelled diagram, not app chrome. */
-export function Flow({ items, caption }: { items: Point[]; caption: ReactNode }) {
+export function Flow({ items, caption }: { items: Point[]; caption?: ReactNode }) {
   return (
     <figure className="rx-flowfig">
       <ol className="rx-flow">
@@ -63,7 +61,7 @@ export function Flow({ items, caption }: { items: Point[]; caption: ReactNode })
           </li>
         ))}
       </ol>
-      <figcaption>{caption}</figcaption>
+      {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   );
 }
@@ -104,16 +102,13 @@ export function RelatedResearch({ slugs, title = "Related research", links = [] 
   return (
     <div className="v8-stack--lg">
       <div className="v8-head v8-head--row">
-        <div className="v8-head">
-          <span className="v8-eyebrow">Research areas, not products</span>
-          <h2 className="v8-h2">{title}</h2>
-        </div>
+        <h2 className="v8-h2">{title}</h2>
         {links.length ? (
           <div className="rx-links">{links.map((l) => <TextLink key={l.to} to={l.to} muted>{l.label}</TextLink>)}</div>
         ) : null}
       </div>
       <div className="rx-related">
-        {areas.map((r) => <PhotoCard key={r.slug} photoKey={r.photo} to={`/research/${r.slug}`} title={r.title} line={r.line} />)}
+        {areas.map((r) => <PhotoCard key={r.slug} photoKey={r.photo} to={`/research/${r.slug}`} title={r.title} />)}
       </div>
     </div>
   );
@@ -124,7 +119,7 @@ export function ResearchBand() {
   return (
     <Band
       title="Study these problems with us."
-      lead="We would like to hear from researchers and academic teams working on model integrity, adversarial threats, machine trust or security evidence."
+      lead="For researchers and academic teams."
       actions={<><Button to="/contact?topic=research" arrow>Research collaboration</Button><Button to="/contour" kind="soft">Vraelis Contour</Button></>}
     />
   );

@@ -120,7 +120,7 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
               {TOPICS.filter((t) => t.key !== "privacy").map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
             </select>{errorText("topic")}
           </div>
-        ) : <p className="cnt-help">Your request goes to the privacy team. Organization details and commercial acknowledgements are not required.</p>}
+        ) : <p className="cnt-help">Goes to the privacy team. No organization details needed.</p>}
       </div>
       <div className="cnt-pair">
         <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-name`}>Name <span className="cnt-opt">Optional</span></label><input className="cnt-input" id={`${id}-name`} name="name" autoComplete="name" maxLength={160} /></div>
@@ -134,7 +134,7 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
             <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-country`}>Organization country{!sender.requiresCountry ? <span className="cnt-opt">Optional</span> : null}</label><input className="cnt-input" id={`${id}-country`} name="country" placeholder="Country where the organization is based" required={sender.requiresCountry} maxLength={100} aria-invalid={!!errors.country || undefined} aria-describedby={err("country")} onInput={() => clear("country")} />{errorText("country")}</div>
             <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-role`}>Role or office{!sender.requiresRole ? <span className="cnt-opt">Optional</span> : null}</label><input className="cnt-input" id={`${id}-role`} name="role" autoComplete="organization-title" required={sender.requiresRole} maxLength={100} aria-invalid={!!errors.role || undefined} aria-describedby={err("role")} onInput={() => clear("role")} />{errorText("role")}</div>
           </div>
-          <p className="cnt-help">These details help us review the inquiry and any applicable requirements. Submitting does not establish eligibility or grant product access.</p>
+          <p className="cnt-help">Submitting does not establish eligibility or grant access.</p>
         </fieldset>
       ) : null}
       <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-message`}>{requirements ? CONTOUR_LABEL : sender?.messageLabel ?? "Your inquiry"}</label><textarea key={audience} className="cnt-input cnt-input--area" id={`${id}-message`} name="message" rows={5} required minLength={10} placeholder={requirements ? CONTOUR_PLACEHOLDER : undefined} aria-invalid={!!errors.message || undefined} aria-describedby={err("message")} onInput={() => clear("message")} />{errorText("message")}</div>
@@ -144,7 +144,7 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
         </div>
       ) : null}
       <div className="cnt-hp" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} name="website" tabIndex={-1} autoComplete="off" defaultValue="" /></div>
-      <p className="cnt-consent">The privacy policy explains how we handle your inquiry. Please leave out credentials and sensitive operational data. <a href={privacyHref}>Read the privacy policy</a></p>
+      <p className="cnt-consent">Leave out credentials and sensitive operational data. <a href={privacyHref}>Read the privacy policy</a></p>
       <div className="cnt-actions"><button type="submit" className="v8-btn v8-btn--solid v8-btn--lg cnt-submit" aria-disabled={sending || undefined}>{sending ? MSG.sending : requirements ? "Send requirements" : MSG.send}</button></div>
       {failure ? <p className="cnt-err cnt-err--form" role="alert">{failure}</p> : null}{seed}
     </form>

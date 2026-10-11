@@ -53,6 +53,7 @@ export const PREFERENCE_LOCAL_KEYS: readonly string[] = [
   "vraelis:scratchpad-open", // the console notes panel: open or closed
   "vraelis:scratchpad-view", // the console notes panel: docked, floating or expanded
   "vraelis-locale",          // the language picked in the language switch
+  "vraelis-theme",           // light or dark, picked in the v8 footer
 ];
 /** Preference cookies. Cleared host-only and on .vraelis.com, since either may have been set. */
 export const PREFERENCE_COOKIE_NAMES: readonly string[] = [
