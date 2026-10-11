@@ -7,7 +7,7 @@ import { v8meta } from "./_kit/meta";
 import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { NEWS, formatDay } from "./_content/news";
-import { PARTNERS } from "./_content/partners";
+import { PARTNERS, showsLogo } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
 
@@ -57,22 +57,32 @@ const DOCS_QUERIES = (() => {
 
 /* THE PARTNER BAND (founder, 2026-10-11, after deccan.ai: "the homepage has the unclickable scroll ... we should
    have that"). A band of names drifting sideways at the foot of the hero, nothing in it clickable. Deccan's says
-   "trusted by"; ours names what is true, the two official partnerships, set in type because neither company has given
-   written permission for its logo (partners.ts). The partnership records stay one click away in the Partners section.
+   "trusted by"; ours names what is true, the two official partnerships, each by its official logo and name (the
+   lockups carry both; founder 2026-10-11 "use logos and names"), in its own colours. ByteDance's is one-colour white,
+   so the light theme shows it in black (LIGHT_TOKENS). The partnership records stay one click away below.
    One group is repeated enough to overfill a wide screen, then the whole group twice, so moving by half loops
    without a seam. Screen readers get one sentence; reduced motion holds it still. */
 function PartnerBand() {
   const names = PARTNERS.map((p) => p.name);
-  const group = Array.from({ length: 6 }, () => names).flat();
+  const group = Array.from({ length: 6 }, () => PARTNERS).flat();
   return (
     <div className="hm-band v8-fade" style={{ ["--d" as string]: ".9s" }}>
-      <Wrap><p className="hm-band__label">Official partnerships</p></Wrap>
-      <p className="v8-sr">Official partnerships: {names.join(" and ")}.</p>
+      {/* "Partnered with", not "Trusted by" (founder asked for either, 2026-10-11): neither partnership endorses or uses
+          Vraelis, and the records say nothing may suggest otherwise (partners.ts). */}
+      <Wrap><p className="hm-band__label">Partnered with</p></Wrap>
+      <p className="v8-sr">Partnered with {names.join(" and ")}.</p>
       <div className="hm-band__view" aria-hidden="true">
         <div className="hm-band__track">
           {[0, 1].map((half) => (
             <div key={half} className="hm-band__group">
-              {group.map((n, i) => <span key={i} className="hm-band__name">{n}</span>)}
+              {group.map((p, i) => (
+                <span key={i} className="hm-band__item">
+                  {showsLogo(p)
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img className={`hm-band__logo${p.logoMono ? " hm-band__logo--mono" : ""}`} src={p.logo.src} alt="" width={p.logo.w} height={p.logo.h} loading="eager" decoding="async" />
+                    : <span className="hm-band__name">{p.name}</span>}
+                </span>
+              ))}
             </div>
           ))}
         </div>

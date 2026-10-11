@@ -22,8 +22,13 @@ export type Partner = {
   means: string[];
   boundary: string[];
   logo: { src: string; w: number; h: number; alt: string };
-  /** True only once the company has given written permission to show its logo. Until then the name is set in type. */
+  /** True only once the company has given written permission to show its logo. */
   logoCleared?: boolean;
+  /** The founder's decision to show the official logo (2026-10-11: "use logos and names"), recorded separately so
+   *  logoCleared keeps meaning that permission is on record. It is not, yet, for either company. */
+  logoShown?: boolean;
+  /** The logo is one colour, white: shown in black on a light page (light theme). */
+  logoMono?: boolean;
   glow: string;
   photo: { src: string; alt: string; credit: string; href: string };
   links: { label: string; href: string }[];
@@ -51,6 +56,8 @@ export const PARTNERS: Partner[] = [
       "No exclusivity, no private data",
     ],
     logo: { src: "/v8/partners/bytedance-logo-white.svg", w: 256, h: 44, alt: "ByteDance" },
+    logoShown: true,
+    logoMono: true,
     glow: "radial-gradient(80% 90% at 75% 20%, rgba(60,140,255,.55), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(50,90,180,.5), transparent 70%), #0B1530",
     photo: { src: "/home/menu/pics/bytedance-partnership.jpg", alt: "A person holding a phone in the dark.", credit: "Jaroslav Maléř, Pexels", href: "https://www.pexels.com/photo/man-holding-a-mobile-phone-in-the-dark-19949818/" },
     links: [{ label: "ByteDance", href: "https://www.bytedance.com/en/" }, { label: "ByteDance Seed", href: "https://seed.bytedance.com/en/" }],
@@ -73,6 +80,7 @@ export const PARTNERS: Partner[] = [
       "No campaign performance, exclusivity or private user data",
     ],
     logo: { src: "/v8/partners/reddit-lockup.svg", w: 774, h: 216, alt: "Reddit" },
+    logoShown: true,
     glow: "radial-gradient(80% 90% at 75% 15%, rgba(255,69,0,.42), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(255,97,1,.22), transparent 70%), #160A06",
     photo: { src: "/home/menu/pics/reddit-partnership.jpg", alt: "An aerial view of a city at night.", credit: "Denys Mikhalevych, Pexels", href: "https://www.pexels.com/photo/an-aerial-photography-of-city-buildings-at-night-12534226/" },
     links: [{ label: "Reddit", href: "https://www.reddit.com/" }, { label: "Reddit for Business", href: "https://www.business.reddit.com/" }],
@@ -82,3 +90,6 @@ export const PARTNERS: Partner[] = [
 
 export const PARTNERS_NOTE = "Neither partnership covers Vraelis Contour or endorses its security capabilities.";
 export const partner = (slug: string) => PARTNERS.find((p) => p.slug === slug);
+
+/** Whether a partner's official logo is shown: written permission on record, or the founder's decision to show it. */
+export const showsLogo = (p: Partner) => !!(p.logoCleared || p.logoShown);
