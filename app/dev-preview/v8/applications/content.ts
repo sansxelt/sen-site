@@ -165,7 +165,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     capture: "app-release-cpu2",
     notClaimed: [
       "No customers or deployments, and no partner endorsement of Vraelis Contour.",
-      "No pricing or general availability. Product access is closed.",
+      "No pricing or general availability. Not for public use.",
       "No certification.",
       SELF_REPORTS,
     ],

@@ -45,7 +45,7 @@ export default async function Contact({ searchParams }: { searchParams: Query })
                   ? "How models move from approval to the systems that run them."
                   : "Technical, organizational, research or privacy inquiries."}
               </p>
-              <p className="v8-note cnt-closed">Product access is closed: Vraelis Contour is in private development.</p>
+              <p className="v8-note cnt-closed">Vraelis Contour is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.</p>
               <nav className="cnt-routes" aria-label="Start from">
                 {ROUTES.map((r) => {
                   const on = r.topic === topic || (r.topic === "contour" && contour);

@@ -87,7 +87,7 @@ export function pageMarkdown(page: Page): string {
 
 /** The docs home as Markdown: every page, by tab, with its twin. */
 export function indexMarkdown(): string {
-  const out = ["# Vraelis documentation", "", "How Vraelis Contour works, the research behind it, and earlier implementation references. Vraelis Contour is in private development, and product access is closed.", ""];
+  const out = ["# Vraelis documentation", "", "How Vraelis Contour works, the research behind it, and earlier implementation references. Vraelis Contour is not for public use: it is built for release, platform and security engineers at suppliers and system integrators.", ""];
   for (const t of TABS) {
     out.push(`## ${t.label}`, "", t.line, "");
     for (const p of PAGES.filter((x) => x.tab === t.id)) out.push(`- [${p.title}](${SITE}/docs/${p.slug}) ([Markdown](${SITE}/docs/md/${p.slug}.md)): ${p.description}`);

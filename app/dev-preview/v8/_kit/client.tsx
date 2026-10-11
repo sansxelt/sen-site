@@ -102,44 +102,66 @@ export function CodeTabs({ tabs }: { tabs: CodeTab[] }) {
 }
 
 export type Chapter = { n: string; title: string; body: ReactNode; tags?: ReactNode; image: { src: string; alt: string; w: number; h: number } };
-/** Sticky chapters (x.ai /grok): the list scrolls, the panel stays, and the chapter in view lights up. */
-export function Chapters({ items, caption }: { items: Chapter[]; caption?: ReactNode }) {
+/** Pinned chapters (x.ai /grok; founder 2026-10-10 "center paragraph", "1 at a time"). On wide screens the section
+ *  pins for a stretch of scrolling: one step's text, centred beside its own capture, and scrolling advances to the
+ *  next step, crossfading both. The capture is shown plain, with no stage frame around it ("this layering is worse").
+ *  On narrow screens, and under reduced motion, every step is simply listed with its capture. */
+export function Chapters({ items, head, caption }: { items: Chapter[]; head?: ReactNode; caption?: ReactNode }) {
   const [on, setOn] = useState(0);
-  const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) setOn(Number((e.target as HTMLElement).dataset.i));
-    }, { rootMargin: "-45% 0px -45% 0px" });
-    refs.current.forEach((r) => r && io.observe(r));
-    return () => io.disconnect();
-  }, []);
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = root.current; if (!el) return;
+      const r = el.getBoundingClientRect(), pin = el.querySelector<HTMLElement>(".v8-chapters__pin");
+      const run = r.height - (pin?.offsetHeight ?? 0);
+      if (run <= 0) return;
+      const t = Math.min(.9999, Math.max(0, -r.top / run));
+      setOn(Math.floor(t * items.length));
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); cancelAnimationFrame(raf); };
+  }, [items.length]);
   return (
-    <div className="v8-chapters">
-      <div className="v8-chapters__list">
-        {items.map((c, i) => (
-          <div key={c.n} ref={(el) => { refs.current[i] = el; }} data-i={i} className="v8-chapter" data-on={i === on}>
+    <div ref={root} className="v8-chapters" style={{ ["--n" as string]: items.length }}>
+      <div className="v8-chapters__pin">
+        {head ? <div className="v8-chapters__head">{head}</div> : null}
+        <div className="v8-chapters__text">
+          {items.map((c, i) => (
+            <div key={c.n} className="v8-chapter" data-on={i === on} aria-hidden={i !== on}>
+              <span className="v8-chapter__n">{c.n} <span>/ {String(items.length).padStart(2, "0")}</span></span>
+              <h3 className="v8-h2" style={{ fontSize: "clamp(26px, 2.6vw, 38px)" }}>{c.title}</h3>
+              <div className="v8-body">{c.body}</div>
+              {c.tags ? <div className="v8-tags">{c.tags}</div> : null}
+            </div>
+          ))}
+        </div>
+        <div className="v8-chapters__media">
+          {items.map((c, i) => (
+            <div key={c.n} className="v8-chapters__frame" data-on={i === on} aria-hidden={i !== on}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={c.image.src} alt={i === on ? c.image.alt : ""} width={c.image.w} height={c.image.h} decoding="async" />
+            </div>
+          ))}
+          {caption ? <div className="v8-caption">{caption}</div> : null}
+        </div>
+      </div>
+      <ol className="v8-chapters__list">
+        {items.map((c) => (
+          <li key={c.n} className="v8-chapter">
             <span className="v8-chapter__n">{c.n}</span>
-            <h3 className="v8-h2" style={{ fontSize: "clamp(24px, 2.3vw, 34px)" }}>{c.title}</h3>
+            <h3 className="v8-h2" style={{ fontSize: "clamp(24px, 6vw, 30px)" }}>{c.title}</h3>
             <div className="v8-body">{c.body}</div>
             {c.tags ? <div className="v8-tags">{c.tags}</div> : null}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <div className="v8-chapter__inline"><img src={c.image.src} alt={c.image.alt} width={c.image.w} height={c.image.h} loading="lazy" decoding="async" /></div>
-          </div>
+            <img src={c.image.src} alt={c.image.alt} width={c.image.w} height={c.image.h} loading="lazy" decoding="async" />
+          </li>
         ))}
-      </div>
-      <div className="v8-chapters__panel">
-        <div className="v8-stage" style={{ padding: 0 }}>
-          <div className="v8-chapters__frames">
-            {items.map((c, i) => (
-              <div key={c.n} className="v8-chapters__frame" data-on={i === on} aria-hidden={i !== on}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.image.src} alt={i === on ? c.image.alt : ""} width={c.image.w} height={c.image.h} loading="lazy" decoding="async" />
-              </div>
-            ))}
-          </div>
-        </div>
-        {caption ? <div className="v8-caption">{caption}</div> : null}
-      </div>
+      </ol>
     </div>
   );
 }

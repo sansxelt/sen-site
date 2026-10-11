@@ -95,12 +95,8 @@ export default function ContourPage() {
 
       <Section id="how" rule>
         <Wrap>
-          <div className="v8-stack--lg">
-            <div className="v8-head">
-              <span className="v8-eyebrow">Workflow</span>
-              <h2 className="v8-h2">How it works</h2>
-            </div>
             <Chapters
+              head={<div className="v8-head"><span className="v8-eyebrow">Workflow</span><h2 className="v8-h2">How it works</h2></div>}
               items={WORKFLOW.map((s) => {
                 const c = CAPTURES[s.shot];
                 return {
@@ -112,7 +108,6 @@ export default function ContourPage() {
                 };
               })}
             />
-          </div>
         </Wrap>
       </Section>
 
@@ -184,7 +179,7 @@ export default function ContourPage() {
           <Faq
             title={<>Questions about {CONTOUR.name}</>}
             items={[
-              { q: `Is ${CONTOUR.name} available?`, a: <>No. Product access is closed. <Link className="v8-under" href={href("/contact?topic=contour")}>Join us</Link> to tell us how you release models.</> },
+              { q: `Is ${CONTOUR.name} available?`, a: <>Not publicly. It is built for release, platform and security engineers at suppliers and system integrators. <Link className="v8-under" href={href("/contact?topic=contour")}>Join us</Link> to tell us how you release models.</> },
               { q: "Does it roll back automatically?", a: "No. Baseline mode serves what it loaded until an explicit, recorded reload. The experiment also has a reconcile mode." },
               { q: "Where is the source?", a: "Private. This site shows recorded evidence and captures of the evidence app." },
             ]}

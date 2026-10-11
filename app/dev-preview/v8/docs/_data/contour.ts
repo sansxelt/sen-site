@@ -73,7 +73,7 @@ export const CONTOUR_PAGES: Page[] = [
     tab: "contour", group: "Get started", eyebrow: "Introduction", slug: "overview",
     title: "Vraelis Contour overview", nav: "Overview",
     description: "What Vraelis Contour is, where it stands today, and the five-step release workflow it is built around.",
-    lead: "Vraelis Contour is model release security, from approval to reported runtime state. It is in private development, and product access is closed.",
+    lead: "Vraelis Contour is model release security, from approval to reported runtime state. It is not for public use: it is built for release, platform and security engineers at suppliers and system integrators.",
     updated: UPDATED,
     blocks: [
       { t: "h2", text: "What Vraelis Contour is" },
@@ -389,7 +389,7 @@ export const CONTOUR_PAGES: Page[] = [
         "Accuracy or detection numbers.",
       ] },
       { t: "h2", text: "Product access" },
-      { t: "p", text: "Product access is closed. There is no public API, command line tool, console or account. The local QA tooling used to test the experiment is not a customer developer platform." },
+      { t: "p", text: "Vraelis Contour is not for public use; it is built for release, platform and security engineers at suppliers and system integrators. There is no public API, command line tool, console or account. The local QA tooling used to test the experiment is not a customer developer platform." },
       { t: "p", text: "To talk about Vraelis Contour, use Join us, which leads to the contact form. [Join us](/contact?topic=contour)" },
       { t: "p", text: "The development status page keeps the same lists in one place. [Development status](/contour/status)" },
     ],
