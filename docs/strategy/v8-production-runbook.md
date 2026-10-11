@@ -89,6 +89,20 @@ the cleanup-2 closures and the email footer.
 - docs.vraelis.com serves the docs at its root. vraelis.com/docs/* redirects (308) there, path for path.
 - llms.txt, llms-full.txt and sitemap.xml come from the v8 registries; robots allows crawling (not a review build).
 
+## Promotion prepared (2026-10-11)
+
+- `main` (5dc06187) merged into `site-v8` (b1b5887d), so the promotion carries the live cleanup and email footer.
+- Found while preparing: with the flag on, v8 rewrote every path it did not know into its own 404, which would have
+  broken account recovery (`/auth/reset-password`, its emailed confirm link, email verification) and turned the
+  retired installers' 410 into 404. Fixed in 2f8650b2 (`v8Machine` lets `/auth/*`, `/install`, `/install.ps1` keep
+  their own handling); `npm run v8:paths:test` pins it, and fails without the fix.
+- Review deployment `vraelis-v8-review-dkcn8rmh5` (2f8650b2, v8 flag on): cleanup paths 410/503/307 as on
+  production, account recovery pages 200, the operational APIs unchanged (the Stripe webhook answers 503 there only
+  because the review project has no Stripe secrets), two-host crawl 122 pages, 0 broken links.
+- docs.vraelis.com resolves through Cloudflare to Vercel and answers `DEPLOYMENT_NOT_FOUND`: attaching it to
+  `sen-site` is all it needs. Rollback target for the promotion: `sen-site-lt64iii0o` (5dc06187).
+- Waiting only on the founder's legal entity and policy answers (open decision 1).
+
 ## Code switch (already on site-v8, inert until the flag is set)
 
 - `NEXT_PUBLIC_VRAELIS_V8_PUBLIC=1` turns on the promotion in `proxy.ts` (`v8Promoted`, `V8_ROOTS`, `V8_SUCCESSORS`).
@@ -115,8 +129,9 @@ the cleanup-2 closures and the email footer.
 5. **Build without going live.** `vercel deploy --prod --skip-domain` from `main` (or redeploy the latest `main`
    deployment with "Assign domains" off). This builds a production deployment with the flag baked in and gives it a
    `*.vercel.app` URL without moving vraelis.com.
-6. **Check that build** on its URL: home, /contour, /docs redirect, contact form error path (POST /api/contact with a bad
-   email returns 400), /api/v/data-requests returns 200, /app and /systems redirect to /beta, robots.txt allows, sitemap
+6. **Check that build** on its URL: `npm run v8:paths:test` locally first; then home, /contour, /docs redirect,
+   /auth/reset-password 200, /install 410, /cli/vraelis.mjs 410, /invite/x 307, contact form error path (POST
+   /api/contact with a bad email returns 400), /api/v/data-requests returns 200, /app and /systems redirect to /beta, robots.txt allows, sitemap
    lists v8 URLs. (The docs host can only be checked after step 7.)
 7. **Promote.** `vercel promote <url from step 5> --scope sansxel`, or "Promote to Production" in the dashboard.
    vraelis.com and docs.vraelis.com switch together.
