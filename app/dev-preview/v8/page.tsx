@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { AutoVideo, CodeTabs, RiseWords } from "./_kit/client";
+import { AutoVideo, CaptureCycle, CodeTabs, ResearchCycle, RiseWords, TypeLoop } from "./_kit/client";
+import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
-import { Button, Ledger, Section, TextLink, Wrap, captureSrc } from "./_kit/blocks";
+import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
 import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
@@ -18,6 +19,42 @@ export const metadata = v8meta({
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
+/** The Recorded evidence tile: real captures of the evidence app, one after another. */
+const EVIDENCE_TILE = (["crop-approved-cpu2", "crop-loaded-cpu1", "crop-loaded-unavailable", "crop-release-approval", "crop-source-json"] as const).map((n) => ({
+  src: captureSrc(n), alt: CAPTURES[n].alt, w: CAPTURES[n].w, h: CAPTURES[n].h,
+}));
+
+/** The research tile: each area beside a real capture of the evidence it is about (x.ai shows its product, not stock photos). */
+const RESEARCH_SHOT: Record<string, CaptureName> = {
+  "model-integrity": "crop-release-identity",
+  "adversarial-threats": "crop-loaded-cpu1",
+  "machine-trust": "crop-release-approval",
+  "security-evidence": "crop-source-json",
+};
+
+/** The docs tile's queries, each with its best real section from the docs search index: a title match first, then
+ *  the section that uses the phrase most. A few are typed with a slip, as people do; those show the section for what
+ *  they meant, marked "Might be related". About 15 queries, then it loops. */
+const DOCS_QUERIES = (() => {
+  const index = buildSearchIndex();
+  const best = (phrase: string) => {
+    const n = phrase.toLowerCase();
+    const score = (e: (typeof index)[number]) => (e.title.toLowerCase().includes(n) ? 1000 : 0) + (`${e.text}`.toLowerCase().split(n).length - 1);
+    const top = index.map((e) => ({ e, s: score(e) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s)[0];
+    return top ? { title: top.e.title, crumb: top.e.crumb } : null;
+  };
+  const QUERIES: [typed: string, meant?: string][] = [
+    ["release authorization"], ["runtime identity"], ["verison mismatch", "version mismatch"], ["destination-bound approval"],
+    ["evidence freshness"], ["artifact integrity"], ["reported loaded release"], ["runtime polcy", "runtime policy"],
+    ["RUNTIME_UNAVAILABLE"], ["worker self-report"], ["approval age limit"], ["preprocesing", "preprocessing"],
+    ["reload pending"], ["configuration digest"], ["recovery"],
+  ];
+  return QUERIES.flatMap(([q, meant]) => {
+    const hit = best(meant ?? q);
+    return hit ? [{ q, hits: [{ ...hit, note: meant ? "Might be related" : undefined }] }] : [];
+  });
+})();
+
 export default function Home() {
   return (
     <>
@@ -45,18 +82,17 @@ export default function Home() {
         <Wrap>
           <div className="v8-bento">
             <Link href={href("/contour")} className="v8-tile">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(139,124,255,.22), transparent 70%), #0C0C0E" }}>
+              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,255,255,.06), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
-                  <AutoVideo src="/v8/contour/contour-compare-tile.mp4" poster="/v8/contour/contour-compare-tile-poster.webp" label="The Vraelis Contour app stepping through four recorded observations." />
+                  <AutoVideo src="/v8/contour/contour-compare-tile.mp4" poster="/v8/contour/contour-compare-tile-poster.webp" label="The Vraelis Contour app stepping through four recorded observations." rate={1.6} />
                 </div>
               </div>
               <div className="v8-tile__foot"><span>{CONTOUR.name}</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/contour#observations")} className="v8-tile">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(94,230,255,.16), transparent 70%), #0C0C0E" }}>
+              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(255,255,255,.05), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={captureSrc("crop-source-json")} alt="The source JSON of a recorded observation in the Vraelis Contour app." width={1638} height={768} loading="lazy" decoding="async" />
+                  <CaptureCycle images={EVIDENCE_TILE} />
                 </div>
               </div>
               <div className="v8-tile__foot"><span>Recorded evidence</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
@@ -68,16 +104,14 @@ export default function Home() {
               <div className="v8-tile__foot"><span>Applications</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/research")} className="v8-tile v8-tile--wide">
-              <ul className="v8-tile__list">
-                {RESEARCH.map((r) => <li key={r.slug}>{r.title}</li>)}
-              </ul>
+              <ResearchCycle items={RESEARCH.map((r) => ({ title: r.title, line: r.line, img: captureSrc(RESEARCH_SHOT[r.slug]), alt: CAPTURES[RESEARCH_SHOT[r.slug]].alt }))} />
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Research</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/docs")} className="v8-tile v8-tile--wide">
               <div style={{ padding: "26px 22px 0", display: "grid", gap: 10 }}>
-                <p className="v8-h3" style={{ color: "var(--ink)" }}>How Vraelis Contour works, in detail.</p>
+                <p className="v8-h3" style={{ color: "var(--ink)" }}>Every check, explained.</p>
               </div>
-              <div className="v8-tile__search" aria-hidden="true">Search the documentation<kbd>Ctrl K</kbd></div>
+              <TypeLoop idle="Search the documentation" queries={DOCS_QUERIES} />
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Documentation</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
           </div>

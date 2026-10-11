@@ -10,7 +10,8 @@ import { useEffect, useRef, useState } from "react";
 // itself carries the whole tagline for screen readers and search; this line is decoration and aria-hidden.
 // Under reduced motion the first keyword simply stays.
 
-const SPEC: [number, number, number][] = [[94, 230, 255], [139, 124, 255], [255, 95, 162]];
+// Monochrome (founder 2026-10-10: no rainbow): bright white through to mid grey.
+const SPEC: [number, number, number][] = [[255, 255, 255], [200, 200, 206], [142, 142, 150]];
 function spec(t: number) {
   const c = Math.max(0, Math.min(1, t)), s = c * 2, i = Math.min(1, Math.floor(s)), f = s - i, a = SPEC[i], b = SPEC[i + 1];
   return `rgb(${(a[0] + (b[0] - a[0]) * f) | 0},${(a[1] + (b[1] - a[1]) * f) | 0},${(a[2] + (b[2] - a[2]) * f) | 0})`;

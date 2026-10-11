@@ -57,10 +57,10 @@
   position: relative; display: block; padding: 6px 0 6px 16px; color: var(--ink-3);
   font-size: 13.5px; line-height: 1.45; text-wrap: pretty; transition: color .15s var(--ease-std);
 }
-/* The selected item takes the spectral light, the one place a legal page uses it. */
+/* The selected item gets a plain ink bar. */
 .v8 .v8-legal__toca::before {
   content: ""; position: absolute; left: -1px; top: 5px; bottom: 5px; width: 2px; border-radius: 2px;
-  background: linear-gradient(180deg, var(--spec-1), var(--spec-2) 50%, var(--spec-3));
+  background: var(--ink);
   opacity: 0; transform: scaleY(.3); transition: opacity .2s var(--ease), transform .35s var(--ease);
 }
 .v8 .v8-legal__toca:hover { color: var(--ink); }

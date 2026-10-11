@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 
 /** The tagline, rising in word by word; each area and its joining word stay together on one line. */
 export function AreasLine({ before, areas, joiners, after }: { before: string; areas: readonly string[]; joiners: string[]; after: string }) {
@@ -50,20 +50,131 @@ export function RiseWords({ text }: { text: string }) {
 }
 
 /** A muted, looping video that plays only while on screen and never under reduced motion. */
-export function AutoVideo({ src, webm, poster, label, className }: { src: string; webm?: string; poster: string; label: string; className?: string }) {
+export function AutoVideo({ src, webm, poster, label, className, rate = 1 }: { src: string; webm?: string; poster: string; label: string; className?: string; rate?: number }) {
   const ref = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const v = ref.current; if (!v) return;
+    v.defaultPlaybackRate = rate; v.playbackRate = rate;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 });
     io.observe(v);
     return () => io.disconnect();
-  }, []);
+  }, [rate]);
   return (
     <video ref={ref} className={className} muted loop playsInline preload="metadata" poster={poster} aria-label={label}>
       {webm ? <source src={webm} type="video/webm" /> : null}
       <source src={src} type="video/mp4" />
     </video>
+  );
+}
+
+/** Runs `tick` every `ms` while `el` is on screen (and never under reduced motion). */
+function useTicker(el: RefObject<HTMLElement | null>, ms: number, tick: () => void) {
+  const fn = useRef(tick);
+  useEffect(() => { fn.current = tick; });
+  useEffect(() => {
+    const node = el.current; if (!node || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let id: ReturnType<typeof setInterval> | undefined;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !id) id = setInterval(() => fn.current(), ms);
+      if (!e.isIntersecting && id) { clearInterval(id); id = undefined; }
+    }, { threshold: .25 });
+    io.observe(node);
+    return () => { io.disconnect(); if (id) clearInterval(id); };
+  }, [el, ms]);
+}
+
+/** Real captures crossfading in turn (homepage tiles; founder 2026-10-10: "cut to the chase and faster"). */
+export function CaptureCycle({ images, ms = 1900 }: { images: { src: string; alt: string; w: number; h: number }[]; ms?: number }) {
+  const [i, setI] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  useTicker(ref, ms, () => setI((n) => (n + 1) % images.length));
+  return (
+    <div ref={ref} className="v8-cycle">
+      {images.map((m, k) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={m.src} src={m.src} alt={k === i ? m.alt : ""} aria-hidden={k !== i} width={m.w} height={m.h} data-on={k === i} loading="lazy" decoding="async" />
+      ))}
+    </div>
+  );
+}
+
+/** The research tile: the four areas light in turn, each with its one line and its own photograph. */
+export function ResearchCycle({ items, ms = 2200 }: { items: { title: string; line: string; img: string; alt: string }[]; ms?: number }) {
+  const [i, setI] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  useTicker(ref, ms, () => setI((n) => (n + 1) % items.length));
+  return (
+    <div ref={ref} className="v8-rtile">
+      <ul className="v8-tile__list">
+        {items.map((t, k) => (
+          <li key={t.title} data-on={k === i}>
+            <span>{t.title}</span>
+            <small>{t.line}</small>
+          </li>
+        ))}
+      </ul>
+      <div className="v8-rtile__photo">
+        {items.map((t, k) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={t.img} src={t.img} alt={k === i ? t.alt : ""} aria-hidden={k !== i} data-on={k === i} loading="lazy" decoding="async" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export type DocsHit = { title: string; crumb: string; note?: string };
+/** The docs tile: the search box types a real query and the real matching sections from the docs index come up
+ *  under it, then it clears for the next query. */
+export function TypeLoop({ queries, idle }: { queries: { q: string; hits: DocsHit[] }[]; idle: string }) {
+  const [view, setView] = useState({ t: 0, text: "", done: false });
+  const ref = useRef<HTMLDivElement>(null);
+  const st = useRef({ t: 0, c: 0, hold: 6 });
+  useTicker(ref, 45, () => {
+    const s = st.current, q = queries[s.t].q;
+    if (s.hold > 0) { s.hold--; return; }
+    if (s.c < q.length) { s.c++; setView({ t: s.t, text: q.slice(0, s.c), done: s.c === q.length }); if (s.c === q.length) s.hold = 50; return; }
+    s.t = (s.t + 1) % queries.length; s.c = 0; s.hold = 5; setView({ t: s.t, text: "", done: false });
+  });
+  const hits = view.done ? queries[view.t].hits : [];
+  return (
+    <div ref={ref} className="v8-dtile" aria-hidden="true">
+      <div className="v8-tile__search">
+        {view.text ? <span className="v8-tile__typed">{view.text}<i /></span> : <span>{idle}</span>}<kbd>Ctrl K</kbd>
+      </div>
+      <ul className="v8-dtile__hits" data-on={view.done}>
+        {hits.map((h, k) => (
+          <li key={h.crumb + h.title} style={{ ["--k" as string]: k }}>
+            {h.note ? <em>{h.note}</em> : null}<b>{h.title}</b><small>{h.crumb}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Monochrome highlighting for the code windows: a shell prompt line reads like a terminal ("$" dim, the command
+ *  bright), JSON keys are bright and values a step down, punctuation dim. No colour (founder 2026-10-10). */
+export function Highlight({ code }: { code: string }) {
+  return (
+    <>
+      {code.split("\n").map((line, i) => {
+        const nl = i === 0 ? null : "\n";
+        if (line.startsWith("$ ")) return <Fragment key={i}>{nl}<span className="hl-p">$</span> <span className="hl-cmd">{line.slice(2)}</span></Fragment>;
+        const out: ReactNode[] = []; let last = 0;
+        const re = /("(?:[^"\\]|\\.)*")(\s*:)?|\b(true|false|null)\b|-?\b\d+(?:\.\d+)?\b|[{}[\],]/g;
+        for (let m = re.exec(line); m; m = re.exec(line)) {
+          if (m.index > last) out.push(line.slice(last, m.index));
+          const cls = m[1] ? (m[2] ? "hl-k" : "hl-s") : m[3] || /^-?\d/.test(m[0]) ? "hl-n" : "hl-d";
+          out.push(<span key={m.index} className={cls}>{m[1] && m[2] ? m[1] : m[0]}</span>);
+          if (m[1] && m[2]) out.push(<span key={`${m.index}c`} className="hl-d">{m[2]}</span>);
+          last = m.index + m[0].length;
+        }
+        if (last < line.length) out.push(line.slice(last));
+        return <Fragment key={i}>{nl}{out}</Fragment>;
+      })}
+    </>
   );
 }
 
@@ -83,7 +194,7 @@ export function CodeTabs({ tabs }: { tabs: CodeTab[] }) {
               try { await navigator.clipboard.writeText(t.code); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* the text stays selectable */ }
             }}>{copied ? "Copied" : "Copy"}</button>
           </div>
-          <pre tabIndex={0}>{t.code}</pre>
+          <pre tabIndex={0}><Highlight code={t.code} /></pre>
         </div>
       </div>
       <div className="v8-tabs" role="tablist" aria-label="Examples">
@@ -129,8 +240,9 @@ export function Chapters({ items, head, caption }: { items: Chapter[]; head?: Re
   return (
     <div ref={root} className="v8-chapters" style={{ ["--n" as string]: items.length }}>
       <div className="v8-chapters__pin">
-        {head ? <div className="v8-chapters__head">{head}</div> : null}
         <div className="v8-chapters__text">
+          {head ? <div className="v8-chapters__head">{head}</div> : null}
+          <div className="v8-chapters__stack">
           {items.map((c, i) => (
             <div key={c.n} className="v8-chapter" data-on={i === on} aria-hidden={i !== on}>
               <span className="v8-chapter__n">{c.n} <span>/ {String(items.length).padStart(2, "0")}</span></span>
@@ -139,6 +251,7 @@ export function Chapters({ items, head, caption }: { items: Chapter[]; head?: Re
               {c.tags ? <div className="v8-tags">{c.tags}</div> : null}
             </div>
           ))}
+          </div>
         </div>
         <div className="v8-chapters__media">
           {items.map((c, i) => (

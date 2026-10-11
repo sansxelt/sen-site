@@ -103,7 +103,7 @@ export default function ContourPage() {
                   n: s.n,
                   title: s.title,
                   body: STEP_LINE[s.n],
-                  tags: <>{s.kinds.map(([k, label]) => <Tag key={label} kind={k}>{tagText(k, label)}</Tag>)}</>,
+                  tags: <Tag kind={s.kinds[0][0]}>{tagText(s.kinds[0][0], s.kinds[0][1])}</Tag>,
                   image: { src: captureSrc(s.shot), alt: c.alt, w: c.w, h: c.h },
                 };
               })}

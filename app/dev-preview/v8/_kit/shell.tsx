@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
-import { Brand, Mark, Wordmark } from "./logo";
+import { Brand, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
 import { FOOTER, JOIN, MENUS, href, type Menu } from "./site";
 
@@ -170,7 +170,7 @@ export function V8Footer() {
       <div className="v8-wrap v8-wrap--frame">
         <div className="v8-footer__grid">
           <div className="v8-footer__brand">
-            <Link href={href("/")} className="v8-lockup" aria-label="Vraelis home"><Mark /><Wordmark height={14.25} /></Link>
+            <button type="button" className="v8-lockup" aria-label="Back to top" onClick={glideToTop}><Mark /><Wordmark height={14.25} /></button>
             <p className="v8-small" style={{ color: "var(--ink-4)" }}>© 2026 Vraelis</p>
           </div>
           {FOOTER.map((col) => (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type MouseEvent } from "react";
-import { INTRO_STYLE_ID } from "./scripts";
+import { INTRO_CSS, INTRO_STYLE_ID } from "./scripts";
 
 // THE LOGO INTRO (founder, 2026-10-10: "what SpaceX AI did ... the text and logo part").
 //
@@ -56,7 +56,7 @@ export function Mark({ title, gradientId }: { title?: string; gradientId?: strin
         <>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#5EE6FF" /><stop offset=".5" stopColor="#8B7CFF" /><stop offset="1" stopColor="#FF5FA2" />
+              <stop offset="0" stopColor="#FFFFFF" /><stop offset=".5" stopColor="#C9C9CF" /><stop offset="1" stopColor="#8E8E96" />
             </linearGradient>
           </defs>
           <path className="v8-brand__tint" d={OUTLINE} fill={`url(#${gradientId})`} style={{ opacity: 0 }} />
@@ -66,21 +66,35 @@ export function Mark({ title, gradientId }: { title?: string; gradientId?: strin
   );
 }
 
-const SPEC: [number, number, number][] = [[94, 230, 255], [139, 124, 255], [255, 95, 162]];
+// Monochrome (founder 2026-10-10: no rainbow): bright white through to mid grey.
+const SPEC: [number, number, number][] = [[255, 255, 255], [200, 200, 206], [142, 142, 150]];
 function spec(t: number) {
   const c = Math.max(0, Math.min(1, t)), s = c * 2, i = Math.min(1, Math.floor(s)), f = s - i, a = SPEC[i], b = SPEC[i + 1];
   return `rgb(${(a[0] + (b[0] - a[0]) * f) | 0},${(a[1] + (b[1] - a[1]) * f) | 0},${(a[2] + (b[2] - a[2]) * f) | 0})`;
 }
 const easeInOut = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
+/** Smoothly back to the top, even mid-scroll: wheel and touch scrolling are held off until the glide lands, because a
+ *  momentum scroll still in flight would otherwise cancel it. */
+export function glideToTop() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { window.scrollTo({ top: 0 }); return; }
+  const hold = (e: Event) => e.preventDefault();
+  const opts = { passive: false } as const;
+  window.addEventListener("wheel", hold, opts); window.addEventListener("touchmove", hold, opts);
+  const t0 = performance.now();
+  const release = () => { window.removeEventListener("wheel", hold); window.removeEventListener("touchmove", hold); };
+  const watch = () => { if (window.scrollY <= 1 || performance.now() - t0 > 1400) release(); else requestAnimationFrame(watch); };
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  requestAnimationFrame(watch);
+}
+
 export function Brand({ home, navId }: { home: string; navId: string }) {
   const brand = useRef<HTMLAnchorElement>(null);
   const word = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const pending = document.getElementById(INTRO_STYLE_ID);
     const b = brand.current, w = word.current, nav = document.getElementById(navId);
-    if (!pending || !b || !w || !nav) return;
+    if (!b || !w || !nav) return;
     let raf = 0, cancelled = false;
     const tint = b.querySelector<SVGPathElement>(".v8-brand__tint");
     const finish = () => {
@@ -145,8 +159,18 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
       };
       raf = requestAnimationFrame(frame);
     };
-    start();
-    return () => { cancelled = true; finish(); };
+    if (document.getElementById(INTRO_STYLE_ID)) start();
+    // Coming back to the page from another site with Back restores it from the browser's page cache without a load,
+    // so replay the intro then too (founder 2026-10-10: "when they go off page and come back, then it does replay").
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      finish();
+      nav.style.transition = "none";
+      const s = document.createElement("style"); s.id = INTRO_STYLE_ID; s.textContent = INTRO_CSS; document.head.appendChild(s);
+      requestAnimationFrame(() => { nav.style.transition = ""; cancelled = false; start(); });
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => { cancelled = true; finish(); window.removeEventListener("pageshow", onShow); };
   }, [navId]);
 
   // x.ai's logo: from another page it goes home; on the homepage it glides back to the top, and at the top it reloads.
@@ -155,7 +179,7 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     if (pathname !== home && pathname !== `${home}/`) return;
     e.preventDefault();
-    if (window.scrollY > 4) window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    if (window.scrollY > 4) glideToTop();
     else window.location.reload();
   };
 
