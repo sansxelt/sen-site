@@ -96,6 +96,10 @@ the cleanup-2 closures and the email footer.
   main (flag off, verified unchanged on `sen-site-boj7vkmh5`), docs.vraelis.com attached to `sen-site` (verified,
   configuredBy http, no DNS change), `NEXT_PUBLIC_VRAELIS_V8_PUBLIC=1` added to Production, `vercel deploy --prod
   --skip-domain`, checked on its URL, `vercel promote`.
+- Follow-up fixes (founder review, same evening) shipped as 47d17a27, production `sen-site-mai2h9giv`: the docs
+  Products tab opens its menu (and the menu is no longer clipped on phones), facts top-aligned, one way in (header
+  Join us only; /contact is the Join us page with the same chips every visit; room under the form), the logo intro
+  replays on arriving home. Verified live; crawl clean apart from Cloudflare's email-obfuscation paths.
 - **Rollback target: `sen-site-lt64iii0o-sansxel.vercel.app` (5dc06187).** `vercel rollback
   sen-site-lt64iii0o-sansxel.vercel.app --scope sansxel`, then remove `NEXT_PUBLIC_VRAELIS_V8_PUBLIC` from Production
   (or the next push to main rebuilds v8) and remove docs.vraelis.com from `sen-site` Domains (a v6 build would show
