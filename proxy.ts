@@ -253,6 +253,13 @@ const v8Machine = (path: string) => path.startsWith("/api/") || path === "/yc" |
   || path === "/icon" || path === "/apple-icon" || path.startsWith("/icon/") || path.startsWith("/apple-icon/")
   || path === "/v1" || path.startsWith("/v1/") || path === "/mcp" || path.startsWith("/.well-known/")
   || path === "/curtain" || path === "/robots.txt" || path === "/sitemap.xml" || path === "/llms.txt" || path === "/llms-full.txt";
+/** The docs host's origin when the docs live on their own host, or "" when they are served at /docs on this one. */
+function v8DocsHostOrigin(): string {
+  const env = process.env.NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN;
+  if (env === "local" || env === "") return "";
+  if (env) return env.replace(/\/$/, "");
+  return process.env.VERCEL_ENV === "production" ? "https://docs.vraelis.com" : "";
+}
 function v8Promoted(req: NextRequest, path: string, host: string): NextResponse | null {
   if (path === "/dev-preview/v8" || path.startsWith("/dev-preview/v8/")) {
     const url = req.nextUrl.clone();
@@ -260,6 +267,12 @@ function v8Promoted(req: NextRequest, path: string, host: string): NextResponse 
     return NextResponse.redirect(url, 308);
   }
   if (v8Machine(path)) return null;
+  // With a separate docs host configured (production: docs.vraelis.com; a review build: its docs alias), the docs
+  // live only there: /docs/x on the main host is a permanent redirect to /x on the docs host. Without one
+  // (NEXT_PUBLIC_VRAELIS_DOCS_ORIGIN=local) the docs are served here at /docs, as before.
+  if ((path === "/docs" || path.startsWith("/docs/")) && v8DocsHostOrigin()) {
+    return NextResponse.redirect(`${v8DocsHostOrigin()}${path.slice("/docs".length) || "/"}${req.nextUrl.search}`, 308);
+  }
   const successor = V8_SUCCESSORS[path] ?? V8_SUCCESSOR_PREFIXES.find(([p]) => path.startsWith(p))?.[1];
   if (successor) {
     const url = req.nextUrl.clone();
@@ -289,7 +302,10 @@ function docsHost(req: NextRequest, path: string, main: string) {
   // Machine endpoints pass through. A bare /api is a docs page (the earlier references' "api"), not an endpoint.
   const endpoint = parts[0] === "api" || parts[0] === "og" ? parts.length > 1 : ["icon", "apple-icon"].includes(parts[0] ?? "");
   if (endpoint) return NextResponse.next(withGround(req, path));
-  const isDocs = parts.length <= 1 || (parts.length === 2 && parts[0] === "md");
+  // A site page typed on the docs host (docs.vraelis.com/company) belongs to the main site. "contour" and "research"
+  // are docs pages as well, so they stay here.
+  const sitePage = parts.length === 1 && V8_ROOTS.has(parts[0]) && !["contour", "research", "docs"].includes(parts[0]);
+  const isDocs = !sitePage && (parts.length <= 1 || (parts.length === 2 && parts[0] === "md"));
   if (!isDocs) {
     const to = `${main}${path}${req.nextUrl.search}`;
     // Next shortens a redirect that names its own origin to a bare path. On Vercel that origin is the request's host

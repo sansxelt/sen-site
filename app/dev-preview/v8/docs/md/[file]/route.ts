@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
   const { file } = await params;
   const headers = (index: boolean) => ({
     "content-type": "text/markdown; charset=utf-8",
-    "x-robots-tag": v8Public && index ? "all" : "noindex",
+    "x-robots-tag": v8Public && index && !process.env.VRAELIS_REVIEW_LABEL ? "all" : "noindex",
   });
   if (file === "index.md") return new Response(indexMarkdown(), { headers: headers(true) });
   const page = file.endsWith(".md") ? getPage(file.slice(0, -3)) : null;

@@ -8,6 +8,6 @@ const v8Public = process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
 
 export function GET() {
   return new Response(indexMarkdown(), {
-    headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": v8Public ? "all" : "noindex" },
+    headers: { "content-type": "text/plain; charset=utf-8", "x-robots-tag": v8Public && !process.env.VRAELIS_REVIEW_LABEL ? "all" : "noindex" },
   });
 }
