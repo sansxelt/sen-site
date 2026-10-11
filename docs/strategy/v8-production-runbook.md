@@ -1,7 +1,7 @@
 # v8 production runbook (vraelis.com and docs.vraelis.com)
 
-Prepared 2026-10-11, updated the same day after the second cleanup and the email footer shipped. The v8 promotion
-has not been executed; it and every DNS or domain change below wait for the founder's go.
+Prepared 2026-10-11 and executed the same day: v8 is live on vraelis.com and docs.vraelis.com (see PROMOTED below).
+The sections that follow describe the state just before the promotion and are kept as the record.
 
 ## What exists today (production `5dc06187`)
 
@@ -88,6 +88,30 @@ the cleanup-2 closures and the email footer.
   v8 404. app.vraelis.com and console paths stay closed.
 - docs.vraelis.com serves the docs at its root. vraelis.com/docs/* redirects (308) there, path for path.
 - llms.txt, llms-full.txt and sitemap.xml come from the v8 registries; robots allows crawling (not a review build).
+
+## PROMOTED 2026-10-11 22:4x UTC
+
+- vraelis.com and docs.vraelis.com now serve v8 from production deployment `sen-site-54hezn9j6-sansxel.vercel.app`
+  (`dpl_9Aysnbqib237K9vGSWFLvc245sGJ`), commit `b5e5338a` (site-v8 merged into main 5dc06187). Steps taken: merge to
+  main (flag off, verified unchanged on `sen-site-boj7vkmh5`), docs.vraelis.com attached to `sen-site` (verified,
+  configuredBy http, no DNS change), `NEXT_PUBLIC_VRAELIS_V8_PUBLIC=1` added to Production, `vercel deploy --prod
+  --skip-domain`, checked on its URL, `vercel promote`.
+- **Rollback target: `sen-site-lt64iii0o-sansxel.vercel.app` (5dc06187).** `vercel rollback
+  sen-site-lt64iii0o-sansxel.vercel.app --scope sansxel`, then remove `NEXT_PUBLIC_VRAELIS_V8_PUBLIC` from Production
+  (or the next push to main rebuilds v8) and remove docs.vraelis.com from `sen-site` Domains (a v6 build would show
+  the v6 homepage there).
+- Verified live: v8 home, pages and legal pages 200; old addresses 308 to their successors; /docs/* 308 to
+  docs.vraelis.com; docs host 200 with site pages sent back to vraelis.com; no noindex on either host; robots,
+  sitemap and llms files served; cleanup intact (/install, /install.ps1, /cli/vraelis.mjs 410; /invite, /signin,
+  /app 307 to /beta; waitlist, plan setup, subscription start 503); account recovery pages 200; contact,
+  reset-password, data-rights, account deletion, the three payment webhooks and the credit balance unchanged;
+  www 308, app.vraelis.com 307, data.vraelis.com 200 (untouched). Two-host crawl: 122 pages, no broken links (the
+  only misses are Cloudflare's email-obfuscation paths, which decode in a browser: checked, no page errors). One
+  labelled test inquiry delivered both emails (Resend).
+- Operator details (founder): Foremake, Inc as operator (unincorporated brand, no individuals named), notices by
+  email, California, USA law with EU residents' mandatory protections kept. A background security review noted that
+  this names a brand rather than an identifiable person or registered entity as operator and controller; that is a
+  legal point for a parent or guardian or counsel (with the under-18 items), not a code fault.
 
 ## Promotion prepared (2026-10-11)
 
