@@ -18,15 +18,18 @@ export const metadata = v8meta({
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
+/** The homepage pill is the newest changelog entry that has a short pill title. */
+const LATEST = NEWS.find((n) => n.pill) ?? { ...NEWS[0], pill: NEWS[0].title };
+
 export default function Home() {
   return (
     <>
       <section className="v8-hero">
         <Wrap>
           <div className="v8-hero__inner">
-            <Link href={href("/contour")} className="v8-pill v8-fade" style={{ ["--d" as string]: ".05s" }}>
-              <em>New</em><span><b>Meet {CONTOUR.name}</b><span className="v8-pill__more"><span className="v8-pill__sep" aria-hidden="true">·</span>Our first product direction</span></span>
-              <i aria-hidden="true"><span className="v8-arrow" /></i>
+            <Link href={href(LATEST.to ?? "/changelog")} className="v8-pill v8-fade" style={{ ["--d" as string]: ".05s" }}>
+              <em>Latest</em><span><b>{LATEST.pill}</b><span className="v8-pill__more"><span className="v8-pill__sep" aria-hidden="true">·</span>{formatDay(LATEST.date).replace(/, \d{4}$/, "")}</span></span>
+              <span className="v8-arrow" aria-hidden="true" />
             </Link>
             <h1 className="v8-hero-title" style={{ width: "100%" }}>
               <span className="v8-sr">{TAGLINE}</span>

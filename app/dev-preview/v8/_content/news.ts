@@ -5,6 +5,7 @@ export type NewsItem = {
   date: string; // ISO day
   kind: "Product" | "Company" | "Engineering";
   title: string;
+  pill?: string; // short title for the homepage pill; the newest entry with one is shown there
   summary: string;
   image: { src: string; alt: string; w: number; h: number };
   to?: string;
@@ -16,6 +17,7 @@ export const NEWS: NewsItem[] = [
     date: "2026-10-10",
     kind: "Product",
     title: "A read-only evidence app for Vraelis Contour",
+    pill: "The Vraelis Contour evidence app",
     summary: "A six-screen read-only app over the recorded trace, with the QA fixes.",
     image: { src: "/v8/contour/app-destination-pending-1200.webp", alt: "The Vraelis Contour app comparing approved cpu-2 with reported loaded cpu-1.", w: 1200, h: 750 },
     to: "/contour",
