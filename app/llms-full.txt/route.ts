@@ -10,7 +10,7 @@ export function GET(req: Request) {
   if (stealthConfigured() && !verifyStealthCookie(cookie ? decodeURIComponent(cookie) : undefined)) {
     return new Response("Not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   }
-  if (v8IsSite()) return new Response(llmsFullTxt(), { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  if (v8IsSite()) return new Response(llmsFullTxt(), { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": stealthConfigured() ? "private, no-store" : "public, max-age=3600" } });
   const intro = `# Vraelis\n\n${SUPPORT}\n\n## First product\n\n${SECURITY_PAGES.contour.intro}\nSource: https://vraelis.com/contour\n\nPublic workspace access is closed. These guides describe private development and supported reference components.\n`;
   const docs = CURRENT_DOC_SLUGS.map(slug => { const doc = getDoc(slug)!; return `${docToMarkdown(doc)}\nSource: https://vraelis.com/docs/${doc.slug}\n`; }).join("\n---\n\n");
   return new Response(`${intro}\n---\n\n${docs}`, {

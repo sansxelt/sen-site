@@ -22,7 +22,7 @@ export function sitePages(): { path: string; label: string }[] {
     if (!path.startsWith("/") || path === "/docs" || path.startsWith("/docs/") || seen.has(path)) return;
     seen.set(path, label);
   };
-  for (const m of MENUS) for (const l of m.links) add(l.to, l.label === "All research" ? "Research" : l.label === "All applications" ? "Applications" : l.label === "Overview" ? m.label : l.label);
+  for (const m of MENUS) for (const l of m.links) add(l.to, l.label === "All research" ? "Research" : l.label === "All applications" ? "Applications" : l.label === "Overview" ? (m.id === "contour" ? "Vraelis Contour" : m.label) : l.label);
   for (const col of FOOTER) for (const l of col.links) add(l.to, l.label);
   for (const p of PARTNERS) add(`/partners/${p.slug}`, `Partnership with ${p.name}`);
   return [...seen].map(([path, label]) => ({ path, label }));

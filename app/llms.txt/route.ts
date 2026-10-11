@@ -13,7 +13,7 @@ export function GET(req: Request) {
     return new Response("Not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   }
   // With v8 promoted, the index comes from v8's own registries (app/dev-preview/v8/_kit/machine.ts).
-  if (v8IsSite()) return new Response(llmsTxt(), { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  if (v8IsSite()) return new Response(llmsTxt(), { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": stealthConfigured() ? "private, no-store" : "public, max-age=3600" } });
   const lines = [
     "# Vraelis", "", `> ${SUPPORT}`, "",
     "Vraelis is in private development. Public workspace access is closed. These references do not describe an available deployment.", "",
