@@ -6,7 +6,9 @@
    in the GitHub dark colours of the kit (.hl-*). Every rule is scoped under .v8 and reuses the kit's tokens, so the
    light theme's style element restyles all of it. */
 
-.v8 { --dh: 64px; --dside: 272px; }
+/* Wider than it was (founder, 2026-10-12: narrow next to Linear and Scale): a 300px sidebar with 14px items, a
+   780px reading column. */
+.v8 { --dh: 64px; --dside: 300px; }
 @media (max-width: 900px) { .v8 { --dh: 108px; } }
 /* The v8 main already pads for a 64px header; the docs add what their header needs beyond that. */
 .v8 .v8-docs { padding-top: calc(var(--dh) - var(--header-h)); }
@@ -86,12 +88,12 @@
 .v8 .v8-docs-main { min-width: 0; padding-inline: clamp(20px, 3vw, 48px); outline: none; }
 
 .v8 .v8-dsb__group + .v8-dsb__group { margin-top: 24px; }
-.v8 .v8-dsb__section { margin: 8px 0 14px; padding: 18px 8px 0; border-top: 1px solid var(--line); color: var(--ink); font: 600 14px/1.3 var(--display); letter-spacing: -.005em; }
+.v8 .v8-dsb__section { margin: 8px 0 14px; padding: 18px 8px 0; border-top: 1px solid var(--line); color: var(--ink); font: 600 15px/1.3 var(--display); letter-spacing: -.005em; }
 .v8 .v8-dsb__group:first-child .v8-dsb__section { margin-top: 0; padding-top: 0; border-top: 0; }
-.v8 .v8-dsb__label { margin: 0 0 6px; padding: 0 8px; color: var(--ink); font: 500 13px/1.4 var(--sans); }
+.v8 .v8-dsb__label { margin: 0 0 6px; padding: 0 10px; color: var(--ink); font: 500 14px/1.4 var(--sans); }
 .v8 .v8-dsb__section + .v8-dsb__label { margin-top: 0; }
 .v8 .v8-dsb ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
-.v8 .v8-dsb li a { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 6px 8px; border-radius: 10px; color: var(--ink-3); font: 500 13px/1.35 var(--sans); transition: color .12s, background .12s; }
+.v8 .v8-dsb li a { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 10px; border-radius: 10px; color: var(--ink-3); font: 500 14px/1.35 var(--sans); transition: color .12s, background .12s; }
 .v8 .v8-dsb li a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
 .v8 .v8-dsb li a[aria-current="page"] { color: var(--ink); background: var(--s3); }
 .v8 .v8-dsb__badge { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent); color: var(--accent-ink); font: 500 10px/1 var(--sans); font-style: normal; letter-spacing: .01em; white-space: nowrap; }
@@ -99,9 +101,9 @@
 .v8 .v8-dsb--sheet .v8-dsb__label { font-size: 14px; }
 
 /* ── Article ────────────────────────────────────────────────────────────────────────────────────────── */
-.v8 .v8-docs-page { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 0 clamp(32px, 4vw, 64px); max-width: 1160px; margin-inline: auto; align-items: start; }
+.v8 .v8-docs-page { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 0 clamp(32px, 4vw, 64px); max-width: 1240px; margin-inline: auto; align-items: start; }
 .v8 .v8-docs-page--solo { grid-template-columns: minmax(0, 1fr); }
-.v8 .v8-docs-article { width: 100%; max-width: 700px; justify-self: center; min-width: 0; padding-block: 36px clamp(72px, 8vw, 104px); }
+.v8 .v8-docs-article { width: 100%; max-width: 780px; justify-self: center; min-width: 0; padding-block: 36px clamp(72px, 8vw, 104px); }
 .v8 .v8-docs-banner { margin-bottom: 26px; padding: 14px 16px 15px; border-radius: 14px; background: var(--s2); color: var(--ink-2); font-size: 14px; line-height: 1.55; }
 .v8 .v8-docs-banner b { color: var(--ink); font-weight: 600; }
 .v8 .v8-docs-crumbs { color: var(--ink-3); font: 500 14px/1.3 var(--sans); }
@@ -228,9 +230,9 @@
 
 /* ── On this page ───────────────────────────────────────────────────────────────────────────────────── */
 .v8 .v8-docs-toc { position: sticky; top: var(--dh); max-height: calc(100vh - var(--dh)); max-height: calc(100dvh - var(--dh)); overflow-y: auto; padding: 38px 0 32px; scrollbar-width: none; }
-.v8 .v8-docs-toc__h { margin-bottom: 10px; color: var(--ink); font: 500 13px/1.3 var(--sans); }
+.v8 .v8-docs-toc__h { margin-bottom: 10px; color: var(--ink); font: 500 13.5px/1.3 var(--sans); }
 .v8 .v8-docs-toc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
-.v8 .v8-docs-toc li a { display: block; padding: 4px 0; color: var(--ink-3); font-size: 12.5px; line-height: 1.45; transition: color .15s; }
+.v8 .v8-docs-toc li a { display: block; padding: 4px 0; color: var(--ink-3); font-size: 13px; line-height: 1.45; transition: color .15s; }
 .v8 .v8-docs-toc li.is-sub a { padding-left: 12px; }
 .v8 .v8-docs-toc li a:hover, .v8 .v8-docs-toc li a[aria-current="location"] { color: var(--ink); }
 .v8 .v8-docs-toc__foot { display: grid; justify-items: start; gap: 4px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
