@@ -73,7 +73,7 @@ function PartnerBand() {
       {/* "Partnered with", not "Trusted by" (founder asked for either, 2026-10-11): neither partnership endorses or uses
           Vraelis, and the records say nothing may suggest otherwise (partners.ts). */}
       <Wrap><p className="hm-band__label">Partnered with</p></Wrap>
-      <p className="v8-sr">Partnered with {PARTNERS.map((p) => `${p.name} (${p.bandLine})`).join(" and ")}.</p>
+      <p className="v8-sr">Partnered with {PARTNERS.map((p) => p.name).join(" and ")}.</p>
       <div className="hm-band__view" aria-hidden="true">
         <div className="hm-band__track">
           {[0, 1].map((half) => (
@@ -84,7 +84,6 @@ function PartnerBand() {
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img className={`hm-band__logo${p.logoMono ? " hm-band__logo--mono" : ""}`} src={p.logo.src} alt="" width={p.logo.w} height={p.logo.h} loading="eager" decoding="async" />
                     : <span className="hm-band__name">{p.name}</span>}
-                  <span className="hm-band__why">{p.bandLine}</span>
                 </span>
               ))}
             </div>
