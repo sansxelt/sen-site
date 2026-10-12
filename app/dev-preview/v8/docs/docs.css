@@ -385,7 +385,7 @@
 .v8 .v8-drv.v8-drv--in { opacity: 1; transform: none; transition: opacity .6s var(--ease) var(--drv-d, 0ms), transform .8s var(--ease) var(--drv-d, 0ms); }
 
 /* ── Narrower screens ───────────────────────────────────────────────────────────────────────────────── */
-@media (max-width: 1240px) {
+@media (max-width: 1320px) { /* with the 300px sidebar, below this the contents list would squeeze the text */
   .v8 .v8-docs-page { grid-template-columns: minmax(0, 1fr); }
   .v8 .v8-docs-toc { display: none; }
   .v8 .v8-dh-explore { grid-template-columns: repeat(2, minmax(0, 1fr)); }
