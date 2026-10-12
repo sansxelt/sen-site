@@ -124,7 +124,16 @@ The founder pushes to `main` directly (the SEO pass, 2026-10-12). Before every p
 
 - The repository `sansxelt/sen-site` is public: anyone can read the code, this runbook and the strategy notes.
 - A Railway service, "appealing-love", is connected to the repository and deploys every push to `main` as production.
-  It is not part of the Vercel setup described here.
+  It is not part of the Vercel setup described here. REMOVED by the founder 2026-10-12: it ran only the retired
+  Preflight worker (root `railway.toml`), whose run-creating APIs are closed and whose queue was empty (last run
+  2026-10-02). To bring Preflight back, follow docs/worker-deploy-runbook.md.
+
+### A preview that fails in seconds with git_info_fail (2026-10-12)
+
+- Preview `dpl_5g55Bxad9bFLnxWgS9SbrpKujJDx` (site-v8 at 94dc215b, 02:50:51 UTC) failed after 3 seconds with
+  `git_info_fail`: Vercel could not read the commit from GitHub and built nothing. The same commit built and deployed
+  from `main` two minutes later, and later site-v8 pushes passed. Not a code or configuration fault; if it repeats on
+  a commit that matters, push again or redeploy it.
 
 ## PROMOTED 2026-10-11 22:4x UTC
 
