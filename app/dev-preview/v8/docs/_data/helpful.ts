@@ -190,7 +190,7 @@ const EVALUATE: Page = {
     { t: "h2", text: "How access works" },
     { t: "p", text: "There is no self-service account, public API or download. Work with Vraelis directly: describe your release path through the contact form, and a person at Vraelis replies. A conversation does not grant access, and Vraelis does not take inquiries from China, including Hong Kong and Macao." },
     { t: "cards", items: [
-      { to: "/contact", title: "Join us", line: "Send your release path and requirements." },
+      { to: "/contact?topic=contour", title: "Join us", line: "Send your release path and requirements." },
       { to: "/docs/limits", title: "Limits", line: "What exists today, and what does not." },
     ] },
   ],

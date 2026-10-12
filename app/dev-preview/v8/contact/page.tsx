@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wrap, cx } from "../_kit/blocks";
+import { Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { href } from "../_kit/site";
 import { ContactForm } from "./contact-form";
@@ -17,6 +17,9 @@ export const metadata = v8meta({
 // form): /contact with no topic is the Vraelis Contour inquiry, every Contact and Join us link lands here, and the
 // form's two selects (who you are, what about) are the only way to choose: a row of topic chips above it asked the
 // same thing twice and was removed (founder, 2026-10-12). Links from the menus still preset the topic with ?topic=.
+// NOT A VRAELIS CONTOUR PAGE (founder, 2026-10-12: "dont form the entire thing around Vraelis Contour since they can
+// reach out over many things"): the heading is the same for every arrival; ?topic= only presets the form, and the
+// Vraelis Contour context (its note, the requirements prompt) appears in the form when that topic is chosen.
 const ADDRESSES: [string, string][] = [
   ["help@vraelis.com", "General and technical inquiries"],
   ["sales@vraelis.com", "Vraelis Contour, AI security and organizational inquiries"],
@@ -29,24 +32,18 @@ type Query = Promise<{ [key: string]: string | string[] | undefined }>;
 export default async function Contact({ searchParams }: { searchParams: Query }) {
   const { topic: raw } = await searchParams;
   const topic = typeof raw === "string" ? raw : undefined;
-  const contour = !topic || topic === "contour" || topic === "ai-security";
   return (
     <div className="cnt">
       <section className="v8-page-hero cnt-sec">
         <Wrap>
-          <div className={cx("cnt-grid", contour && "cnt-grid--contour")}>
+          <div className="cnt-grid">
             <header className="cnt-intro">
-              <span className="v8-eyebrow">{contour ? "Vraelis Contour" : EYEBROW[topic ?? ""] ?? "Contact"}</span>
-              <h1 className="v8-h1">{contour ? "Join us on Vraelis Contour." : "Reach the right team."}</h1>
-              <p className="v8-lead">
-                {contour
-                  ? "Model release security, from approval to reported runtime state."
-                  : "Technical, organizational, research or privacy inquiries."}
-              </p>
-              <p className="v8-note cnt-closed">Vraelis Contour is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.</p>
+              <span className="v8-eyebrow">{EYEBROW[topic ?? ""] ?? "Contact"}</span>
+              <h1 className="v8-h1">Talk to Vraelis.</h1>
+              <p className="v8-lead">Vraelis Contour, research, an application area, a partnership, privacy or anything else. Choose a topic and your message goes to the team that handles it.</p>
             </header>
             <div className="cnt-formwrap">
-              <ContactForm key={topic ?? ""} topicParam={contour ? "contour" : topic === "other" ? undefined : topic} privacyHref={href("/privacy")} />
+              <ContactForm key={topic ?? ""} topicParam={topic === "other" ? undefined : topic} privacyHref={href("/privacy")} />
             </div>
             <aside className="cnt-aside" aria-label="Other contact options">
               {/* Always open, on every screen (founder, 2026-10-12: "dont even make this a dropdown"). */}

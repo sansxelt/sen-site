@@ -22,10 +22,10 @@ const TOPICS = [
 ] as const;
 type TopicKey = typeof TOPICS[number]["key"];
 
-/** ?topic= presets. contour (and the live site's older ai-security) opens the Contour requirements context. */
-const PRESETS: Record<string, { audience?: ContactAudience; topic?: TopicKey; contour?: boolean }> = {
-  contour: { topic: "sales", contour: true },
-  "ai-security": { topic: "sales", contour: true },
+/** ?topic= presets. contour (and the live site's older ai-security) presets the Vraelis Contour topic. */
+const PRESETS: Record<string, { audience?: ContactAudience; topic?: TopicKey }> = {
+  contour: { topic: "sales" },
+  "ai-security": { topic: "sales" },
   beta: { topic: "sales" },
   research: { audience: "research", topic: "partnerships" },
   government: { audience: "government", topic: "support" },
@@ -45,6 +45,7 @@ const MSG = {
   failed: "The message did not send. Try again, or write to help@vraelis.com.",
 } as const;
 const CONTOUR_LABEL = "Your release path and requirements";
+const CONTOUR_NOTE = "Vraelis Contour is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.";
 const CONTOUR_PLACEHOLDER = "Describe the models you release, the systems that run them, how a release is approved today, and which evidence you would need.";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 type Field = IntakeField | "topic" | "email" | "message";
@@ -72,7 +73,9 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
   const sender = contactAudience(audience);
   const privacy = audience === "privacy";
   const chosen = TOPICS.find((t) => t.key === (privacy ? "privacy" : topic));
-  const requirements = !!preset?.contour && topic === "sales" && !privacy;
+  // Choosing Vraelis Contour, by link or in the select, brings its context: the not-public note and the requirements
+  // prompt. Every other topic gets a plain message field.
+  const requirements = topic === "sales" && !privacy;
   const clear = (f: Field) => setErrors((e) => (e[f] ? { ...e, [f]: undefined } : e));
   const err = (f: Field) => (errors[f] ? `${id}-${f}-err` : undefined);
   const errorText = (f: Field) => (errors[f] ? <p className="cnt-err" id={err(f)}>{errors[f]}</p> : null);
@@ -113,7 +116,7 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
     finally { setSending(false); }
   }
   // Strings the in-browser translator should know before they first appear (kept from v6).
-  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), CONTOUR_LABEL, CONTOUR_PLACEHOLDER, ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap((a) => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
+  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), CONTOUR_LABEL, CONTOUR_NOTE, CONTOUR_PLACEHOLDER, ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap((a) => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
   if (sent) return <><div className="cnt-sent" ref={done} tabIndex={-1} role="status"><p className="cnt-sent__t">{MSG.sent}</p></div>{seed}</>;
 
   return (
@@ -137,6 +140,7 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
           </div>
         ) : <p className="cnt-help">Goes to the privacy team. No organization details needed.</p>}
       </div>
+      {requirements ? <p className="cnt-help cnt-closed">{CONTOUR_NOTE}</p> : null}
       <div className="cnt-pair">
         <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-name`}>Name <span className="cnt-opt">Optional</span></label><input className="cnt-input" id={`${id}-name`} name="name" autoComplete="name" maxLength={160} /></div>
         <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-email`}>{privacy || audience === "individual" ? "Email" : "Work email"}</label><input className="cnt-input" id={`${id}-email`} name="email" type="email" autoComplete="email" required aria-invalid={!!errors.email || undefined} aria-describedby={err("email")} onInput={() => clear("email")} />{errorText("email")}</div>

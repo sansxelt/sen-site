@@ -196,7 +196,7 @@ export const PHOTO_NOTE = "Editorial photograph. It shows the kind of setting, n
 
 /** Join us routes into the existing contact intake: audience and topic arrive already chosen. */
 export const JOIN = [
-  { label: "Discuss Vraelis Contour", hint: "Release, platform and security teams", to: "/contact" },
+  { label: "Discuss Vraelis Contour", hint: "Release, platform and security teams", to: "/contact?topic=contour" },
   { label: "Research collaboration", hint: "Researchers and academic teams", to: "/contact?topic=research" },
   { label: "Government or institution", hint: "Public bodies", to: "/contact?topic=government" },
   { label: "Report a security issue", hint: "Disclosure", to: "/security#report" },
