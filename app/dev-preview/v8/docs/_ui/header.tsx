@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Mark, Wordmark } from "../../_kit/logo";
 import { localHref } from "../../_kit/site";
 import { ThemeToggle } from "../../_kit/theme";
-import type { NavTab, TabId } from "../_data/types";
+import type { NavBranch, NavLeaf, NavTab, TabId } from "../_data/types";
 import { AskButton } from "./ask-button";
 import { Go, useDocsLink, useDocsMain, useDocsPlace } from "./host";
 import { SearchPill } from "./search";
@@ -46,34 +46,50 @@ function useMenu() {
   return { open, setOpen, box, button, card };
 }
 
-/** The sidebar tree of one tab: product headings, group headings, items with their badges, the current page filled. */
+/** The sidebar tree (Scale's docs): large topic headings; under each, pages and expandable subtopics. A subtopic opens
+ *  by itself when the current page is inside it, and the reader can open or close any of them. */
 export function NavTree({ tab, onNavigate }: { tab: NavTab; onNavigate?: () => void }) {
   const link = useDocsLink();
   const { pathname } = useDocsPlace({});
+  const row = (it: NavLeaf) => {
+    const to = link(it.to);
+    return (
+      <li key={it.to}>
+        <Go to={to} onClick={onNavigate} aria-current={to === pathname ? "page" : undefined}>
+          <span>{it.label}</span>{it.badge ? <em className="v8-dsb__badge">{it.badge}</em> : null}
+        </Go>
+      </li>
+    );
+  };
   return (
     <>
-      {tab.groups.map((g, gi) => {
-        const head = g.section && g.section !== tab.groups[gi - 1]?.section ? g.section : null;
-        return (
-          <div key={`${g.section ?? ""}/${g.group}`} className="v8-dsb__group">
-            {head ? <p className="v8-dsb__section">{head}</p> : null}
-            {g.group ? <p className="v8-dsb__label">{g.group}</p> : null}
-            <ul>
-              {g.items.map((it) => {
-                const to = link(it.to);
-                return (
-                  <li key={it.to}>
-                    <Go to={to} onClick={onNavigate} aria-current={to === pathname ? "page" : undefined}>
-                      <span>{it.label}</span>{it.badge ? <em className="v8-dsb__badge">{it.badge}</em> : null}
-                    </Go>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })}
+      {tab.topics.map((t) => (
+        <div key={t.title} className="v8-dsb__topic">
+          <p className="v8-dsb__topichead">{t.title}</p>
+          <ul>
+            {t.items.map((it) => ("items" in it
+              ? <Branch key={it.label} branch={it} current={it.items.some((x) => link(x.to) === pathname)} row={row} />
+              : row(it)))}
+          </ul>
+        </div>
+      ))}
     </>
+  );
+}
+
+function Branch({ branch, current, row }: { branch: NavBranch; current: boolean; row: (it: NavLeaf) => ReactNode }) {
+  const [open, setOpen] = useState(current);
+  const id = useId();
+  // Arriving on a page inside it opens it (state adjusted during render, not in an effect).
+  const [was, setWas] = useState(current);
+  if (current !== was) { setWas(current); if (current) setOpen(true); }
+  return (
+    <li className="v8-dsb__branch" data-open={open}>
+      <button type="button" className="v8-dsb__branchbtn" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
+        <span>{branch.label}</span><Chevron />
+      </button>
+      <ul id={id} className="v8-dsb__sub" hidden={!open}>{branch.items.map(row)}</ul>
+    </li>
   );
 }
 

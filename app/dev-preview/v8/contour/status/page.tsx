@@ -1,12 +1,13 @@
 import { Button, Capture, JoinBand, PageHero, Section, Tag, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
-import { CONTOUR, FACTS, STATUS, type Kind, STATUS_SOURCES } from "../../_kit/site";
+import { CONTOUR, FACTS, STATUS, type Kind, STATUS_SOURCES, TAB_NAMES } from "../../_kit/site";
 import "../contour.css";
 
 export const metadata = v8meta({
   title: `${CONTOUR.name} development status`,
   description: `What works in the ${CONTOUR.name} reference experiment, what is planned next, what we do not claim, and the source for every line.`,
   path: "/contour/status",
+  tab: TAB_NAMES["contour-status"],
 });
 
 // Replaces the old /beta and /limitations pages. Every row reads from STATUS and FACTS in _kit/site.ts, so this

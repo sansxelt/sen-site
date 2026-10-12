@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Chapters, RiseWords } from "../_kit/client";
 import { Button, CAPTURES, Capture, Faq, Terms, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, OBSERVATION_TIMES, WORKFLOW, href, type Kind } from "../_kit/site";
+import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, OBSERVATION_TIMES, WORKFLOW, href, type Kind, TAB_NAMES } from "../_kit/site";
 import { HeroStage, ObservationTabs, type Lift, type ObservationView } from "./contour-client";
 import "./contour.css";
 
@@ -10,6 +10,7 @@ export const metadata = v8meta({
   title: `${CONTOUR.name} | ${CONTOUR.headline.replace(/\.$/, "")}`,
   description: `${CONTOUR.line} ${CONTOUR.name} is in private development: today it runs inside a controlled ONNX reference experiment.`,
   path: "/contour",
+  tab: TAB_NAMES.contour,
 });
 
 // Gusto's way of showing a product (one central interface, a few details lifted out of it, readable workflow

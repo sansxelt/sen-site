@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import "../partners.css";
 import { Section, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
-import { href } from "../../_kit/site";
+import { href, TAB_NAMES } from "../../_kit/site";
 import { PARTNERS, partner } from "../../_content/partners";
 import { LogoCard, day } from "../logo-card";
 
@@ -13,7 +13,7 @@ export function generateStaticParams() { return PARTNERS.map((p) => ({ slug: p.s
 export async function generateMetadata({ params }: Props) {
   const p = partner((await params).slug);
   if (!p) return {};
-  return v8meta({ title: `${p.title} | Partners`, description: p.summary, path: `/partners/${p.slug}` });
+  return v8meta({ title: `${p.title} | Partners`, description: p.summary, path: `/partners/${p.slug}` , tab: TAB_NAMES[p.slug] ?? p.name });
 }
 
 export default async function PartnerPage({ params }: Props) {

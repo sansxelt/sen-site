@@ -146,6 +146,33 @@ export const STATUS_SOURCES = {
   spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
 } as const;
 
+/** Short names for the browser tab (founder, 2026-10-12: "ensure all tabs actually fit"). A tab shows about 24
+ *  characters, so a page's tab title is "<name> | Vraelis" with the name at most 14 characters; the full title stays in
+ *  link previews and search snippets. Keyed by page slug, shared by the site and the docs (the same slugs name the same
+ *  subjects). A page not listed uses its own short label. scripts/tab-titles-verify.ts holds every title to 24. */
+export const TAB_NAMES: Record<string, string> = {
+  // Site
+  contour: "Contour", "contour-status": "Contour status", company: "Company", refunds: "Refunds",
+  bytedance: "ByteDance", reddit: "Reddit",
+  // Applications (site and docs)
+  defense: "Defense", "critical-infrastructure": "Infrastructure", "autonomous-systems": "Autonomy", government: "Government", integrators: "Integrators",
+  // Research (site and docs)
+  "model-integrity": "Integrity", "adversarial-threats": "Threats", "machine-trust": "Machine trust", "security-evidence": "Evidence",
+  "model-release-security": "Release guide", "operating-constraints": "Constraints", "ai-security-evaluation": "Evaluation",
+  // Docs
+  introduction: "Introduction", "reading-the-docs": "Reading guide", "who-its-for": "Who it is for", "company-and-brands": "Company",
+  "application-areas": "Applications", "security-and-disclosure": "Security", "privacy-and-data": "Privacy", "where-vraelis-is-offered": "Availability",
+  "partner-scope": "Partnerships", status: "Status", "release-notes": "Release notes", sources: "Sources", glossary: "Glossary", faq: "FAQ",
+  products: "Products", "release-identity": "Identity", "approval-binding": "Binding", "runtime-integration": "Runtime",
+  "comparing-approved-and-reported": "Comparison", "evidence-and-observations": "Observations", "evidence-app": "Evidence app", limits: "Limits",
+  "observation-01": "Observation 01", "observation-02": "Observation 02", "observation-03": "Observation 03", "observation-04": "Observation 04",
+  // Earlier references (history)
+  "getting-started": "Start here", "the-loop": "The loop", "what-you-can-check": "Checks", "ai-assistants": "AI assistants", ci: "CI gate",
+  review: "Plan review", "run-activity": "Run activity", "recorded-reports": "Task reports", cli: "CLI",
+};
+/** The browser-tab title for a page: "<name> | Vraelis". */
+export const tabTitle = (key: string, fallback: string) => `${TAB_NAMES[key] ?? fallback} | Vraelis`;
+
 export const RESEARCH = [
   { slug: "model-integrity", title: "Model integrity", line: "Whether the model that runs is the model that was approved.", photo: "embeddedBoard" },
   { slug: "adversarial-threats", title: "Adversarial threats", line: "Inputs, updates and supply paths built to change what a model does.", photo: "boardInspection" },
