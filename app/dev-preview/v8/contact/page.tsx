@@ -49,12 +49,13 @@ export default async function Contact({ searchParams }: { searchParams: Query })
               <ContactForm key={topic ?? ""} topicParam={contour ? "contour" : topic === "other" ? undefined : topic} privacyHref={href("/privacy")} />
             </div>
             <aside className="cnt-aside" aria-label="Other contact options">
-              <details className="cnt-direct">
-                <summary>Direct contact addresses<span className="v8-caret" aria-hidden="true" /></summary>
+              {/* Always open, on every screen (founder, 2026-10-12: "dont even make this a dropdown"). */}
+              <section className="cnt-direct" aria-labelledby="cnt-direct-h">
+                <h2 id="cnt-direct-h" className="cnt-direct__h">Direct contact addresses</h2>
                 <ul className="cnt-list">
                   {ADDRESSES.map(([address, job]) => <li key={address}><a href={`mailto:${address}`} data-no-translate>{address}</a><span>{job}</span></li>)}
                 </ul>
-              </details>
+              </section>
               <Link className="cnt-report" href={href("/security#report")}>Report a security issue<span className="v8-arrow" aria-hidden="true" /></Link>
             </aside>
           </div>

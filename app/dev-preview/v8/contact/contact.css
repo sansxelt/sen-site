@@ -19,9 +19,7 @@
 
 /* Other options. */
 .v8 .cnt-direct { border-top: 1px solid var(--line); padding-top: 16px; }
-.v8 .cnt-direct summary { list-style: none; display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 500; cursor: pointer; }
-.v8 .cnt-direct summary::-webkit-details-marker { display: none; }
-.v8 .cnt-direct[open] summary .v8-caret { transform: translateY(1px) rotate(225deg); }
+.v8 .cnt-direct__h { margin: 0; color: var(--ink); font: 500 14px/1.4 var(--sans); }
 .v8 .cnt-list { list-style: none; margin: 12px 0 0; padding: 0; }
 .v8 .cnt-list li { display: grid; gap: 3px; padding: 11px 0; border-bottom: 1px solid var(--line); }
 .v8 .cnt-list a { color: var(--ink); font-size: 14.5px; overflow-wrap: anywhere; text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; }
