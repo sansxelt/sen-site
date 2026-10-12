@@ -110,7 +110,8 @@ export default function Home() {
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
             <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 46 }}>
-              <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
+              {/* Join us lives in the header; the hero leads to the product instead of repeating it (founder, 2026-10-12). */}
+              <Button to="/contour" size="lg" arrow>See how Contour works</Button>
               <Button to="/docs" kind="soft" size="lg">Read the documentation</Button>
             </div>
           </div>
