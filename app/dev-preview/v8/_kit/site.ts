@@ -161,7 +161,7 @@ export const MENUS: Menu[] = [
     id: "contour", label: "Products", kind: "mega",
     links: [
       { label: "Vraelis Contour", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
-      { label: "Development status", to: "/contour/status", line: "What works today, what is being built, what we do not claim.", preview: crop("crop-release-identity"), previewAlt: "Release identity for cpu-2, with preprocessing not recorded." },
+      { label: "Contour status", to: "/contour/status", line: "What works today, what is being built, what we do not claim.", preview: crop("crop-release-identity"), previewAlt: "Release identity for cpu-2, with preprocessing not recorded." },
     ],
   },
   {
