@@ -15,19 +15,13 @@ export const metadata = v8meta({
 // same fields, validation, POST body and messages. ?topic= arrives from the menus and presets the form.
 // ONE PAGE FOR CONTACT AND JOIN US (founder, 2026-10-11, after scale.com, whose Contact and Get Started are the same
 // form): /contact with no topic is the Vraelis Contour inquiry, every Contact and Join us link lands here, and the
-// chips are the same set on every visit, "Any other inquiry" included (topic=other, the general form).
+// form's two selects (who you are, what about) are the only way to choose: a row of topic chips above it asked the
+// same thing twice and was removed (founder, 2026-10-12). Links from the menus still preset the topic with ?topic=.
 const ADDRESSES: [string, string][] = [
   ["help@vraelis.com", "General and technical inquiries"],
   ["sales@vraelis.com", "Vraelis Contour, AI security and organizational inquiries"],
   ["privacy@vraelis.com", "Privacy and data rights"],
 ];
-const ROUTES = [
-  { topic: "contour", label: "Vraelis Contour" },
-  { topic: "research", label: "Research collaboration" },
-  { topic: "government", label: "Government or institution" },
-  { topic: "privacy", label: "Privacy request" },
-  { topic: "other", label: "Any other inquiry" },
-] as const;
 const EYEBROW: Record<string, string> = { research: "Research collaboration", government: "Government and institutions", privacy: "Privacy", other: "Contact" };
 
 type Query = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -50,12 +44,6 @@ export default async function Contact({ searchParams }: { searchParams: Query })
                   : "Technical, organizational, research or privacy inquiries."}
               </p>
               <p className="v8-note cnt-closed">Vraelis Contour is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.</p>
-              <nav className="cnt-routes" aria-label="Start from">
-                {ROUTES.map((r) => {
-                  const on = r.topic === topic || (r.topic === "contour" && contour);
-                  return <Link key={r.topic} href={href(`/contact?topic=${r.topic}`)} className="cnt-route" aria-current={on ? "page" : undefined}>{r.label}</Link>;
-                })}
-              </nav>
             </header>
             <div className="cnt-formwrap">
               <ContactForm key={topic ?? ""} topicParam={contour ? "contour" : topic === "other" ? undefined : topic} privacyHref={href("/privacy")} />

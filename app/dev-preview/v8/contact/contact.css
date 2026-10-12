@@ -16,10 +16,6 @@
 }
 
 /* Routes into the same intake (x.ai's route cards, compact). */
-.v8 .cnt-routes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.v8 .cnt-route { display: inline-flex; align-items: center; min-height: 34px; padding: 6px 13px; border-radius: 999px; color: var(--ink-2); font-size: 13.5px; box-shadow: inset 0 0 0 1px var(--line-2); transition: color .15s, box-shadow .15s, background .15s; }
-.v8 .cnt-route:hover { color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-3); }
-.v8 .cnt-route[aria-current="page"] { color: var(--ink); background: var(--s2); box-shadow: inset 0 0 0 1px var(--line-3); }
 
 /* Other options. */
 .v8 .cnt-direct { border-top: 1px solid var(--line); padding-top: 16px; }

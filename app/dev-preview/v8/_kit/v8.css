@@ -67,7 +67,9 @@ html:has(.v8) { --nav-h: 76px; }
 .v8 ::selection { background: #FAFAFA; color: #0A0A0B; }
 .v8 :where(a) { color: inherit; text-decoration: none; }
 .v8 :where(img, video) { display: block; max-width: 100%; }
-.v8 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+/* The keyboard focus ring hugs each element in its own shape (founder, 2026-10-12: it sat too far out, with a forced
+   6px corner that did not match pills, fields or 10px buttons). */
+.v8 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .v8 :where(h1, h2, h3, h4) { margin: 0; color: var(--ink); font-family: var(--display); font-weight: 500; letter-spacing: -.022em; text-wrap: balance; }
 .v8 :where(p) { margin: 0; color: inherit; }
 .v8 :where(code, pre) { font-family: var(--mono); }
