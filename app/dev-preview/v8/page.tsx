@@ -130,7 +130,7 @@ export default function Home() {
               <div className="v8-tile__foot"><span>{CONTOUR.name}</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/contour#observations")} className="v8-tile">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(255,176,103,.10), transparent 70%), #0C0C0E" }}>
+              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(90,180,255,.12), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
                   <CaptureCycle images={EVIDENCE_TILE} />
                 </div>

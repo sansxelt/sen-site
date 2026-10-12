@@ -96,7 +96,7 @@
 .v8 .v8-dsb li a { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 10px; border-radius: 10px; color: var(--ink-3); font: 500 14px/1.35 var(--sans); transition: color .12s, background .12s; }
 .v8 .v8-dsb li a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
 .v8 .v8-dsb li a[aria-current="page"] { color: var(--ink); background: var(--s3); }
-.v8 .v8-dsb__badge { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent); color: var(--accent-ink); font: 500 10px/1 var(--sans); font-style: normal; letter-spacing: .01em; white-space: nowrap; }
+.v8 .v8-dsb__badge { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fresh) 40%, transparent); color: var(--fresh); font: 500 10px/1 var(--sans); font-style: normal; letter-spacing: .01em; white-space: nowrap; }
 .v8 .v8-dsb--sheet li a { min-height: 40px; font-size: 15px; }
 .v8 .v8-dsb--sheet .v8-dsb__label { font-size: 14px; }
 
@@ -140,8 +140,8 @@
 .v8 .v8-docs-body a:not([class]):hover { text-decoration-color: var(--ink); }
 .v8 .v8-docs-body .v8-docs-h a { text-decoration: none; }
 /* Inline code: x.ai's orange text with no chip, in our accent. */
-.v8 .v8-docs-body :not(pre) > code, .v8 .v8-docs-lead code { color: var(--accent-ink); font-size: .9em; overflow-wrap: anywhere; }
-.v8 .v8-docs-body a:not([class]):has(code) { text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.v8 .v8-docs-body :not(pre) > code, .v8 .v8-docs-lead code { color: var(--code); font-size: .9em; overflow-wrap: anywhere; }
+.v8 .v8-docs-body a:not([class]):has(code) { text-decoration-color: color-mix(in srgb, var(--code) 60%, transparent); }
 
 /* Lists: a hairline marker, never a dot. */
 .v8 .v8-docs-ul, .v8 .v8-docs-ol { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 9px; }
@@ -170,7 +170,7 @@
 .v8 .v8-docs-copy--icon { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; }
 .v8 .v8-docs-code .v8-docs-copy, .v8 .v8-dcp .v8-docs-copy { color: rgba(250,250,250,.55); }
 .v8 .v8-docs-code .v8-docs-copy:hover, .v8 .v8-dcp .v8-docs-copy:hover { color: #FAFAFA; background: rgba(255,255,255,.07); }
-.v8 .v8-docs-copy[data-state="copied"] { color: var(--accent-ink); }
+.v8 .v8-docs-copy[data-state="copied"] { color: var(--go); }
 .v8 .v8-docs-code .v8-docs-copy[data-state="copied"], .v8 .v8-dcp .v8-docs-copy[data-state="copied"] { color: #FF8A50; }
 
 /* Tables: no outer frame, first column emphasised and flush left, cells top-aligned (x.ai). */
@@ -265,7 +265,7 @@
 .v8 .v8-docs-sr__item .x { color: var(--ink-3); font-size: 12.5px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .v8 .v8-docs-sr__empty { padding: 18px 14px; color: var(--ink-3); font-size: 13.5px; }
 /* Matches in x.ai's highlight: a block of the accent. */
-.v8 .v8-docs-modal mark { border-radius: 3px; background: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--ink); padding: 0 1px; }
+.v8 .v8-docs-modal mark { border-radius: 3px; background: color-mix(in srgb, var(--wait) 45%, transparent); color: var(--ink); padding: 0 1px; }
 .v8 .v8-docs-sp { min-height: 0; overflow-y: auto; padding: 18px 22px 24px; scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
 .v8 .v8-docs-sp__crumb { color: var(--ink-4); font-size: 12px; }
 .v8 .v8-docs-sp__title { margin-top: 6px; color: var(--ink); font: 500 19px/1.3 var(--display); letter-spacing: -.012em; }
@@ -278,7 +278,7 @@
 .v8 .v8-docs-sp__body ul { list-style: none; padding-left: 14px; }
 .v8 .v8-docs-sp__body ul li { position: relative; }
 .v8 .v8-docs-sp__body ul li::before { content: ""; position: absolute; left: -14px; top: .82em; width: 7px; height: 1px; background: var(--ink-4); }
-.v8 .v8-docs-sp__body code { color: var(--accent-ink); font-size: .9em; }
+.v8 .v8-docs-sp__body code { color: var(--code); font-size: .9em; }
 .v8 .v8-docs-sp__body pre { padding: 10px 12px; border-radius: 10px; background: #111113; color: #E1E4E8; font: 400 11.5px/1.6 var(--mono); white-space: pre; overflow: auto; }
 .v8 .v8-docs-sp__body table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .v8 .v8-docs-sp__body th, .v8 .v8-docs-sp__body td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
@@ -322,7 +322,7 @@
 .v8 .v8-dh-product__main { display: flex; flex-direction: column; }
 .v8 .v8-dh-product__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 .v8 .v8-dh-product__head h3 { font-size: 22px; font-weight: 500; line-height: 1.2; letter-spacing: -.014em; }
-.v8 .v8-badge { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 34%, transparent); color: var(--accent-ink); font: 500 12px/1 var(--sans); white-space: nowrap; }
+.v8 .v8-badge { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fresh) 34%, transparent); color: var(--fresh); font: 500 12px/1 var(--sans); white-space: nowrap; }
 .v8 .v8-dh-product__id { margin-top: 6px; color: var(--ink-3); font-size: 13px; }
 .v8 .v8-dh-product__p { margin-top: 16px; color: var(--ink-2); font-size: 15px; line-height: 1.6; }
 .v8 .v8-dh-product__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 22px; }

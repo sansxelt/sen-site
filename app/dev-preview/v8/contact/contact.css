@@ -64,7 +64,7 @@
 .v8 .cnt-hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(100%); }
 .v8 .cnt-sent { padding: 4px 0; border-radius: var(--r-sm); }
 .v8 .cnt-sent:focus { outline: none; }
-.v8 .cnt-sent:focus-visible { outline: 2px solid var(--spec-2); outline-offset: 3px; }
+.v8 .cnt-sent:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .v8 .cnt-sent__t { color: var(--ink); font: 500 clamp(20px, 2vw, 24px)/1.4 var(--display); letter-spacing: -.012em; }
 @media (max-width: 620px) { .v8 .cnt-pair, .v8 .cnt-pair--context { grid-template-columns: minmax(0, 1fr); gap: 22px; } }
 @media (max-width: 480px) { .v8 .cnt-submit { width: 100%; } }
