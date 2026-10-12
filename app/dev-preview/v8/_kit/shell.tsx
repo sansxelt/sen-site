@@ -153,8 +153,8 @@ export function V8Header() {
           </nav>
           <div className="v8-header__end">
             {/* One way in, as on scale.com where Contact and Get Started are the same form (founder, 2026-10-11). */}
-            {/* The hero button's size (founder, 2026-10-12: "the size in the middle I like, it should be in the top right"). */}
-            <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href(JOIN[0].to)}>Join us</Link>
+            {/* The nav items' height, 36px, so it sits on their line (founder, 2026-10-12: the hero size was "way too big"). */}
+            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href(JOIN[0].to)}>Join us</Link>
             <button type="button" className="v8-burger" aria-label={drawer ? "Close menu" : "Open menu"} aria-expanded={drawer} aria-controls="v8-drawer"
               onClick={() => setDrawer((d) => !d)}><span aria-hidden="true" /></button>
           </div>
