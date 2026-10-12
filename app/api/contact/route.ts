@@ -82,10 +82,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // New structured inquiries are validated here as well as in the form. Legacy contact clients remain supported.
-  const intake = payload.intake === undefined ? null : validateContactIntake(payload.intake);
-  if (intake && !intake.ok) return NextResponse.json({ error: intake.error }, { status: 400 });
-  const details = intake?.ok ? intake.value : null;
+  // Every inquiry carries its structured context, validated here as well as in the form (2026-10-12: the payload
+  // without it, kept for the retired forms, is no longer accepted, so the country policy in lib/contact-intake.ts
+  // cannot be skipped by leaving the context out).
+  const intake = validateContactIntake(payload.intake);
+  if (!intake.ok) return NextResponse.json({ error: intake.error }, { status: 400 });
+  const details = intake.value;
   const routedMessage = details ? `${message}\n\n---\n${formatContactIntake(details)}` : message;
 
   // Validate + normalize the destination inbox (help@/sales@/privacy@ only).

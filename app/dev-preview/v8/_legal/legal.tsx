@@ -87,6 +87,12 @@ export function OperatorSection({ controller = false }: { controller?: boolean }
           ? <P>Legal notices and privacy requests are handled by email: legal notices to <A href="mailto:help@vraelis.com">help@vraelis.com</A>, privacy requests to <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</P>
           : <P>Legal notices and privacy requests: {TBC}.</P>}
       {controller ? null : <P>Governing law and courts: these terms are governed by the laws of {OPERATOR.governingLaw ?? TBC}, without regard to conflict-of-laws rules, and disputes go to the state and federal courts located in California. If you live in the European Union, you also keep the protection of the mandatory consumer laws of the country where you live, and you may bring a claim in its courts. Everywhere else, these global terms apply as written.</P>}
+      {controller ? null : <>
+        {/* Where Vraelis is offered (founder, 2026-10-12). Enforced in the contact form and on the server
+            (lib/contact-intake.ts); privacy requests stay open to everyone, as privacy law requires. */}
+        <H>Where Vraelis is offered</H>
+        <P>Vraelis does not offer Vraelis Contour, and does not take inquiries about it or about working with Vraelis, from people or organizations located in China, including Hong Kong and Macao. Vraelis is building for defense and critical-infrastructure work in the United States, where who may receive security software and technical information is restricted. Privacy and data-rights requests are accepted from everyone, wherever they are.</P>
+      </>}
     </>
   );
 }

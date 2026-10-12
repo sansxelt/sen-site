@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { CONTACT_AUDIENCES, INTAKE_ERRORS, contactAudience, validateContactIntake, type ContactAudience, type IntakeField } from "@/lib/contact-intake";
+import { CONTACT_AUDIENCES, COUNTRIES, HEARD_OPTIONS, INTAKE_ERRORS, contactAudience, isRestrictedCountry, validateContactIntake, type ContactAudience, type IntakeField } from "@/lib/contact-intake";
 
 // THE V8 CONTACT FORM. A restyled copy of app/dev-preview/v6/contact/contact-form.tsx with the same behaviour:
 // the same fields, client validation, POST body to /api/contact, rate-limit and failure messages, and in-place sent
 // state, so the API route works unchanged. What changed: topic labels follow the 2026-10-10 direction (the keys, and
 // so the routed inboxes, do not), the ?topic= presets (see PRESETS), and the Vraelis Contour requirements context.
+// 2026-10-12 (founder, after scale.com's form): every inquiry but a privacy request asks for the company, the country
+// (a fixed list) and how the sender heard about Vraelis; China, Hong Kong and Macao are refused here and on the server.
 
 const TOPICS = [
   { key: "sales", label: "Vraelis Contour and AI security", to: "sales@vraelis.com" },
@@ -75,14 +77,14 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
     if (sending) return;
     const form = event.currentTarget, data = new FormData(form);
     const read = (key: string) => String(data.get(key) ?? "").trim();
-    const intake = validateContactIntake({ version: 1, audience, organization: read("organization"), country: read("country"), role: read("role"), acknowledgement: data.get("acknowledgement") === "on" });
+    const intake = validateContactIntake({ version: 1, audience, organization: read("organization"), country: read("country"), role: read("role"), source: read("source"), acknowledgement: data.get("acknowledgement") === "on" });
     const fields = { email: read("email"), name: read("name"), message: read("message") };
     const next: Errors = intake.ok ? {} : { ...intake.errors };
     if (!chosen) next.topic = MSG.topic;
     if (!EMAIL.test(fields.email)) next.email = MSG.email;
     if (fields.message.length < 10) next.message = MSG.message;
     setErrors(next); setFailure(null);
-    for (const field of ["audience", "topic", "email", "organization", "country", "role", "message", "acknowledgement"] as const) {
+    for (const field of ["audience", "topic", "email", "organization", "country", "role", "source", "message", "acknowledgement"] as const) {
       if (next[field]) { form.querySelector<HTMLElement>(`[name="${field}"]`)?.focus(); return; }
     }
     if (!intake.ok || !chosen) { setFailure(MSG.bad); return; }
@@ -128,14 +130,28 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
       </div>
       {sender?.organizationLabel ? (
         <fieldset className="cnt-context-fields" key={audience}>
-          <legend className="cnt-legend">{audience === "government" ? "Who you represent" : "Organization details"}</legend>
+          <legend className="cnt-legend">{audience === "government" ? "Who you represent" : audience === "individual" ? "About you" : "Organization details"}</legend>
           <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-organization`}>{sender.organizationLabel}{!sender.requiresOrganization ? <span className="cnt-opt">Optional</span> : null}</label><input className="cnt-input" id={`${id}-organization`} name="organization" autoComplete="organization" required={sender.requiresOrganization} maxLength={160} aria-invalid={!!errors.organization || undefined} aria-describedby={err("organization")} onInput={() => clear("organization")} />{errorText("organization")}</div>
           <div className="cnt-pair">
-            <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-country`}>Organization country{!sender.requiresCountry ? <span className="cnt-opt">Optional</span> : null}</label><input className="cnt-input" id={`${id}-country`} name="country" placeholder="Country where the organization is based" required={sender.requiresCountry} maxLength={100} aria-invalid={!!errors.country || undefined} aria-describedby={err("country")} onInput={() => clear("country")} />{errorText("country")}</div>
+            <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-country`}>Country</label>
+              <select className="cnt-input cnt-select" id={`${id}-country`} name="country" defaultValue="" required aria-invalid={!!errors.country || undefined} aria-describedby={err("country")}
+                onChange={(e) => setErrors((x) => ({ ...x, country: isRestrictedCountry(e.target.value) ? INTAKE_ERRORS.restricted : undefined }))}>
+                <option value="" disabled>Where you or your organization are based</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>{errorText("country")}</div>
             <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-role`}>Role or office{!sender.requiresRole ? <span className="cnt-opt">Optional</span> : null}</label><input className="cnt-input" id={`${id}-role`} name="role" autoComplete="organization-title" required={sender.requiresRole} maxLength={100} aria-invalid={!!errors.role || undefined} aria-describedby={err("role")} onInput={() => clear("role")} />{errorText("role")}</div>
           </div>
           <p className="cnt-help">Submitting does not establish eligibility or grant access.</p>
         </fieldset>
+      ) : null}
+      {!privacy && sender ? (
+        <div className="cnt-field">
+          <label className="cnt-label" htmlFor={`${id}-source`}>How did you hear about Vraelis?</label>
+          <select className="cnt-input cnt-select" id={`${id}-source`} name="source" defaultValue="" required aria-invalid={!!errors.source || undefined} aria-describedby={err("source")} onChange={() => clear("source")}>
+            <option value="" disabled>Select one</option>
+            {HEARD_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>{errorText("source")}
+        </div>
       ) : null}
       <div className="cnt-field"><label className="cnt-label" htmlFor={`${id}-message`}>{requirements ? CONTOUR_LABEL : sender?.messageLabel ?? "Your inquiry"}</label><textarea key={audience} className="cnt-input cnt-input--area" id={`${id}-message`} name="message" rows={5} required minLength={10} placeholder={requirements ? CONTOUR_PLACEHOLDER : undefined} aria-invalid={!!errors.message || undefined} aria-describedby={err("message")} onInput={() => clear("message")} />{errorText("message")}</div>
       {sender?.acknowledgement ? (
