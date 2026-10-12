@@ -93,8 +93,8 @@ the cleanup-2 closures and the email footer.
 
 | | Deployment | Commit | How it was built |
 | --- | --- | --- | --- |
-| **Live now** | `sen-site-27ssckphe-sansxel.vercel.app` (`dpl_2wkADAxNGiJr1FB99HMnw1uZfLre`), 2026-10-12 | `07f7c5fd`: Codex's Contour docs corrections (runtime adapter modes, approval deadline, `id` and `code` semantics, all 15 evidence app refusal codes) | Git push to `main` by the founder/Codex. |
-| **Previous production** (rollback within v8) | `sen-site-pzare5r7n-sansxel.vercel.app` (`dpl_BpvwpV5RSS9f22VN2U1k9G4Rzpan`) | `18ce5aac` (SEO pass + helpful-docs pages) | Git push to `main`. Before it: `sen-site-8nkt6hbxs` (e83cf65d, SEO pass only). |
+| **Live now** | `sen-site-m2xkr5sa1-sansxel.vercel.app` (`dpl_2JoQcjSqt8Bfve5LLKEiQt3y2A8q`), 2026-10-12 | `fed4b56c` (header Join us at hero size; hero leads to Contour) | Git push to `main` after merging `origin/main` (Vercel status confirmed). |
+| **Previous production** (rollback within v8) | `sen-site-27ssckphe-sansxel.vercel.app` (`dpl_2wkADAxNGiJr1FB99HMnw1uZfLre`) | `07f7c5fd` (Codex's Contour docs corrections) | Git push to `main`. Before it: `sen-site-pzare5r7n` (18ce5aac), `sen-site-8nkt6hbxs` (e83cf65d). |
 | **SEO-only rollback** (founder's handoff) | `sen-site-4riurwalt-sansxel.vercel.app` (`dpl_EumbEvf4jCLfc3PrQJej7gxW4owG`) | `4918d3a3` | Removes the SEO pass and everything after it. Earlier v8 builds: `sen-site-dilkjqlw2` (1ff46250), `sen-site-1f9t4djqd` (0797b3e7). |
 | **Before v8** (rollback out of v8) | `sen-site-lt64iii0o-sansxel.vercel.app` (`dpl_FXR1udx3R9L8e5xE5NU9Rmd8YagT`), 2026-10-11 21:45 UTC | `5dc06187` | Git push to `main`. Leaving v8 also needs `NEXT_PUBLIC_VRAELIS_V8_PUBLIC` removed and docs.vraelis.com detached (see Rollback). |
 
