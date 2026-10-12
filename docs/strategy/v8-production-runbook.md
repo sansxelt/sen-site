@@ -93,8 +93,8 @@ the cleanup-2 closures and the email footer.
 
 | | Deployment | Commit | How it was built |
 | --- | --- | --- | --- |
-| **Live now** | `sen-site-dilkjqlw2-sansxel.vercel.app` (`dpl_7j551j8WN6ajkG6AWhmtQAPzB75f`), 2026-10-12 | `1ff46250` (v8 404 and docs 404) | Git push to `main` (Vercel status confirmed on the commit). |
-| **Previous v8 production** (rollback within v8) | `sen-site-1f9t4djqd-sansxel.vercel.app` (`dpl_2Le7XQKaj324b6nutVXS4ECzAkF9`), 2026-10-12 04:04 UTC | `0797b3e7` (shared spectrum) | Git push to `main`. Earlier v8 builds: `sen-site-r44bz0sff` (3ba02d67), `sen-site-b12lghl33` (86f4d8a7, CLI), `sen-site-q363xez5n` (917c9c33). |
+| **Live now** | `sen-site-4riurwalt-sansxel.vercel.app` (`dpl_EumbEvf4jCLfc3PrQJej7gxW4owG`), 2026-10-12 | `4918d3a3` (docs sidebar tree, short tab titles) | Git push to `main` (Vercel status confirmed on the commit). |
+| **Previous v8 production** (rollback within v8) | `sen-site-dilkjqlw2-sansxel.vercel.app` (`dpl_7j551j8WN6ajkG6AWhmtQAPzB75f`), 2026-10-12 | `1ff46250` (v8 404 and docs 404) | Git push to `main`. Earlier v8 builds: `sen-site-1f9t4djqd` (0797b3e7), `sen-site-r44bz0sff` (3ba02d67), `sen-site-b12lghl33` (86f4d8a7, CLI), `sen-site-q363xez5n` (917c9c33). |
 | **Before v8** (rollback out of v8) | `sen-site-lt64iii0o-sansxel.vercel.app` (`dpl_FXR1udx3R9L8e5xE5NU9Rmd8YagT`), 2026-10-11 21:45 UTC | `5dc06187` | Git push to `main`. Leaving v8 also needs `NEXT_PUBLIC_VRAELIS_V8_PUBLIC` removed and docs.vraelis.com detached (see Rollback). |
 
 ### The push to `main` that built nothing (2026-10-12, investigated, no config error)
