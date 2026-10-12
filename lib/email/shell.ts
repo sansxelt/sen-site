@@ -137,13 +137,14 @@ const OGSC = DARK.trim().split("\n").map((line) => {
 export function shell(content: string, opts: ShellOptions): string {
   // THE FOOTER (founder 2026-10-12 critiqued it: four spaced lines, vraelis.com twice, underlines everywhere). Now
   // three short lines in SpaceXAI's order: the copyright with Privacy and Terms, why you got this, who to ask.
-  // Links are quiet grey text; only an email address is underlined, because it is the one thing to act on.
+  // Links are grey; Vraelis, Privacy, Terms and email addresses are underlined, the domain in the reason line is not.
   const foot = `margin:0 0 8px;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};`;
   const footLink = `color:${MUTED};text-decoration:none;`;
   const footAddress = `color:${MUTED};text-decoration:underline;text-underline-offset:2px;`;
   const year = new Date().getUTCFullYear();
   const lines = [
-    `&copy; ${year} Vraelis &nbsp;&middot;&nbsp; <a href="https://vraelis.com/privacy" style="${footLink}">Privacy</a> &nbsp;&middot;&nbsp; <a href="https://vraelis.com/terms" style="${footLink}">Terms</a>`,
+    // The three are links, underlined so they read as links (founder, 2026-10-12).
+    `&copy; ${year} <a href="https://vraelis.com" style="${footAddress}">Vraelis</a> &nbsp;&middot;&nbsp; <a href="https://vraelis.com/privacy" style="${footAddress}">Privacy</a> &nbsp;&middot;&nbsp; <a href="https://vraelis.com/terms" style="${footAddress}">Terms</a>`,
     quietLinks(opts.reason ?? DEFAULT_REASON, footLink, footAddress),
     ...(opts.support === false ? [] : [`For questions, contact <a href="mailto:${SUPPORT_EMAIL}" style="${footAddress}">${SUPPORT_EMAIL}</a>`]),
   ];

@@ -170,40 +170,8 @@ export function contactConfirmHtml(name: string) {
   });
 }
 
-/** The plain-text twin of the confirmation, so text-only clients get a letter, not stripped markup. */
-export function contactConfirmText(name: string) {
-  const first = confirmName(name);
-  return [
-    "We received your message",
-    "",
-    first ? `Hi ${first},` : "Hi,",
-    "",
-    "Thanks for contacting Vraelis. A person on the team reads every message and replies to this address, usually within one business day.",
-    "",
-    "To add anything, reply to this email.",
-    "",
-    "If you did not send this, you can ignore this email. We will not write to you unless you contact us.",
-    "",
-    "--",
-    "Vraelis · https://vraelis.com · Privacy https://vraelis.com/privacy",
-  ].join("\n");
-}
-
-/** The plain-text twin of the support-inbox email. */
-export function supportText(opts: { email: string; name: string; subject: string; message: string; channel?: string | null }) {
-  return [
-    opts.subject,
-    "",
-    ...(opts.channel ? [`Channel: ${opts.channel}`] : []),
-    `From: ${opts.name || "(no name)"}`,
-    `Email: ${opts.email}`,
-    "",
-    opts.message,
-    "",
-    "--",
-    `Sent from the contact form on vraelis.com. Replying goes to ${opts.email}.`,
-  ].join("\n");
-}
+// The plain-text parts are derived from the HTML for every email (withTextPart in lib/email/shell.ts), so the
+// hand-written twins of the confirmation and the support email were removed (2026-10-12): one footer, one wording.
 
 export function supportHtml(opts: {
   email:    string;
@@ -508,7 +476,6 @@ export async function sendContactConfirmEmail(
       replyTo: inbox,
       subject: "We received your message",
       html: contactConfirmHtml(name),
-      text: contactConfirmText(name),
     });
   } catch (error) {
     console.error("sendContactConfirmEmail failed:", error);
@@ -566,7 +533,6 @@ export async function sendSupportEmail(opts: {
     replyTo: opts.email,
     subject: opts.subject,
     html: supportHtml(opts),
-    text: supportText(opts),
   });
 
   // Resend returns { data, error } instead of throwing on 4xx, turn it

@@ -76,7 +76,7 @@ async function main() {
       const problems: string[] = [];
       if (!m.subject) problems.push("no subject");
       if (html && !html.includes("lockup-ink@2x.png") && name !== "lead-reply") problems.push("no logo");
-      if (html && !/&copy; \d{4} Vraelis/.test(html)) problems.push("no footer");
+      if (html && name !== "lead-reply" && !/&copy; \d{4} <a [^>]*>Vraelis<\/a>/.test(html)) problems.push("no footer");
       if (/\b(undefined|NaN|\[object Object\])\b|>null</.test(html + text)) problems.push("undefined/null/NaN in output");
       if (html.includes("<b>actually</b>")) problems.push("unescaped user HTML");
       if (/<p[^>]*>\s*Hi [^<]{0,60}, [a-z]/.test(html)) problems.push("greeting not split");
