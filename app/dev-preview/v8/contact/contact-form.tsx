@@ -39,7 +39,7 @@ const PRESETS: Record<string, { audience?: ContactAudience; topic?: TopicKey; co
 
 const MSG = {
   topic: "Choose a topic.", email: "Enter a valid email address.", message: "Write a message of at least 10 characters.",
-  send: "Send inquiry", sending: "Sending", sent: "Sent. A person at Vraelis reads every message.",
+  send: "Submit", sending: "Submitting", sent: "Sent. A person at Vraelis reads every message.",
   bad: "Check the fields above and try again.",
   limited: "Too many messages from this network. Try again in ten minutes or write to help@vraelis.com.",
   failed: "The message did not send. Try again, or write to help@vraelis.com.",
@@ -62,6 +62,11 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  // Whether everything required is filled in (founder, 2026-10-12: the button should look unfinished, a little
+  // transparent, until the form is done). Recomputed from the form on every input; the same checks as on submit,
+  // without showing errors. A refused country keeps it unfinished.
+  const [ready, setReady] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const done = useRef<HTMLDivElement>(null);
   useEffect(() => { if (sent) done.current?.focus(); }, [sent]);
   const sender = contactAudience(audience);
@@ -71,6 +76,14 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
   const clear = (f: Field) => setErrors((e) => (e[f] ? { ...e, [f]: undefined } : e));
   const err = (f: Field) => (errors[f] ? `${id}-${f}-err` : undefined);
   const errorText = (f: Field) => (errors[f] ? <p className="cnt-err" id={err(f)}>{errors[f]}</p> : null);
+  const recheck = () => {
+    const form = formRef.current; if (!form) return;
+    const data = new FormData(form), read = (key: string) => String(data.get(key) ?? "").trim();
+    const intake = validateContactIntake({ version: 1, audience, organization: read("organization"), country: read("country"), role: read("role"), source: read("source"), acknowledgement: data.get("acknowledgement") === "on" });
+    setReady(intake.ok && !!chosen && EMAIL.test(read("email")) && read("message").length >= 10);
+  };
+  // The fields shown change with the audience and topic, so check again once they have rendered.
+  useEffect(() => { recheck(); });
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,11 +113,11 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
     finally { setSending(false); }
   }
   // Strings the in-browser translator should know before they first appear (kept from v6).
-  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), "Send requirements", CONTOUR_LABEL, CONTOUR_PLACEHOLDER, ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap((a) => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
+  const seed = <div hidden data-i18n-seed="">{[...Object.values(MSG), CONTOUR_LABEL, CONTOUR_PLACEHOLDER, ...Object.values(INTAKE_ERRORS), ...CONTACT_AUDIENCES.flatMap((a) => [a.messageLabel, a.acknowledgement])].filter(Boolean).map((s, i) => <span key={i}>{s}</span>)}</div>;
   if (sent) return <><div className="cnt-sent" ref={done} tabIndex={-1} role="status"><p className="cnt-sent__t">{MSG.sent}</p></div>{seed}</>;
 
   return (
-    <form className="cnt-form" noValidate onSubmit={onSubmit} aria-busy={sending || undefined}>
+    <form ref={formRef} className="cnt-form" noValidate onSubmit={onSubmit} onInput={recheck} onChange={recheck} aria-busy={sending || undefined}>
       <div className="cnt-pair cnt-pair--context">
         <div className="cnt-field">
           <label className="cnt-label" htmlFor={`${id}-audience`}>I am reaching out as</label>
@@ -161,7 +174,7 @@ export function ContactForm({ topicParam, privacyHref }: { topicParam?: string; 
       ) : null}
       <div className="cnt-hp" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} name="website" tabIndex={-1} autoComplete="off" defaultValue="" /></div>
       <p className="cnt-consent">Leave out credentials and sensitive operational data. <a href={privacyHref}>Read the privacy policy</a></p>
-      <div className="cnt-actions"><button type="submit" className="v8-btn v8-btn--solid v8-btn--lg cnt-submit" aria-disabled={sending || undefined}>{sending ? MSG.sending : requirements ? "Send requirements" : MSG.send}</button></div>
+      <div className="cnt-actions"><button type="submit" className="v8-btn v8-btn--solid v8-btn--lg cnt-submit" data-ready={ready} aria-disabled={sending || undefined}>{sending ? MSG.sending : MSG.send}</button></div>
       {failure ? <p className="cnt-err cnt-err--form" role="alert">{failure}</p> : null}{seed}
     </form>
   );

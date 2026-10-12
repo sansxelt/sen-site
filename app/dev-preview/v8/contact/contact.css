@@ -56,6 +56,9 @@
 .v8 .cnt-actions { display: flex; }
 .v8 .cnt-submit { min-width: 190px; }
 .v8 .cnt-submit[aria-disabled] { opacity: .6; cursor: wait; }
+/* Unfinished until every required field is filled; still clickable, so a click points at what is missing. */
+.v8 .cnt-submit[data-ready="false"] { opacity: .45; }
+.v8 .cnt-submit { transition: opacity .2s var(--ease), filter .15s var(--ease-std); }
 .v8 .cnt-err { margin: 8px 0 0; color: #FFA58C; font-size: 13px; line-height: 1.5; }
 .v8 .cnt-err--form { margin: 0; padding: 12px 14px; border-radius: var(--r-md); background: rgba(255,122,85,.07); box-shadow: inset 0 0 0 1px rgba(255,122,85,.3); color: var(--ink); }
 .v8 .cnt-hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(100%); }
