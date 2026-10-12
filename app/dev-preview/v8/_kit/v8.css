@@ -215,10 +215,15 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-split > a { padding: 0 14px 0 17px; border-radius: 10px 0 0 10px; }
 .v8-split > button { padding: 0 13px 0 11px; border-left: 1px solid rgba(10,10,11,.18); border-radius: 0 10px 10px 0; }
 .v8-split > a:hover, .v8-split > button:hover { background: rgba(10,10,11,.08); }
-.v8-burger { display: none; width: 40px; height: 40px; border-radius: 999px; border: 0; background: var(--s2); color: var(--ink); cursor: pointer; place-items: center; }
+.v8-burger { display: none; width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--s2); color: var(--ink); cursor: pointer; place-items: center; }
 .v8-burger span { position: relative; display: block; width: 16px; height: 1.6px; background: currentColor; }
 .v8-burger span::before, .v8-burger span::after { content: ""; position: absolute; left: 0; width: 16px; height: 1.6px; background: currentColor; }
 .v8-burger span::before { top: -5px; } .v8-burger span::after { top: 5px; }
+/* Open, the three lines become a close mark (x.ai). */
+.v8-burger span, .v8-burger span::before, .v8-burger span::after { transition: transform .22s var(--ease), top .22s var(--ease), background-color .15s; }
+.v8-burger[aria-expanded="true"] span { background: transparent; }
+.v8-burger[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); }
+.v8-burger[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); }
 
 /* Panels under the header. One at a time; x.ai's mega menu with a live preview pane. */
 .v8-panel { position: absolute; top: calc(var(--header-h) - 6px); z-index: 49; padding: 8px; border-radius: 18px; background: var(--panel); box-shadow: 0 0 0 1px var(--line-2), 0 24px 60px -18px rgba(0,0,0,.85); backdrop-filter: blur(18px); opacity: 0; transform: translateY(-6px) scale(.985); transform-origin: top left; visibility: hidden; transition: opacity .22s var(--ease-menu), transform .22s var(--ease-menu), visibility 0s linear .22s; }
@@ -246,7 +251,7 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 
 /* Phone drawer */
 .v8-drawer { position: fixed; inset: var(--header-h) 0 0; z-index: 48; overflow-y: auto; padding: 8px var(--gutter) 40px; background: var(--ground); display: none; }
-.v8-drawer[data-open="true"] { display: block; animation: v8-fade .25s var(--ease) both; --d: 0s; }
+.v8-drawer[data-open="true"] { display: flex; flex-direction: column; animation: v8-fade .25s var(--ease) both; --d: 0s; padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
 .v8-drawer details { border-bottom: 1px solid var(--line); }
 .v8-drawer summary { list-style: none; display: flex; justify-content: space-between; align-items: center; padding: 16px 0; color: var(--ink); font: 500 18px/1.2 var(--display); cursor: pointer; }
 .v8-drawer summary::-webkit-details-marker { display: none; }
@@ -254,7 +259,11 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-drawer ul { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 2px; }
 .v8-drawer li a { display: block; padding: 9px 0; color: var(--ink-2); font-size: 15.5px; }
 .v8-drawer > a { display: block; padding: 16px 0; border-bottom: 1px solid var(--line); color: var(--ink); font: 500 18px/1.2 var(--display); }
-.v8-drawer__ctas { display: grid; gap: 10px; margin-top: 24px; }
+.v8-drawer__ctas { display: grid; gap: 18px; margin-top: auto; padding-top: 32px; }
+.v8-drawer__links { display: flex; justify-content: center; color: var(--ink-3); font-size: 14px; }
+.v8-drawer__links a { color: inherit; padding: 6px 2px; }
+.v8-drawer__links a:hover { color: var(--ink-2); }
+.v8-drawer__links i { font-style: normal; margin-inline: 14px; }
 
 @media (max-width: 1100px) {
   .v8-nav, .v8-header__end .v8-btn, .v8-split { display: none; }
@@ -548,6 +557,14 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 
 /* Home: the partner band at the foot of the hero (page.tsx, PartnerBand). Not interactive, edges fade out. */
 /* Tight (founder, 2026-10-12: "too much space to the partnerships"): close under the actions, close above the tiles. */
+/* Hero buttons: centered under the headline; on a phone one row, the second labelled short. */
+.hm-hero__actions { justify-content: center; margin-top: 46px; }
+.hm-narrow { display: none; }
+@media (max-width: 560px) {
+  .hm-hero__actions { margin-top: 26px; flex-wrap: nowrap; }
+  .hm-hero__actions .v8-btn--lg { padding-inline: 18px; font-size: 14.5px; }
+  .hm-wide { display: none; } .hm-narrow { display: inline; }
+}
 .hm-band { margin-top: clamp(28px, 3vw, 44px); display: grid; gap: clamp(20px, 2.2vw, 30px); }
 .v8-hero:has(.hm-band) { padding-bottom: clamp(48px, 5vw, 76px); }
 .hm-band__label { margin: 0; color: var(--ink-3); font: 500 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; text-align: left; }

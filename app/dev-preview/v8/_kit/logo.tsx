@@ -85,6 +85,9 @@ export function glideToTop() {
   requestAnimationFrame(watch);
 }
 
+/** Dispatched on window to end a playing intro at once, on the mark (the phone menu opening). */
+export const INTRO_SKIP = "v8:intro-skip";
+
 export function Brand({ home, navId }: { home: string; navId: string }) {
   const brand = useRef<HTMLAnchorElement>(null);
   const word = useRef<HTMLSpanElement>(null);
@@ -173,8 +176,10 @@ export function Brand({ home, navId }: { home: string; navId: string }) {
       settle = window.setTimeout(() => { w.style.transition = ""; cancelled = false; start(); }, 650);
     };
     const onShow = (e: PageTransitionEvent) => { if (e.persisted) replay.current?.(); };
+    const onSkip = () => { cancelled = true; clearTimeout(settle); w.style.transition = ""; finish(); };
     window.addEventListener("pageshow", onShow);
-    return () => { cancelled = true; clearTimeout(settle); finish(); replay.current = null; window.removeEventListener("pageshow", onShow); };
+    window.addEventListener(INTRO_SKIP, onSkip);
+    return () => { cancelled = true; clearTimeout(settle); finish(); replay.current = null; window.removeEventListener("pageshow", onShow); window.removeEventListener(INTRO_SKIP, onSkip); };
   }, [navId]);
 
   // x.ai's logo: from another page it goes home; on the homepage it glides back to the top, and at the top it reloads.

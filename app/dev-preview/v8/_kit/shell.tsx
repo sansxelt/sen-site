@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
-import { Brand, Mark, Wordmark, glideToTop } from "./logo";
+import { Brand, INTRO_SKIP, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
 import { FOOTER, JOIN, MENUS, href, localHref, type Menu } from "./site";
 
@@ -111,9 +111,11 @@ export function V8Header() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, drawer]);
-  // The phone drawer pins the page behind it (iOS ignores overflow hidden on body).
+  // The phone drawer pins the page behind it (iOS ignores overflow hidden on body). Opening it also settles the logo
+  // intro on the mark (x.ai's menu shows only its mark; a half-dissolved name beside the menu read as broken).
   useEffect(() => {
     if (!drawer) return;
+    window.dispatchEvent(new Event(INTRO_SKIP));
     const y = window.scrollY, s = document.body.style;
     const prev = { position: s.position, top: s.top, width: s.width };
     s.position = "fixed"; s.top = `-${y}px`; s.width = "100%";
@@ -169,8 +171,14 @@ export function V8Header() {
           </details>
         ))}
         <Link href={href("/docs")} onClick={() => setDrawer(false)}>Docs</Link>
+        {/* x.ai's phone menu: the one button at the foot, the small links under it. */}
         <div className="v8-drawer__ctas">
           <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href(JOIN[0].to)} onClick={() => setDrawer(false)}>Join us</Link>
+          <nav className="v8-drawer__links" aria-label="More">
+            {[["/contact", "Contact"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([to, label], i) => (
+              <span key={to}>{i ? <i aria-hidden="true">·</i> : null}<Link href={href(to)} onClick={() => setDrawer(false)}>{label}</Link></span>
+            ))}
+          </nav>
         </div>
       </div>
     </>

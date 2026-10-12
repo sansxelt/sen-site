@@ -109,10 +109,11 @@ export default function Home() {
               <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
-            <div className="v8-actions v8-fade" style={{ ["--d" as string]: ".7s", marginTop: 46 }}>
+            <div className="v8-actions v8-fade hm-hero__actions" style={{ ["--d" as string]: ".7s" }}>
               {/* Join us lives in the header; the hero leads to the product instead of repeating it (founder, 2026-10-12). */}
               <Button to="/contour" size="lg" arrow>See how Contour works</Button>
-              <Button to="/docs" kind="soft" size="lg">Read the documentation</Button>
+              {/* On a phone the two sit on one centered row, as x.ai's do, so the second says less. */}
+              <Button to="/docs" kind="soft" size="lg"><span className="hm-wide">Read the documentation</span><span className="hm-narrow">Read the docs</span></Button>
             </div>
           </div>
         </Wrap>
