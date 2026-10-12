@@ -10,7 +10,7 @@ import "./company.css";
 
 export const metadata = v8meta({
   title: "Vraelis | Company and founder Nishanth Dasari",
-  description: `${COMPANY_LINE} Founded by ${FOUNDER}. Foremake, Inc is the umbrella brand behind Vraelis and Overlym, a separate fintech venture in development.`,
+  description: `Founded by ${FOUNDER}, Vraelis develops AI cybersecurity software. Vraelis Contour is its first product in private development.`,
   path: "/company",
 });
 
