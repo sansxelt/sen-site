@@ -1,19 +1,15 @@
-/* The v8 404 (not-found.tsx) and the docs 404 (docs/not-found.tsx). */
-.v8 .nf { display: grid; align-content: center; min-height: calc(100svh - var(--header-h)); padding-block: clamp(56px, 8vw, 120px); }
+/* The v8 404 (not-found.tsx) and the docs 404 (docs/not-found.tsx).
+   ONE SCREEN, ON ITS OWN (founder, 2026-10-12: "404 page isn't connected to anything, it should just be that screen in
+   the middle"): no site or docs header, footer or sidebar, no list of places; the number, one sentence and the two
+   ways back, centered in the viewport. The page's own .nf hides the frame around it, so the layouts stay unchanged. */
+.v8:has(.nf) :is(.v8-header, .v8-drawer, .v8-scrim, .v8-footer, .v8-dhd, .v8-dhd-sheet, .v8-dft, .v8-docs-side) { display: none !important; }
+.v8:has(.nf) .v8-main { padding-top: 0; }
+.v8 .v8-docs-shell:has(.nf) { display: block; }
+.v8 .v8-docs-main:has(.nf) { padding-inline: 0; }
+
+.v8 .nf { display: grid; place-items: center; min-height: 100vh; min-height: 100svh; padding: 48px var(--gutter, 20px); }
 .v8 .nf__head { display: grid; justify-items: center; gap: 14px; text-align: center; }
 .v8 .nf__code { margin: 0; font: 600 clamp(84px, 14vw, 168px)/.9 var(--display); letter-spacing: -.05em; }
 .v8 .nf__title { margin: 0; }
 .v8 .nf__lead { margin: 0; max-width: 46ch; }
 .v8 .nf__actions { justify-content: center; margin-top: 10px; }
-.v8 .nf__places { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 980px; margin: clamp(48px, 6vw, 80px) auto 0; padding: 0; list-style: none; }
-.v8 .nf__places a { display: grid; gap: 6px; height: 100%; padding: 18px 20px; border-radius: var(--r-md); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-3); font-size: 13.5px; line-height: 1.45; transition: background .15s, box-shadow .15s; }
-.v8 .nf__places a:hover { background: var(--s2); box-shadow: inset 0 0 0 1px var(--line-3); }
-.v8 .nf__places b { display: flex; align-items: center; gap: 8px; color: var(--ink); font: 500 15px/1.3 var(--sans); }
-@media (max-width: 860px) { .v8 .nf__places { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 520px) { .v8 .nf__places { grid-template-columns: minmax(0, 1fr); } }
-/* Docs: inside the docs column. */
-.v8 .nf--docs { min-height: 0; padding-block: clamp(48px, 7vw, 96px); }
-.v8 .nf--docs .nf__head { justify-items: start; text-align: left; }
-.v8 .nf--docs .nf__actions { justify-content: flex-start; }
-.v8 .nf--docs .nf__places { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 780px; margin-inline: 0; }
-@media (max-width: 520px) { .v8 .nf--docs .nf__places { grid-template-columns: minmax(0, 1fr); } }
