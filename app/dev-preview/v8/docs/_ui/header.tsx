@@ -142,19 +142,28 @@ function Tabs({ nav, active }: { nav: NavTab[]; active?: TabId }) {
     window.addEventListener("resize", close);
     return () => { row?.removeEventListener("scroll", close); window.removeEventListener("resize", close); };
   }, [open, setOpen, button]);
+  // Hover opens it on a mouse, as the site's own menus do (founder, 2026-10-12: "dropdown should be hover in the
+  // docs"), with the site's intent delays; touch and keyboard keep the click. A click just after a hover opened it
+  // leaves it open rather than toggling it shut under the pointer.
+  const hoverTimer = useRef(0);
+  const hoverAt = useRef(0);
+  const mouse = () => matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const hoverIn = () => { if (!mouse()) return; clearTimeout(hoverTimer.current); hoverTimer.current = window.setTimeout(() => { hoverAt.current = performance.now(); setOpen(true); }, 70); };
+  const hoverOut = () => { if (!mouse()) return; clearTimeout(hoverTimer.current); hoverTimer.current = window.setTimeout(() => setOpen(false), 180); };
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
   return (
     <nav ref={strip} className="v8-dhd__tabs" aria-label="Documentation sections">
       {nav.map((t) => {
         const cur = active === t.id ? "page" as const : undefined;
         if (!t.menu) return <Go key={t.id} to={link(t.to)} className="v8-dhd__tab" aria-current={cur}>{t.label}</Go>;
         return (
-          <div key={t.id} ref={box} className="v8-dhd__tabsplit" data-open={open}>
+          <div key={t.id} ref={box} className="v8-dhd__tabsplit" data-open={open} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
             {/* The whole tab opens the menu (founder, 2026-10-11: clicking "Products" went to the page instead, so the
                 menu looked missing). Its overview page is the menu's first entry. */}
             <button ref={button} type="button" className="v8-dhd__tab v8-dhd__tab--menu" aria-haspopup="true" aria-expanded={open} aria-controls={id}
-              data-current={!!cur} onClick={() => setOpen((o) => !o)}>{t.label}<Chevron /></button>
+              data-current={!!cur} onClick={() => setOpen((o) => (o && performance.now() - hoverAt.current < 600 ? true : !o))}>{t.label}<Chevron /></button>
             {open && at ? createPortal(
-              <div ref={card} id={id} className="v8-dhd__card v8-dhd__card--tab" style={{ top: at.top, left: at.left }}>
+              <div ref={card} id={id} className="v8-dhd__card v8-dhd__card--tab" style={{ top: at.top, left: at.left }} onMouseEnter={hoverIn} onMouseLeave={hoverOut}>
                 {t.menu.map((l) => (
                   <Go key={l.to} to={link(l.to)} onClick={() => setOpen(false)}><b>{l.label}</b><small>{l.line}</small></Go>
                 ))}

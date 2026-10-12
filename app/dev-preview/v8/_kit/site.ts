@@ -156,12 +156,11 @@ const crop = (name: string) => `/v8/contour/${name}.webp`;
 export const MENUS: Menu[] = [
   {
     // "Products", not "Contour" (founder, 2026-10-11): Vraelis Contour is the first product; others join this menu
-    // once they are confirmed, by name and by who they are for.
+    // once they are confirmed, by name and by who they are for. Pages only, never sections of one page (founder:
+    // "everything is the same page"): the product and its status page.
     id: "contour", label: "Products", kind: "mega",
     links: [
       { label: "Vraelis Contour", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
-      { label: "How it works", to: "/contour#how", line: "Five steps from release identity to preserved evidence.", preview: crop("crop-release-approval"), previewAlt: "The approval for cpu-2: destination, policy and age limit." },
-      { label: "Recorded observations", to: "/contour#observations", line: "Four real observations from the reference experiment.", preview: crop("crop-loaded-cpu1"), previewAlt: "Reported loaded release cpu-1, a worker self-report, with the differing fields marked." },
       { label: "Development status", to: "/contour/status", line: "What works today, what is being built, what we do not claim.", preview: crop("crop-release-identity"), previewAlt: "Release identity for cpu-2, with preprocessing not recorded." },
     ],
   },
