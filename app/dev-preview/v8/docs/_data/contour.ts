@@ -362,7 +362,7 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "table", label: "Reference experiment parameters", head: ["Parameter", "Value"], rows: [
         ["Runtime", "ONNX Runtime, exactly `1.23.2`"],
         ["Execution providers", "Exactly `CPUExecutionProvider`"],
-        ["Approval age limit", "60 seconds (`maxAgeMs` 60000)"],
+        ["Approval age limit", "60 seconds (`maxAgeMs` 60000), checked when authorizing the deployment. It is not a 60-second session lifetime or heartbeat deadline."],
         ["Destinations", "One: `non-actuating-lab / onnx-cpu`"],
         ["Policy", "`cpu-lab`, version 1"],
         ["Recorded observations", "Four, in one captured run on 10 October 2026"],

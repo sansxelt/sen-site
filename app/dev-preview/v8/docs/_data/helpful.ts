@@ -85,7 +85,7 @@ const ARCHITECTURE: Page = {
     { t: "h2", text: "What the architecture is not" },
     { t: "ul", items: [
       "Not a deployment tool. It does not decide what runs where; it records what was approved and what is reported.",
-      "Not remote control. It never changes a runtime. A reload is an explicit, recorded step taken by whoever operates the runtime.",
+      "The evidence app is read-only and never changes a runtime. The private runtime adapter can prepare and activate sessions: approved-session mode waits for an explicit reload, while reconcile mode synchronizes the desired release before inference.",
       "Not attestation. The loaded identity is the worker's own report. The host and worker are trusted in the experiment.",
       "Not live. The evidence app reads a recorded trace; it does not watch a running system.",
     ] },
@@ -206,7 +206,7 @@ const RECORD: Page = {
   blocks: [
     { t: "h2", text: "Top level" },
     { t: "table", label: "Event fields", head: ["Field", "Type", "Meaning", "Example"], rows: [
-      ["`id`", "number", "Position of the observation in the trace.", "`2`"],
+      ["`id`", "number", "A positive integer assigned by the capture harness. File order supplies the sequence; the viewer does not enforce unique or consecutive IDs.", "`2`"],
       ["`title`", "string", "A short name for what happened.", "`Update awaiting reload`"],
       ["`action`", "string", "What was done just before this observation.", "`Approved cpu-2. ...`"],
       ["`receivedAt`", "string, ISO 8601 with zone", "When the observation was received. The app refuses a timestamp without an explicit zone.", "`2026-10-10T07:41:29.613Z`"],
@@ -216,7 +216,7 @@ const RECORD: Page = {
     { t: "table", label: "Observation fields", head: ["Field", "Type", "Meaning", "Example"], rows: [
       ["`scope`", "string", "Where the loaded report comes from.", "`managed-onnx-session-self-report`"],
       ["`status`", "`matched`, `pending` or `unknown`", "The result of the comparison. See [States and codes](/docs/states-and-codes).", "`pending`"],
-      ["`code`", "string, only when there is no loaded report", "The reason code.", "`RUNTIME_UNAVAILABLE`"],
+      ["`code`", "optional string", "A diagnostic reason code. The captured run uses it for unavailable evidence; a pending observation can also carry a rejected-reload reason.", "`RUNTIME_UNAVAILABLE`"],
       ["`desired`", "object", "The approved release.", ""],
       ["`loaded`", "object or `null`", "What the runtime reports it loaded. `null` when there is no report.", ""],
       ["`loadedEvidence`", "string, only when `loaded` is `null`", "Says the loaded side is missing.", "`unavailable`"],
@@ -238,6 +238,8 @@ const RECORD: Page = {
       ["`pythonVersion`", "The Python version of the worker.", "No: recorded only."],
       ["`sessionId`", "The runtime session that loaded the release.", "No."],
     ] },
+    { t: "h2", text: "Supported trace shapes" },
+    { t: "p", text: "This reference describes the recorded trace and the evidence app's supported schema, not every observation the backend can produce. The backend can retain a worker report on an unknown observation when it cannot compare that report with authorized desired state. This viewer refuses that shape with `TRACE_LOADED_ON_UNAVAILABLE`; it is not evidence that the backend cannot retain the report. Backend `lastRejection` details are outside the viewer's defined fields and appear only as unvalidated extras in raw JSON and export." },
     { t: "h2", text: "A complete example" },
     { t: "code", label: "observation 02, reload pending", lang: "json", text: OBSERVATION_2 },
   ],
@@ -245,7 +247,7 @@ const RECORD: Page = {
 
 const CODES: Page = {
   tab: "products", section: CONTOUR.name, group: "Reference", slug: "states-and-codes", title: "States and codes", nav: "States and codes",
-  description: "Every observation status, reason code and evidence app refusal, with what each means.",
+  description: "The recorded trace's statuses and reason code, plus the evidence app's complete import-refusal reference.",
   lead: "The trace uses three statuses and one reason code. The evidence app adds its own reason codes when it refuses a file.",
   updated: UPDATED,
   blocks: [
@@ -262,9 +264,23 @@ const CODES: Page = {
     { t: "h2", text: "When the evidence app refuses a file" },
     { t: "p", text: "The app checks a trace's structure and consistency when it opens it, and refuses the whole file if any check fails. Every refusal carries a reason code and a readable message, and a refused file leaves the open state exactly as it was." },
     { t: "table", label: "App refusals", head: ["Code", "When"], rows: [
+      ["`TRACE_TOO_LARGE`", "The input exceeds the 5,000,000-byte file limit."],
+      ["`TRACE_NOT_JSON`", "The input cannot be parsed as JSON."],
+      ["`TRACE_UNSUPPORTED`", "The file has an unsupported schema, kind or top-level structure, or its event count is outside 1–1,000."],
+      ["`TRACE_TEXT_INVALID`", "Text or an identifier is missing, malformed, too long or contains characters the app does not display."],
+      ["`TRACE_UNCHECKED_CLAIM`", "Displayed text claims verification, attestation, authentication, signing, trust or certification that the app cannot check."],
       ["`TRACE_TIMESTAMP_INVALID`", "A timestamp is not a real date and time with an explicit zone."],
+      ["`TRACE_POLICY_INVALID`", "The recorded policy or its runtime requirements are missing, malformed or unsupported."],
+      ["`TRACE_TOOLCHAIN_INVALID`", "The optional recorded toolchain is malformed."],
+      ["`TRACE_OBSERVATION_UNSUPPORTED`", "An event, observation, session identifier or loaded-evidence marker has an unsupported shape or value."],
+      ["`TRACE_REASON_CODE_INVALID`", "An observation's reason code is malformed."],
+      ["`TRACE_IDENTITY_INVALID`", "Required release identity fields are missing or malformed."],
+      ["`TRACE_LOADED_ON_UNAVAILABLE`", "An unknown observation carries a loaded report, which this viewer does not support."],
+      ["`TRACE_RUNTIME_MISSING`", "A matched or pending observation has no valid reported runtime."],
+      ["`TRACE_STATE_CONTRADICTION`", "The recorded matched or pending status contradicts the desired and loaded identity fields."],
+      ["`TRACE_RUNTIME_POLICY_UNSATISFIED`", "The reported ONNX Runtime version or providers do not satisfy the policy contained in the file."],
     ] },
-    { t: "p", text: "The app also refuses displayed text that claims verification, attestation, signing or trust, look-alike and control characters in displayed text, and defined fields with malformed values. Its tests list each case: [The evidence app](/docs/evidence-app)." },
+    { t: "p", text: "The app also refuses displayed text that claims verification, attestation, signing or trust, look-alike and control characters in displayed text, and defined fields with malformed values. These import checks establish internal consistency, not authenticity: a self-consistent edited file can pass and remains labelled imported, not verified. Unknown fields are retained as unvalidated extras in raw JSON and export, not rendered as validated facts. Its tests list each case: [The evidence app](/docs/evidence-app)." },
     { t: "h2", text: "Policy fields the runtime checks" },
     { t: "code", label: "policy cpu-lab, version 1", lang: "json", text: POLICY },
   ],
