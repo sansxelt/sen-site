@@ -42,6 +42,8 @@
   --focus: #5AB4FF;
   /* The shared spectrum (spectrum.ts): logo intro, hero keyword, Latest chip. */
   --spectrum: linear-gradient(90deg, #5AB4FF, #2DD4BF, #3DD68C, #F2B75A, #FF6A2B);
+  /* The same spectrum and its mirror, for a drift that always shows every colour (the 404 number). */
+  --spectrum-loop: linear-gradient(90deg, #5AB4FF, #2DD4BF, #3DD68C, #F2B75A, #FF6A2B, #F2B75A, #3DD68C, #2DD4BF, #5AB4FF);
   --display: var(--font-brand-display), "Manrope", system-ui, sans-serif;
   --sans: var(--font-brand-sans), "IBM Plex Sans", system-ui, sans-serif;
   --mono: var(--font-brand-mono), "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
