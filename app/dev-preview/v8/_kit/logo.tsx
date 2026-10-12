@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type MouseEvent } from "react";
 import { INTRO_CSS, INTRO_STYLE_ID } from "./scripts";
+import { SPECTRUM_HEX, spectrumAt } from "./spectrum";
 
 // THE LOGO INTRO (founder, 2026-10-10: "what SpaceX AI did ... the text and logo part").
 //
@@ -56,7 +57,7 @@ export function Mark({ title, gradientId }: { title?: string; gradientId?: strin
         <>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#FFB067" /><stop offset=".5" stopColor="#FF6A2B" /><stop offset="1" stopColor="#C9381A" />
+              {SPECTRUM_HEX.map((c, i) => <stop key={c} offset={i / (SPECTRUM_HEX.length - 1)} stopColor={c} />)}
             </linearGradient>
           </defs>
           <path className="v8-brand__tint" d={OUTLINE} fill={`url(#${gradientId})`} style={{ opacity: 0 }} />
@@ -66,12 +67,8 @@ export function Mark({ title, gradientId }: { title?: string; gradientId?: strin
   );
 }
 
-// Ember (founder 2026-10-10: colour, but not the vibe-coded green/purple/pink): amber, orange, ember red.
-const SPEC: [number, number, number][] = [[255, 176, 103], [255, 106, 43], [201, 56, 26]];
-function spec(t: number) {
-  const c = Math.max(0, Math.min(1, t)), s = c * 2, i = Math.min(1, Math.floor(s)), f = s - i, a = SPEC[i], b = SPEC[i + 1];
-  return `rgb(${(a[0] + (b[0] - a[0]) * f) | 0},${(a[1] + (b[1] - a[1]) * f) | 0},${(a[2] + (b[2] - a[2]) * f) | 0})`;
-}
+// The shared spectrum (spectrum.ts): the same colours as the hero keyword and the Latest chip.
+const spec = spectrumAt;
 const easeInOut = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 /** Smoothly back to the top, even mid-scroll: wheel and touch scrolling are held off until the glide lands, because a

@@ -40,6 +40,8 @@
   --teal: #2DD4BF;
   --code: #7DD3FC;
   --focus: #5AB4FF;
+  /* The shared spectrum (spectrum.ts): logo intro, hero keyword, Latest chip. */
+  --spectrum: linear-gradient(90deg, #5AB4FF, #2DD4BF, #3DD68C, #F2B75A, #FF6A2B);
   --display: var(--font-brand-display), "Manrope", system-ui, sans-serif;
   --sans: var(--font-brand-sans), "IBM Plex Sans", system-ui, sans-serif;
   --mono: var(--font-brand-mono), "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -179,8 +181,10 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-pill { display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px 6px 14px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 3.0%, transparent); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-2); font-size: 13.5px; transition: box-shadow .2s var(--ease), background .2s var(--ease); }
 .v8-pill b { color: var(--ink); font-weight: 500; }
 /* Our tag, not x.ai's filled chip: a spectral hairline around spectral text, no fill. */
-.v8-pill em { position: relative; font-style: normal; margin-left: -8px; padding: 5px 10px; border-radius: 999px; background: color-mix(in srgb, var(--fresh) 16%, transparent); color: var(--fresh); font-size: 12px; font-weight: 600; letter-spacing: .02em; line-height: 1; }
+.v8-pill em { position: relative; font-style: normal; margin-left: -8px; padding: 5px 10px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--ink); font-size: 12px; font-weight: 600; letter-spacing: .02em; line-height: 1; }
 .v8-pill em::before { content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; background: transparent; opacity: 0; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+/* The chip's word in the shared spectrum, as text (the chip keeps its neutral tint). */
+.v8-spec-text { color: transparent; background-image: var(--spectrum); -webkit-background-clip: text; background-clip: text; }
 .v8-pill > .v8-arrow { color: var(--ink-3); transition: transform .2s var(--ease), color .2s var(--ease); }
 .v8-pill:hover > .v8-arrow { color: var(--ink); transform: translateX(2px); }
 .v8-pill:hover { box-shadow: inset 0 0 0 1px var(--line-3); background: color-mix(in srgb, var(--ink) 5.0%, transparent); }

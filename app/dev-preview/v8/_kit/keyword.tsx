@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { spectrumAt } from "./spectrum";
 
 // THE HERO KEYWORD (founder, 2026-10-10: "do like the logo animation thing with the homepage, one keyword at a time").
 //
@@ -10,22 +11,9 @@ import { useEffect, useRef, useState } from "react";
 // itself carries the whole tagline for screen readers and search; this line is decoration and aria-hidden.
 // Under reduced motion the first keyword simply stays.
 
-// Each keyword breaks up in its own colour (founder 2026-10-12: "don't use orange for everything ... rather have it
-// be colorful"; earlier, 2026-10-10: colour yes, but no vibe-coded purple or pink). Five three-stop palettes in turn:
-// ember (the brand), blue, green, teal, amber. Each is light to deep, so the particles still read as one material.
-type RGB = [number, number, number];
-const PALETTES: [RGB, RGB, RGB][] = [
-  [[255, 176, 103], [255, 106, 43], [201, 56, 26]],
-  [[147, 197, 253], [90, 180, 255], [29, 78, 216]],
-  [[134, 239, 172], [61, 214, 140], [21, 128, 61]],
-  [[153, 246, 228], [45, 212, 191], [15, 118, 110]],
-  [[253, 230, 138], [242, 183, 90], [180, 83, 9]],
-];
-function spec(t: number, word = 0) {
-  const SPEC = PALETTES[word % PALETTES.length];
-  const c = Math.max(0, Math.min(1, t)), s = c * 2, i = Math.min(1, Math.floor(s)), f = s - i, a = SPEC[i], b = SPEC[i + 1];
-  return `rgb(${(a[0] + (b[0] - a[0]) * f) | 0},${(a[1] + (b[1] - a[1]) * f) | 0},${(a[2] + (b[2] - a[2]) * f) | 0})`;
-}
+// Every keyword breaks up in the shared spectrum (spectrum.ts), the same colours as the logo intro and the Latest
+// chip (founder, 2026-10-12: "these 3 should have the same color, can be multi-colored").
+const spec = (t: number) => spectrumAt(t);
 const ease = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 type P = { x: number; y: number; a: number; r: number; j: number };
 
@@ -122,7 +110,7 @@ export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?:
           if (rel <= 0) continue;
           const k = Math.min(1, rel / .55), e = ease(k);
           ctx.globalAlpha = p.a * (1 - k);
-          ctx.fillStyle = spec(1 - p.x / a.W + k * .25, idx);
+          ctx.fillStyle = spec(p.x / a.W + k * .1);
           ctx.fillRect(p.x + a.ox + pad - 60 * e + p.j * 18 * Math.sin(k * Math.PI), p.y + a.oy + 40 + p.j * 10 * k, STEP + 6 * k * (.4 + p.r), STEP * .7);
         }
         ctx.globalAlpha = 1;
@@ -143,7 +131,7 @@ export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?:
           const k = Math.min(1, rel / .55), e = ease(k);
           if (k >= 1) continue;
           ctx.globalAlpha = p.a * Math.min(1, k * 2.2) * (1 - Math.pow(k, 3));
-          ctx.fillStyle = k > .92 ? "#FAFAFA" : spec(.2 + (1 - k) * .8, idx);
+          ctx.fillStyle = k > .92 ? "#FAFAFA" : spec(p.x / b.W);
           ctx.fillRect(p.x + b.ox + pad + 60 * (1 - e) + p.j * 18 * Math.sin(k * Math.PI), p.y + b.oy + 40 + p.j * 10 * (1 - k), STEP + 6 * (1 - k) * (.4 + p.r), STEP);
         }
         ctx.globalAlpha = 1;

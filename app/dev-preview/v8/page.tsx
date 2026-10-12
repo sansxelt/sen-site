@@ -101,7 +101,7 @@ export default function Home() {
         <Wrap>
           <div className="v8-hero__inner">
             <Link href={href("/contour")} className="v8-pill v8-fade" style={{ ["--d" as string]: ".05s" }}>
-              <em>Latest</em><b>{CONTOUR.name}</b>
+              <em><span className="v8-spec-text">Latest</span></em><b>{CONTOUR.name}</b>
               <span className="v8-arrow" aria-hidden="true" />
             </Link>
             <h1 className="v8-hero-title" style={{ width: "100%" }}>
