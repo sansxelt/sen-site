@@ -57,7 +57,7 @@ const COMPANY: Page = {
     { t: "p", text: "The site and the services described on it are operated by Foremake, Inc. Foremake, Inc, Vraelis and Overlym are brands, and none of them is incorporated: \"Inc\" is part of the Foremake, Inc brand name. The [Terms](/terms) say this in full." },
     { t: "cards", items: [
       { to: "/company", title: "Company", line: "People, brands and what Vraelis works on." },
-      { to: "/docs/partner-scope", title: "Partnerships", line: "The two official partnerships and what they cover." },
+      { to: "/docs/partner-scope", title: "Partnerships", line: "The official partnerships and what they cover." },
     ] },
   ],
 };
@@ -178,7 +178,7 @@ const WHERE: Page = {
 
 const PARTNERSHIPS: Page = {
   tab: "vraelis", group: "Trust", slug: "partner-scope", title: "Partnerships",
-  description: `The two official partnerships, what each covers, and what it does not. ${PARTNERS_NOTE}`,
+  description: `The ${PARTNERS.length} official partnerships, what each covers, and what it does not. ${PARTNERS_NOTE}`,
   updated: UPDATED,
   blocks: [
     { t: "note", label: "Scope", text: PARTNERS_NOTE },

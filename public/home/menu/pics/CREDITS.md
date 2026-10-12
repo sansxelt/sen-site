@@ -38,6 +38,7 @@ Each link in the site's mega menus (`app/dev-preview/v6/_system/shell.tsx`, MENU
 | why-vraelis-exists.jpg | Pexels, cottonbro studio (the board, from the film's first cut): https://www.pexels.com/video/a-person-is-working-on-a-circuit-board-4709394/ |
 | contact.jpg | Pexels, Tamara Adeyemi: https://www.pexels.com/photo/submarine-control-room-with-operator-wearing-headset-33676251/ |
 | reddit-partnership.jpg | Pexels, Denys Mikhalevych: https://www.pexels.com/photo/an-aerial-photography-of-city-buildings-at-night-12534226/ |
+| stripe-partnership.jpg | Pexels, cottonbro studio: https://www.pexels.com/photo/hand-holding-a-black-card-8657364/ |
 | bytedance-partnership.jpg | Pexels, Jaroslav Maléř: https://www.pexels.com/photo/man-holding-a-mobile-phone-in-the-dark-19949818/ |
 | what-is-built.jpg | Pexels, Stuffedbox NG: https://www.pexels.com/photo/silhouetted-drone-flying-on-the-background-of-a-sunset-sky-16238128/ |
 | in-public.jpg | Pexels, Alex Fu: https://www.pexels.com/photo/car-headlights-in-foggy-night-road-scene-30546867/ |

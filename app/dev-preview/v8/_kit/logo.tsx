@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, type MouseEvent } from "react";
 import { INTRO_CSS, INTRO_STYLE_ID } from "./scripts";
 import { SPECTRUM_HEX, spectrumAt } from "./spectrum";
+import { smoothScroller } from "@/components/smooth-scroll";
 
 // THE LOGO INTRO (founder, 2026-10-10: "what SpaceX AI did ... the text and logo part").
 //
@@ -75,6 +76,9 @@ const easeInOut = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t +
  *  momentum scroll still in flight would otherwise cancel it. */
 export function glideToTop() {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) { window.scrollTo({ top: 0 }); return; }
+  // With the wheel easing running, glide through it (lock holds the wheel until it arrives).
+  const eased = smoothScroller();
+  if (eased) { eased.scrollTo(0, { lock: true, duration: 1.1 }); return; }
   const hold = (e: Event) => e.preventDefault();
   const opts = { passive: false } as const;
   window.addEventListener("wheel", hold, opts); window.addEventListener("touchmove", hold, opts);

@@ -4,6 +4,7 @@
 .v8 .pt-logo { position: relative; display: grid; place-items: center; overflow: hidden; border-radius: var(--r-xl); box-shadow: inset 0 0 0 1px var(--line); isolation: isolate; }
 .v8 .pt-logo img { position: relative; z-index: 1; width: 46%; max-width: 360px; height: auto; transition: transform .7s var(--ease); }
 .v8 .pt-logo--reddit img { width: 50%; }
+.v8 .pt-logo--stripe-startups img { width: 52%; }
 .v8 .pt-logo__name { position: relative; z-index: 1; color: #FAFAFA; font: 600 clamp(26px, 3.4vw, 46px)/1 var(--display); letter-spacing: -.02em; transition: transform .7s var(--ease); }
 .v8 a:hover .pt-logo__name { transform: scale(1.03); }
 .v8 .pt-strip .pt-logo__name { font-size: clamp(20px, 2vw, 28px); }

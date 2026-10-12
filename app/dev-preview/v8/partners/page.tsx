@@ -8,7 +8,7 @@ import { LogoCard, day } from "./logo-card";
 
 export const metadata = v8meta({
   title: "Partners",
-  description: "Vraelis's partnerships with ByteDance, centred on its Seed models, and with Reddit, around Reddit Ads. Neither covers Vraelis Contour.",
+  description: "Vraelis's partnerships with ByteDance, centred on its Seed models, with Reddit, around Reddit Ads, and with Stripe Startups. None covers Vraelis Contour.",
   path: "/partners",
 });
 
