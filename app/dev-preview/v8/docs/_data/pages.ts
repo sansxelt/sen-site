@@ -1,6 +1,7 @@
 import { CONTOUR_PAGES } from "./contour";
 import { EARLIER_PAGES } from "./earlier";
 import { OBSERVATION_PAGES, VRAELIS_MORE } from "./more";
+import { HELPFUL } from "./helpful";
 import { RESEARCH_PAGES } from "./research";
 import { PRODUCTS_OVERVIEW, VRAELIS_PAGES } from "./vraelis";
 import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from "./types";
@@ -23,14 +24,14 @@ export const TABS: Tab[] = [
 // pages the founder found missing next to Linear and Scale); the recorded observations sit in Contour before Scope.
 const byGroup = (pages: Page[], group: string) => pages.filter((p) => p.group === group);
 const VRAELIS_ORDERED: Page[] = [
-  ...byGroup(VRAELIS_PAGES, "Get started"), ...VRAELIS_MORE.getStarted,
+  ...byGroup(VRAELIS_PAGES, "Get started"), HELPFUL.keyConcepts, ...VRAELIS_MORE.getStarted,
   ...VRAELIS_MORE.applications,
   ...VRAELIS_MORE.trust,
   ...byGroup(VRAELIS_PAGES, "Status"), ...VRAELIS_MORE.status,
   ...byGroup(VRAELIS_PAGES, "Reference"), ...VRAELIS_MORE.reference,
 ];
 const scopeAt = CONTOUR_PAGES.findIndex((p) => p.group === "Scope");
-const CONTOUR_ORDERED: Page[] = [...CONTOUR_PAGES.slice(0, scopeAt), ...OBSERVATION_PAGES, ...CONTOUR_PAGES.slice(scopeAt)];
+const CONTOUR_ORDERED: Page[] = [...CONTOUR_PAGES.slice(0, scopeAt), ...OBSERVATION_PAGES, HELPFUL.architecture, ...HELPFUL.guides, ...HELPFUL.reference, ...CONTOUR_PAGES.slice(scopeAt)];
 export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES, ...EARLIER_PAGES];
 
 /** Slugs that moved. They redirect permanently (308) to the page that now holds their content.
@@ -67,12 +68,14 @@ export function tabGroups(id: TabId) {
    exactly once, and the build fails if one is missing or repeated. */
 type TreeItem = string | { label: string; slugs: string[] };
 const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
-  { title: "Get started", items: ["@home", "introduction", "reading-the-docs", "who-its-for", "company-and-brands"] },
+  { title: "Get started", items: ["@home", "introduction", "key-concepts", "reading-the-docs", "who-its-for", "company-and-brands"] },
   { title: "Products", items: [
-    "products", "contour",
+    "products", "contour", "architecture",
+    { label: "Guides", slugs: ["walkthrough", "review-an-observation", "evaluate-contour"] },
     { label: "Concepts", slugs: ["release-identity", "approval-binding", "runtime-integration", "comparing-approved-and-reported"] },
     { label: "Evidence", slugs: ["evidence-and-observations", "evidence-app"] },
     { label: "Recorded observations", slugs: ["observation-01", "observation-02", "observation-03", "observation-04"] },
+    { label: "Reference", slugs: ["observation-record", "states-and-codes"] },
     "limits",
   ] },
   { title: "Research", items: [

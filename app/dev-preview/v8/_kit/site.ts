@@ -169,6 +169,9 @@ export const TAB_NAMES: Record<string, string> = {
   // Earlier references (history)
   "getting-started": "Start here", "the-loop": "The loop", "what-you-can-check": "Checks", "ai-assistants": "AI assistants", ci: "CI gate",
   review: "Plan review", "run-activity": "Run activity", "recorded-reports": "Task reports", cli: "CLI",
+  // Docs: key concepts, architecture, guides, reference (helpful.ts)
+  "key-concepts": "Key concepts", architecture: "Architecture", walkthrough: "Walkthrough", "review-an-observation": "Review guide",
+  "evaluate-contour": "Evaluate", "observation-record": "Record fields", "states-and-codes": "States, codes",
 };
 /** The browser-tab title for a page: "<name> | Vraelis". */
 export const tabTitle = (key: string, fallback: string) => `${TAB_NAMES[key] ?? fallback} | Vraelis`;

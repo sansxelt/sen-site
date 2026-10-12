@@ -40,6 +40,7 @@ type Col = { title: string; links: { label: string; to: string }[] };
 const EXPLORE: Col[] = [
   { title: "Get started", links: [
     { label: "Introduction", to: "/docs/introduction" },
+    { label: "Key concepts", to: "/docs/key-concepts" },
     { label: "How to read these docs", to: "/docs/reading-the-docs" },
     { label: "Development status", to: "/docs/status" },
     { label: "Release notes", to: "/docs/release-notes" },
@@ -47,6 +48,9 @@ const EXPLORE: Col[] = [
   ] },
   { title: CONTOUR.name, links: [
     { label: "Overview", to: "/docs/contour" },
+    { label: "Architecture", to: "/docs/architecture" },
+    { label: "Walkthrough", to: "/docs/walkthrough" },
+    { label: "Observation record", to: "/docs/observation-record" },
     { label: "Release identity", to: "/docs/release-identity" },
     { label: "Approval binding", to: "/docs/approval-binding" },
     { label: "Evidence and observations", to: "/docs/evidence-and-observations" },

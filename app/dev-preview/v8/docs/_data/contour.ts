@@ -357,6 +357,19 @@ export const CONTOUR_PAGES: Page[] = [
     updated: UPDATED,
     blocks: [
       { t: "ledger" },
+      // Hard numbers in one table (Scale's technical limits, Anduril's callouts; content review 2026-10-12).
+      { t: "h2", text: "The experiment in numbers" },
+      { t: "table", label: "Reference experiment parameters", head: ["Parameter", "Value"], rows: [
+        ["Runtime", "ONNX Runtime, exactly `1.23.2`"],
+        ["Execution providers", "Exactly `CPUExecutionProvider`"],
+        ["Approval age limit", "60 seconds (`maxAgeMs` 60000)"],
+        ["Destinations", "One: `non-actuating-lab / onnx-cpu`"],
+        ["Policy", "`cpu-lab`, version 1"],
+        ["Recorded observations", "Four, in one captured run on 10 October 2026"],
+        ["Loaded evidence", "Worker self-report from a managed ONNX session"],
+        ["Experiment tests", "133 of 133 at the runtime rejection-diagnostics revision, network disabled"],
+        ["Evidence app tests", "34 at revision 7ecb6d0 (14 trace checks, 20 import-safety checks), counted separately"],
+      ] },
       { t: "h2", text: "Not built yet" },
       { t: "table", label: "Not built yet", head: ["Item", "Where it stands"], rows: [
         ["Kubernetes collector", "Proposed in specification v1.3. Not applied."],
