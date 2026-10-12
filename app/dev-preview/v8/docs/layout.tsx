@@ -10,6 +10,7 @@ import { DocsReveal } from "./_ui/reveal";
 import { SearchModal } from "./_ui/search";
 import "./docs.css";
 import "./assistant.css";
+import { DOCS_ORIGIN, SITE_ORIGIN } from "@/lib/docs-host";
 
 // THE DOCS, ON TWO HOSTS (lib/docs-host.ts), drawn after x.ai's docs. One docs header on both: the main site's header
 // and footer step aside on docs paths (_kit/shell.tsx useOnDocs), and on docs.vraelis.com the v8 layout renders only
@@ -36,6 +37,17 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
   );
   return (
     <DocsHostProvider main={main}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": `${DOCS_ORIGIN}/#website`,
+        url: `${DOCS_ORIGIN}/`,
+        name: "Vraelis docs",
+        description: "Vraelis documentation: model release security, recorded runtime evidence and the limits of the private reference experiment.",
+        inLanguage: "en",
+        publisher: { "@id": `${SITE_ORIGIN}/#organization` },
+        isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+      }).replace(/</g, "\\u003c") }} />
       <DocsHeader nav={nav} slugTab={SLUG_TAB} />
       {main ? <main id="v8-main" className="v8-main" tabIndex={-1}>{docs}</main> : docs}
     </DocsHostProvider>

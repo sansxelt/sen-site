@@ -30,6 +30,13 @@ export const SOCIAL_IMAGE_HEIGHT = 630;
 /** Alt text for the photographic card. A link preview is content; it gets described like any other image. */
 export const SOCIAL_IMAGE_ALT = "Vraelis — Security for AI in the physical world. Industrial robotics photography.";
 
+export type SocialImageKind = "site" | "contour" | "docs";
+const SOCIAL_IMAGES = {
+  site: { url: SOCIAL_IMAGE, alt: SOCIAL_IMAGE_ALT },
+  contour: { url: "https://vraelis.com/social/vraelis-contour-v1.png", alt: "Vraelis Contour: approved cpu-2 beside reported loaded cpu-1 in the recorded synthetic CPU experiment. Private development." },
+  docs: { url: "https://vraelis.com/social/vraelis-docs-v1.png", alt: "Vraelis documentation: release identity, approval binding and reported runtime. Private development." },
+} satisfies Record<SocialImageKind, { url: string; alt: string }>;
+
 // A FEW EMBEDS, NOT NINETEEN AND NOT ONE.
 //
 // One sentence for everything was the correction to five surfaces that each invented their own, and it
@@ -51,7 +58,7 @@ export const SOCIAL_EMBEDS = {
   /** The developer surfaces: the same product, named by how you reach it. */
   developers: {
     title: "Vraelis engineering references",
-    description: "AI-security development scope and engineering references. Vraelis is in private development; public workspace access is closed.",
+    description: "AI-security engineering references. Private development; public product access is closed.",
   },
 } as const;
 
@@ -66,8 +73,8 @@ export type SocialEmbed = keyof typeof SOCIAL_EMBEDS;
  * The complete Open Graph + Twitter block. ONE builder, so every embed is identical in shape and only the
  * two sentences differ. The wide card gives the photograph and headline room to read in shared links.
  */
-function build(title: string, description: string) {
-  const image = { url: SOCIAL_IMAGE, width: SOCIAL_IMAGE_WIDTH, height: SOCIAL_IMAGE_HEIGHT, alt: SOCIAL_IMAGE_ALT };
+function build(title: string, description: string, kind: SocialImageKind = "site") {
+  const image = { ...SOCIAL_IMAGES[kind], width: SOCIAL_IMAGE_WIDTH, height: SOCIAL_IMAGE_HEIGHT };
   return {
     openGraph: { title, description, siteName: SOCIAL_TITLE, images: [image] },
     twitter: { card: "summary_large_image" as const, title, description, images: [image] },
@@ -84,6 +91,6 @@ export function socialCardFor(kind: SocialEmbed) {
  * Page metadata supplies its own description; the default remains the company sentence.
  * The shared photographic image and card shape remain centralized.
  */
-export function socialCard(title: string = SOCIAL_TITLE, description: string = SOCIAL_DESCRIPTION) {
-  return build(title, description);
+export function socialCard(title: string = SOCIAL_TITLE, description: string = SOCIAL_DESCRIPTION, kind: SocialImageKind = "site") {
+  return build(title, description, kind);
 }

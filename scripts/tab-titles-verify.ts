@@ -3,11 +3,13 @@
 // through the layout template and are checked live by crawling (titles.mjs in the deploy notes).
 import assert from "node:assert/strict";
 import { PAGES, navLabel } from "../app/dev-preview/v8/docs/_data/pages";
-import { TAB_NAMES, tabTitle } from "../app/dev-preview/v8/_kit/site";
+import { TAB_NAMES } from "../app/dev-preview/v8/_kit/site";
+
+import { docsTabTitle } from "../app/dev-preview/v8/_kit/docs-tab-titles";
 
 const MAX = 24;
 const long: string[] = [];
 for (const [k, v] of Object.entries(TAB_NAMES)) if (`${v} | Vraelis`.length > MAX) long.push(`${k}: ${v}`);
-for (const p of PAGES) { const t = tabTitle(p.slug, navLabel(p)); if (t.length > MAX) long.push(`docs/${p.slug}: ${t}`); }
+for (const p of PAGES) { const t = docsTabTitle(p.slug, navLabel(p)); if (t.length > MAX) long.push(`docs/${p.slug}: ${t}`); }
 assert.deepEqual(long, [], `tab titles over ${MAX} characters:\n${long.join("\n")}`);
 console.log(`PASS ${PAGES.length} docs pages and ${Object.keys(TAB_NAMES).length} short names fit in ${MAX} characters`);

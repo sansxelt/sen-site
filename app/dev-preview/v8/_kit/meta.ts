@@ -10,13 +10,16 @@ const ORIGIN = "https://vraelis.com";
 /** `tab`: a short name for the browser tab ("<tab> | Vraelis"); `title` stays the link-preview title. */
 export function v8meta(o: { title: string; description: string; path: string; index?: boolean; tab?: string }): Metadata {
   const url = `${ORIGIN}${o.path}`;
-  const card = socialCard(o.title, o.description);
+  const docs = o.path === "/docs" || o.path.startsWith("/docs/");
+  const title = /vraelis/i.test(o.title) ? o.title : `${o.title} | ${docs ? "Vraelis docs" : "Vraelis"}`;
+  const kind = docs ? "docs" : o.path === "/contour" || o.path.startsWith("/contour/") ? "contour" : "site";
+  const card = socialCard(title, o.description, kind);
   return {
     title: o.tab ? { absolute: `${o.tab} | Vraelis` } : o.title.startsWith("Vraelis") ? { absolute: o.title } : o.title,
     description: o.description,
     alternates: { canonical: url },
     robots: robotsMeta(v8Public && o.index !== false),
-    openGraph: { ...card.openGraph, type: "website", url },
+    openGraph: { ...card.openGraph, siteName: docs ? "Vraelis docs" : card.openGraph.siteName, type: "website", url },
     twitter: card.twitter,
   };
 }
