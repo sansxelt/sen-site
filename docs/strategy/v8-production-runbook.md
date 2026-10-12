@@ -89,6 +89,38 @@ the cleanup-2 closures and the email footer.
 - docs.vraelis.com serves the docs at its root. vraelis.com/docs/* redirects (308) there, path for path.
 - llms.txt, llms-full.txt and sitemap.xml come from the v8 registries; robots allows crawling (not a review build).
 
+## Deployment record (kept current)
+
+| | Deployment | Commit | How it was built |
+| --- | --- | --- | --- |
+| **Live now** | `sen-site-b12lghl33-sansxel.vercel.app` (`dpl_G7jiWsYgJvqYbd23EvA7b5gSAAux`), 2026-10-12 03:39 UTC | `86f4d8a7` (colour by meaning) | CLI upload from a clean checkout of `origin/main` at `86f4d8a7` (working tree clean). Vercel stores no Git SHA for CLI uploads, so this row is the record of its commit. |
+| **Previous v8 production** (rollback within v8) | `sen-site-q363xez5n-sansxel.vercel.app` (`dpl_EiTVFxyCHUddyDebvdQAsVfiWCK7`), 03:21 UTC | `917c9c33` | Git push to `main`. Rolling back here undoes only the colour change. |
+| **Before v8** (rollback out of v8) | `sen-site-lt64iii0o-sansxel.vercel.app` (`dpl_FXR1udx3R9L8e5xE5NU9Rmd8YagT`), 2026-10-11 21:45 UTC | `5dc06187` | Git push to `main`. Leaving v8 also needs `NEXT_PUBLIC_VRAELIS_V8_PUBLIC` removed and docs.vraelis.com detached (see Rollback). |
+
+### The push to `main` that built nothing (2026-10-12, investigated, no config error)
+
+- `86f4d8a7` was pushed to `site-v8` at 03:26:39 UTC: Vercel built previews for `sen-site` and `vraelis` (GitHub
+  statuses 03:26:40 and 03:28:01/05).
+- The same commit was pushed to `main` at about 03:29:23 UTC. GitHub delivered the push: the Railway service
+  "appealing-love" started a production deploy of it at 03:29:25. Vercel created no deployment and posted no status,
+  for either project.
+- Eight minutes earlier the identical sequence for `917c9c33` worked: the `main` push at 03:21:42 started both Vercel
+  projects within two seconds. Settings at the time and now: production branch `main`, Git deployments enabled, no
+  ignored build step, no deploy hooks, the repository linked (`sansxelt/sen-site`), team on Pro (no daily limit near).
+- Cause: a missed GitHub event on Vercel's side (the Vercel GitHub App's deliveries are visible only to Vercel). Not a
+  configuration error, so nothing was changed.
+- From now on: after every push to `main`, confirm within about three minutes that a `Vercel – sen-site` status
+  appears on the commit (or that `vercel api /v6/deployments?projectId=sen-site&target=production` lists its SHA). If
+  it does not, create a Git-sourced production deployment through the API (`POST /v13/deployments` with
+  `gitSource: { type: "github", ref: "main", repoId }`, `target: "production"`) so Vercel records the commit; a CLI
+  upload works too but records no SHA. The next ordinary push to `main` returns production to Git-built deployments.
+
+### Found while investigating (not changed; founder's decision)
+
+- The repository `sansxelt/sen-site` is public: anyone can read the code, this runbook and the strategy notes.
+- A Railway service, "appealing-love", is connected to the repository and deploys every push to `main` as production.
+  It is not part of the Vercel setup described here.
+
 ## PROMOTED 2026-10-11 22:4x UTC
 
 - vraelis.com and docs.vraelis.com now serve v8 from production deployment `sen-site-54hezn9j6-sansxel.vercel.app`
