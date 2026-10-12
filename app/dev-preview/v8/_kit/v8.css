@@ -544,7 +544,7 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 
 /* Home: the partner band at the foot of the hero (page.tsx, PartnerBand). Not interactive, edges fade out. */
 /* Tight (founder, 2026-10-12: "too much space to the partnerships"): close under the actions, close above the tiles. */
-.hm-band { margin-top: clamp(28px, 3vw, 44px); display: grid; gap: 12px; }
+.hm-band { margin-top: clamp(28px, 3vw, 44px); display: grid; gap: clamp(20px, 2.2vw, 30px); }
 .v8-hero:has(.hm-band) { padding-bottom: clamp(48px, 5vw, 76px); }
 .hm-band__label { margin: 0; color: var(--ink-3); font: 500 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; text-align: left; }
 .hm-band__view { overflow: hidden; pointer-events: none; user-select: none; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }

@@ -70,10 +70,10 @@ function PartnerBand() {
   const group = Array.from({ length: 6 }, () => PARTNERS).flat();
   return (
     <div className="hm-band v8-fade" style={{ ["--d" as string]: ".9s" }}>
-      {/* "Partnered with", not "Trusted by" (founder asked for either, 2026-10-11): neither partnership endorses or uses
+      {/* "In partnership with", not "Trusted by" (founder asked for either, 2026-10-11): neither partnership endorses or uses
           Vraelis, and the records say nothing may suggest otherwise (partners.ts). */}
-      <Wrap><p className="hm-band__label">Partnered with</p></Wrap>
-      <p className="v8-sr">Partnered with {PARTNERS.map((p) => p.name).join(" and ")}.</p>
+      <Wrap><p className="hm-band__label">In partnership with</p></Wrap>
+      <p className="v8-sr">In partnership with {PARTNERS.map((p) => p.name).join(" and ")}.</p>
       <div className="hm-band__view" aria-hidden="true">
         <div className="hm-band__track">
           {[0, 1].map((half) => (
