@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const page = getPage(slug);
   // An unknown slug must not invite indexing: metadata comes from this segment, not from not-found.
-  if (!page) return { title: "Not found", robots: robotsMeta(false) };
+  if (!page) return { title: { absolute: "Error | Vraelis" }, robots: robotsMeta(false) };
   const meta = v8meta({ title: page.title, description: page.description, path: `/docs/${page.slug}`, index: page.tab !== "earlier" });
   const url = `${DOCS_ORIGIN}/${page.slug}`; // the docs' own address; /docs/<slug> on the main host is the same page
   return { ...meta, alternates: { canonical: url }, openGraph: { ...meta.openGraph, url }, title: { absolute: docsTabTitle(page.slug, navLabel(page)) } };

@@ -8,7 +8,8 @@ import "../_kit/not-found.css";
 
 // THE DOCS 404: the same single centered screen as the site's 404 (founder, 2026-10-12), with the docs header,
 // sidebar and footer hidden by _kit/not-found.css. Never indexed.
-export const metadata: Metadata = { title: "Page not found", robots: robotsMeta(false) };
+// Browser tab: "Error | Vraelis" (founder, 2026-10-12).
+export const metadata: Metadata = { title: { absolute: "Error | Vraelis" }, robots: robotsMeta(false) };
 
 function A({ to, className, children }: { to: string; className?: string; children: ReactNode }) {
   const at = dl(to);

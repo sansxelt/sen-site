@@ -7,7 +7,8 @@ import "./_kit/not-found.css";
 // THE V8 404 (founder, 2026-10-12: "i hate this 404 screen", then "it should just be that screen in the middle"): one
 // centered screen with no header, footer or list of places (_kit/not-found.css hides the frame): the number in the
 // shared spectrum, one plain sentence, the way home first. Never indexed.
-export const metadata: Metadata = { title: "Page not found", robots: robotsMeta(false) };
+// Browser tab: "Error | Vraelis" (founder, 2026-10-12).
+export const metadata: Metadata = { title: { absolute: "Error | Vraelis" }, robots: robotsMeta(false) };
 
 export default function V8NotFound() {
   return (

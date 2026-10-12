@@ -12,7 +12,7 @@ export const dynamicParams = false;
 export function generateStaticParams() { return PARTNERS.map((p) => ({ slug: p.slug })); }
 export async function generateMetadata({ params }: Props) {
   const p = partner((await params).slug);
-  if (!p) return {};
+  if (!p) return { title: { absolute: "Error | Vraelis" }, robots: { index: false, follow: false } };
   return v8meta({ title: `${p.title} | Partners`, description: p.summary, path: `/partners/${p.slug}` , tab: TAB_NAMES[p.slug] ?? p.name });
 }
 

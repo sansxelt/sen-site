@@ -14,7 +14,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const page = appPage(slug);
-  if (!page) return { robots: { index: false, follow: false } };
+  if (!page) return { title: { absolute: "Error | Vraelis" }, robots: { index: false, follow: false } };
   return v8meta({ title: page.metaTitle, description: page.description, path: `/applications/${slug}` , tab: TAB_NAMES[slug] ?? page.metaTitle });
 }
 
