@@ -1,6 +1,6 @@
 import { Button, Capture, JoinBand, PageHero, Section, Tag, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
-import { CONTOUR, FACTS, STATUS, type Kind } from "../../_kit/site";
+import { CONTOUR, FACTS, STATUS, type Kind, STATUS_SOURCES } from "../../_kit/site";
 import "../contour.css";
 
 export const metadata = v8meta({
@@ -12,13 +12,7 @@ export const metadata = v8meta({
 // Replaces the old /beta and /limitations pages. Every row reads from STATUS and FACTS in _kit/site.ts, so this
 // table cannot drift from the ledger on the homepage and /contour; only the sources live here.
 
-const SOURCES = {
-  brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
-  qaTests: { label: "Internal automated testing, runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on a separate pinned Docker build. Runtime policy enforcement checked." },
-  qaRejection: { label: "Internal automated testing, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
-  qaApp: { label: "Internal automated review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
-  spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
-} as const;
+const SOURCES = STATUS_SOURCES;
 type Source = keyof typeof SOURCES;
 
 type Row = { status: { kind?: Kind; text?: string }; sources: Source[] };

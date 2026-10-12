@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Chapters, RiseWords } from "../_kit/client";
 import { Button, CAPTURES, Capture, Faq, Terms, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, WORKFLOW, href, type Kind } from "../_kit/site";
+import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, OBSERVATION_TIMES, WORKFLOW, href, type Kind } from "../_kit/site";
 import { HeroStage, ObservationTabs, type Lift, type ObservationView } from "./contour-client";
 import "./contour.css";
 
@@ -26,13 +26,7 @@ const LIFTS: { name: CaptureName; slot: Lift["slot"]; during: string[] }[] = [
   { name: "crop-policy", slot: "c", during: ["01", "02", "03"] },
 ];
 
-/* Observation times and the reason code, as the captured app shows them (trace captured 2026-10-10). */
-const RECORDED: Record<string, { time: string; reason?: string }> = {
-  "01": { time: "07:41:29.606" },
-  "02": { time: "07:41:29.613" },
-  "03": { time: "07:41:29.619" },
-  "04": { time: "07:41:29.723", reason: "RUNTIME_UNAVAILABLE" },
-};
+const RECORDED = OBSERVATION_TIMES;
 
 /** A workflow tag says its status in words: "Working in the experiment: signed bindings", "Proposed: ...". */
 const tagText = (kind: Kind, label: string) => {

@@ -1,5 +1,6 @@
 import { CONTOUR_PAGES } from "./contour";
 import { EARLIER_PAGES } from "./earlier";
+import { OBSERVATION_PAGES, VRAELIS_MORE } from "./more";
 import { RESEARCH_PAGES } from "./research";
 import { PRODUCTS_OVERVIEW, VRAELIS_PAGES } from "./vraelis";
 import type { Block, NavTab, Page, Tab, TabId, TocItem } from "./types";
@@ -18,7 +19,19 @@ export const TABS: Tab[] = [
   { id: "earlier", label: "Earlier references", to: "/docs/getting-started", line: "The earlier browser-testing product, kept as history. Not current." },
 ];
 
-export const PAGES: Page[] = [...VRAELIS_PAGES, PRODUCTS_OVERVIEW, ...CONTOUR_PAGES, ...RESEARCH_PAGES, ...EARLIER_PAGES];
+// The Vraelis tab in sidebar order: Get started, Applications, Trust, Status, Reference (more.ts, 2026-10-12, added the
+// pages the founder found missing next to Linear and Scale); the recorded observations sit in Contour before Scope.
+const byGroup = (pages: Page[], group: string) => pages.filter((p) => p.group === group);
+const VRAELIS_ORDERED: Page[] = [
+  ...byGroup(VRAELIS_PAGES, "Get started"), ...VRAELIS_MORE.getStarted,
+  ...VRAELIS_MORE.applications,
+  ...VRAELIS_MORE.trust,
+  ...byGroup(VRAELIS_PAGES, "Status"), ...VRAELIS_MORE.status,
+  ...byGroup(VRAELIS_PAGES, "Reference"), ...VRAELIS_MORE.reference,
+];
+const scopeAt = CONTOUR_PAGES.findIndex((p) => p.group === "Scope");
+const CONTOUR_ORDERED: Page[] = [...CONTOUR_PAGES.slice(0, scopeAt), ...OBSERVATION_PAGES, ...CONTOUR_PAGES.slice(scopeAt)];
+export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES, ...EARLIER_PAGES];
 
 /** Slugs that moved. They redirect permanently (308) to the page that now holds their content.
  *  overview: the Vraelis Contour overview moved to /contour when the docs became Vraelis-first (2026-10-10).

@@ -128,6 +128,24 @@ export const OBSERVATIONS = [
   { n: "04", title: "Runtime report unavailable", state: "Evidence unavailable", tone: "stop", shot: "app-destination-unavailable", line: "The worker stopped. cpu-2 stays approved, and nothing reports what is loaded." },
 ] as const;
 
+/** Observation times and the reason code, as the captured app shows them (trace captured 2026-10-10, UTC). Shared by
+ *  /contour and the docs' observation pages. */
+export const OBSERVATION_TIMES: Record<string, { time: string; reason?: string }> = {
+  "01": { time: "07:41:29.606" },
+  "02": { time: "07:41:29.613" },
+  "03": { time: "07:41:29.619" },
+  "04": { time: "07:41:29.723", reason: "RUNTIME_UNAVAILABLE" },
+};
+
+/** Where each status line comes from. Shared by /contour/status and the docs' sources page. */
+export const STATUS_SOURCES = {
+  brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
+  qaTests: { label: "Internal automated testing, runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on a separate pinned Docker build. Runtime policy enforcement checked." },
+  qaRejection: { label: "Internal automated testing, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
+  qaApp: { label: "Internal automated review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
+  spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
+} as const;
+
 export const RESEARCH = [
   { slug: "model-integrity", title: "Model integrity", line: "Whether the model that runs is the model that was approved.", photo: "embeddedBoard" },
   { slug: "adversarial-threats", title: "Adversarial threats", line: "Inputs, updates and supply paths built to change what a model does.", photo: "boardInspection" },

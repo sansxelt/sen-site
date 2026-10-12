@@ -531,13 +531,15 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-terms dd:last-child { margin-top: 4px; }
 
 /* Home: the partner band at the foot of the hero (page.tsx, PartnerBand). Not interactive, edges fade out. */
-.hm-band { margin-top: clamp(56px, 7vw, 96px); display: grid; gap: 18px; }
+/* Tight (founder, 2026-10-12: "too much space to the partnerships"): close under the actions, close above the tiles. */
+.hm-band { margin-top: clamp(28px, 3vw, 44px); display: grid; gap: 12px; }
+.v8-hero:has(.hm-band) { padding-bottom: clamp(24px, 2.6vw, 40px); }
 .hm-band__label { margin: 0; color: var(--ink-3); font: 500 12px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; text-align: left; }
 .hm-band__view { overflow: hidden; pointer-events: none; user-select: none; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .hm-band__track { display: flex; width: max-content; animation: hm-band 48s linear infinite; }
 .hm-band__group { display: flex; flex: none; }
-.hm-band__item { flex: none; display: flex; align-items: center; padding-inline: clamp(36px, 4.5vw, 72px); }
-.hm-band__logo { display: block; height: clamp(22px, 2.1vw, 30px); width: auto; }
+.hm-band__item { flex: none; display: flex; align-items: center; padding-inline: clamp(26px, 3vw, 48px); }
+.hm-band__logo { display: block; height: clamp(20px, 1.8vw, 26px); width: auto; }
 .hm-band__name { flex: none; color: var(--ink-3); font: 500 clamp(20px, 2vw, 28px)/1.4 var(--display); letter-spacing: -.01em; white-space: nowrap; }
 @keyframes hm-band { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .hm-band__track { animation: none; } }
