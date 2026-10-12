@@ -144,7 +144,8 @@
     "i18n:version": "tsx scripts/i18n-version.ts",
     "v8:paths:test": "tsx scripts/v8-promotion-paths-verify.ts",
     "v8:operator:test": "tsx scripts/v8-operator-verify.ts",
-    "email:census": "tsx scripts/email-census.ts"
+    "email:census": "tsx scripts/email-census.ts",
+    "tab:titles:test": "tsx scripts/tab-titles-verify.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.78",

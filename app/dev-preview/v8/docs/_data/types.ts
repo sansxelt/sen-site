@@ -72,7 +72,12 @@ export type Tab = {
 /** The sidebar and the phone menu, as plain data for the client header (pages.ts navModel). */
 export type NavItem = { to: string; label: string; badge?: Page["badge"] };
 export type NavGroup = { section?: string; group: string; items: NavItem[] };
-export type NavTab = { id: TabId; label: string; to: string; groups: NavGroup[]; menu?: { to: string; label: string; line: string }[] };
+/** The sidebar as a tree (founder, 2026-10-12, after Scale's docs): "Get started" first, then main topics as large
+ *  headings; under a topic, pages and expandable subtopics that hold the pages. */
+export type NavLeaf = { to: string; label: string; badge?: Page["badge"] };
+export type NavBranch = { label: string; items: NavLeaf[] };
+export type NavTopic = { title: string; items: (NavLeaf | NavBranch)[] };
+export type NavTab = { id: TabId; label: string; to: string; groups: NavGroup[]; topics: NavTopic[]; menu?: { to: string; label: string; line: string }[] };
 
 export type TocItem = { id: string; text: string; level: 2 | 3 };
 

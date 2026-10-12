@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { v8meta } from "../../_kit/meta";
-import { RESEARCH } from "../../_kit/site";
+import { RESEARCH, TAB_NAMES } from "../../_kit/site";
 import { researchPage } from "../content";
 import { ResearchDetail } from "../detail";
 
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const page = researchPage(slug);
   if (!page) return { robots: { index: false, follow: false } };
-  return v8meta({ title: page.metaTitle, description: page.description, path: `/research/${slug}` });
+  return v8meta({ title: page.metaTitle, description: page.description, path: `/research/${slug}` , tab: TAB_NAMES[slug] ?? page.metaTitle });
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {

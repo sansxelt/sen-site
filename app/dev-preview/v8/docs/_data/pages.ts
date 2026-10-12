@@ -3,7 +3,7 @@ import { EARLIER_PAGES } from "./earlier";
 import { OBSERVATION_PAGES, VRAELIS_MORE } from "./more";
 import { RESEARCH_PAGES } from "./research";
 import { PRODUCTS_OVERVIEW, VRAELIS_PAGES } from "./vraelis";
-import type { Block, NavTab, Page, Tab, TabId, TocItem } from "./types";
+import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from "./types";
 
 // THE ONE LIST OF DOCS PAGES. The sidebar, the header tabs, the search index, the pager, "On this page", the
 // Markdown twins, llms.txt, the assistant's retrieval and generateStaticParams all read PAGES, so a page added here
@@ -60,8 +60,66 @@ export function tabGroups(id: TabId) {
   return groups;
 }
 
+/* THE SIDEBAR TREE (founder, 2026-10-12, pointing at Scale's docs: "getting started like intro, and then topics; main
+   topics; under main topics the dropdown subtopics; in the subtopics the actual info"). One tree for the current docs
+   (the Vraelis, Products and Research tabs all show it); the earlier references keep their own, as history. A string
+   is a page slug ("@home" the docs home); { label, slugs } is an expandable subtopic. Every current page must appear
+   exactly once, and the build fails if one is missing or repeated. */
+type TreeItem = string | { label: string; slugs: string[] };
+const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
+  { title: "Get started", items: ["@home", "introduction", "reading-the-docs", "who-its-for", "company-and-brands"] },
+  { title: "Products", items: [
+    "products", "contour",
+    { label: "Concepts", slugs: ["release-identity", "approval-binding", "runtime-integration", "comparing-approved-and-reported"] },
+    { label: "Evidence", slugs: ["evidence-and-observations", "evidence-app"] },
+    { label: "Recorded observations", slugs: ["observation-01", "observation-02", "observation-03", "observation-04"] },
+    "limits",
+  ] },
+  { title: "Research", items: [
+    "research",
+    { label: "Research areas", slugs: ["model-integrity", "adversarial-threats", "machine-trust", "security-evidence"] },
+    { label: "Guides", slugs: ["model-release-security", "operating-constraints", "ai-security-evaluation"] },
+  ] },
+  { title: "Applications", items: [
+    "application-areas",
+    { label: "Areas", slugs: ["defense", "critical-infrastructure", "autonomous-systems", "government", "integrators"] },
+  ] },
+  { title: "Trust", items: ["security-and-disclosure", "privacy-and-data", "where-vraelis-is-offered", "partner-scope"] },
+  { title: "Status and updates", items: ["status", "sources", "release-notes"] },
+  { title: "Reference", items: ["glossary", "faq"] },
+];
+/** Shorter labels in the tree where the page's own label repeats its topic. */
+const TREE_LABEL: Record<string, string> = { products: "Overview", contour: "Vraelis Contour", research: "Overview", "application-areas": "Overview" };
+
+function leaf(slug: string): NavLeaf {
+  if (slug === "@home") return { to: HOME.to, label: HOME.label };
+  const p = getPage(slug);
+  if (!p) throw new Error(`docs sidebar: no page "${slug}"`);
+  return { to: `/docs/${p.slug}`, label: TREE_LABEL[slug] ?? navLabel(p), badge: p.badge };
+}
+function mainTopics(): NavTopic[] {
+  const seen: string[] = [];
+  const topics = MAIN_TREE.map((t) => ({
+    title: t.title,
+    items: t.items.map((it) => {
+      if (typeof it === "string") { seen.push(it); return leaf(it); }
+      seen.push(...it.slugs);
+      return { label: it.label, items: it.slugs.map(leaf) };
+    }),
+  }));
+  const current = PAGES.filter((p) => p.tab !== "earlier").map((p) => p.slug);
+  const missing = current.filter((s) => !seen.includes(s));
+  const repeated = seen.filter((s, i) => seen.indexOf(s) !== i);
+  if (missing.length || repeated.length) throw new Error(`docs sidebar tree: missing ${missing.join(", ") || "none"}; repeated ${repeated.join(", ") || "none"}`);
+  return topics;
+}
+function earlierTopics(): NavTopic[] {
+  return tabGroups("earlier").map((g) => ({ title: g.group, items: g.pages.map((p) => ({ to: `/docs/${p.slug}`, label: navLabel(p), badge: p.badge })) }));
+}
+
 /** The sidebar of every tab, and the Products menu, as plain data for the client header and sidebar. */
 export function navModel(): NavTab[] {
+  const main = mainTopics(), earlier = earlierTopics();
   return TABS.map((t) => {
     const groups = tabGroups(t.id).map((g) => ({
       section: g.section, group: g.group,
@@ -71,7 +129,7 @@ export function navModel(): NavTab[] {
     const menu = t.id === "products"
       ? [{ to: "/docs/products", label: "Overview", line: "The one product direction" }, { to: "/docs/contour", label: "Vraelis Contour", line: "Model release security" }]
       : undefined;
-    return { id: t.id, label: t.label, to: t.to, groups, menu };
+    return { id: t.id, label: t.label, to: t.to, groups, topics: t.id === "earlier" ? earlier : main, menu };
   });
 }
 

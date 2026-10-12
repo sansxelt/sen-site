@@ -16,7 +16,7 @@ const meta = v8meta({
   path: "/docs",
 });
 // The docs' own address is docs.vraelis.com (lib/docs-host.ts); /docs on the main host serves the same page.
-export const metadata = { ...meta, title: { absolute: "Vraelis docs | Get started with Vraelis" }, alternates: { canonical: `${DOCS_ORIGIN}/` }, openGraph: { ...meta.openGraph, url: `${DOCS_ORIGIN}/` } };
+export const metadata = { ...meta, title: { absolute: "Docs | Vraelis" }, alternates: { canonical: `${DOCS_ORIGIN}/` }, openGraph: { ...meta.openGraph, url: `${DOCS_ORIGIN}/` } };
 
 const UPDATED = "October 10, 2026";
 

@@ -1,11 +1,13 @@
 import { v8meta } from "../_kit/meta";
 import { LegalPage, V8_LEGAL_PRIMS } from "../_legal/legal";
 import { RefundsBody, REFUNDS_INTRO, REFUNDS_UPDATED } from "@/app/_content/legal";
+import { TAB_NAMES } from "../_kit/site";
 
 export const metadata = v8meta({
   title: "Refunds and cancellation",
   description: "Refund and cancellation terms written for the earlier paid browser-testing product, still in force for its users while its retirement is resolved. Nothing is on sale today.",
   path: "/refunds",
+  tab: TAB_NAMES.refunds,
 });
 
 const { P } = V8_LEGAL_PRIMS;

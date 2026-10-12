@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Button, Capture, JoinBand, PageHero, PhotoCard, Section, Tag, TextLink, Wrap } from "../_kit/blocks";
 import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
-import { COMPANY_LINE, CONTOUR, FACTS, FOUNDER, PHOTO_NOTE, RESEARCH, WORK_LINE, href } from "../_kit/site";
+import { COMPANY_LINE, CONTOUR, FACTS, FOUNDER, PHOTO_NOTE, RESEARCH, WORK_LINE, href, TAB_NAMES } from "../_kit/site";
 import { formatDay } from "../_content/news";
 import { CURRENT } from "../changelog/history";
 import "./company.css";
@@ -12,6 +12,7 @@ export const metadata = v8meta({
   title: "Vraelis | Company and founder Nishanth Dasari",
   description: `${COMPANY_LINE} Founded by ${FOUNDER}. Foremake, Inc is the umbrella brand behind Vraelis and Overlym, a separate fintech venture in development.`,
   path: "/company",
+  tab: TAB_NAMES.company,
 });
 
 // x.ai's /company order: mission h1, proof cards, what we do, people, values ("At our core"), then the year-grouped

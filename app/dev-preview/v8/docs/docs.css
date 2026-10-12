@@ -453,3 +453,14 @@
 }
 
 .v8 .v8-dh-hero__scope { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.5; }
+
+/* The sidebar tree (Scale's docs): large topic headings, pages, expandable subtopics with their pages indented on a
+   hairline. */
+.v8 .v8-dsb__topic + .v8-dsb__topic { margin-top: 26px; }
+.v8 .v8-dsb__topichead { margin: 0 0 8px; padding: 0 10px; color: var(--ink); font: 600 17px/1.25 var(--display); letter-spacing: -.01em; }
+.v8 .v8-dsb__branchbtn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 36px; padding: 7px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink-2); font: 500 14px/1.35 var(--sans); text-align: left; cursor: pointer; transition: color .12s, background .12s; }
+.v8 .v8-dsb__branchbtn:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.v8 .v8-dsb__branchbtn .v8-dhd__chev { flex: none; color: var(--ink-3); transform: rotate(-90deg); transition: transform .2s var(--ease); }
+.v8 .v8-dsb__branch[data-open="true"] .v8-dsb__branchbtn .v8-dhd__chev { transform: none; }
+.v8 .v8-dsb__sub { margin: 2px 0 6px 18px !important; padding-left: 8px !important; border-left: 1px solid var(--line-2); }
+.v8 .v8-dsb--sheet .v8-dsb__topichead { font-size: 18px; }
