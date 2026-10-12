@@ -46,7 +46,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     whyTitle: "A model update crosses organizations.",
     why: [
       { title: "Updates cross organizations", body: "Trained by one team, integrated by another, operated by a third." },
-      { title: "An unapproved change is a security event", body: "A different release, or the wrong destination, changes what the system does." },
+      { title: "An unexpected change is a security and operational risk", body: "A different release, or the wrong destination, changes what the system does." },
       { title: "Reviewers need to read the evidence", body: "What was approved, for where, and what the system reports running." },
     ],
     steps: ["", "Destination-bound approval: test approval cannot carry into operations.", "", "", ""],
@@ -79,7 +79,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     whyTitle: "The vendor ships it. The operator runs it.",
     why: [
       { title: "Releases cross operators", body: "Both sides need to know which release is running." },
-      { title: "An unapproved release is a security event", body: "A change to an operational system, to be handled as one." },
+      { title: "An unexpected release is a security and operational risk", body: "A change to an operational system, to be reviewed as one." },
       { title: "The change record needs the model", body: "What was approved, for where, and what the runtime reported." },
     ],
     steps: ["", "Destination-bound approval: one site's approval does not cover another.", "", "", "Deployment evidence kept for the operator's change process."],
@@ -103,7 +103,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     whyTitle: "Models ship to machines in the field.",
     why: [
       { title: "Updates land in someone else's fleet", body: "In a facility or fleet the supplier does not operate." },
-      { title: "The wrong release is a security event", body: "A different release, or the wrong machine, changes what it does." },
+      { title: "An unexpected release is a security and operational risk", body: "A different release, or the wrong machine, changes what it does." },
       { title: "The first question is which model", body: "When a machine surprises you, the answer should come from a record." },
     ],
     hypothesis: "Robotics is one segment we study. Release and platform engineers at robotics suppliers and integrators meet this problem early.",
@@ -128,7 +128,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     whyTitle: "Oversight runs on records.",
     why: [
       { title: "Systems built by suppliers", body: "Model updates arrive from outside the institution." },
-      { title: "An unapproved release is a security event", body: "For the institution responsible for the system." },
+      { title: "An unexpected release is a security and operational risk", body: "For the institution responsible for the system." },
       { title: "Readable by someone outside engineering", body: "Including what could not be confirmed." },
     ],
     steps: ["", "Destination-bound approval covers that system and no more.", "", "Version mismatch shown as reload pending, in a view a reviewer can follow.", ""],
@@ -157,7 +157,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     whyTitle: "You ship it. Someone else runs it.",
     why: [
       { title: "The release lands in their system", body: "Your signature does not grant permission to change it." },
-      { title: "A wrong release is a security event", body: "For both sides, even when nobody intended harm." },
+      { title: "An unexpected release creates risk", body: "For both sides, even when nobody intended harm. A baseline kept on purpose is not an incident." },
       { title: "Both sides need the same record", body: "Not a deployment log only one of you sees." },
     ],
     hypothesis: "These teams meet this problem first. We are testing it.",

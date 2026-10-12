@@ -449,3 +449,5 @@
   .v8 .v8-docs-modal, .v8 .v8-docs-modal__box, .v8 .v8-dhd__card { animation: none; }
   .v8 .v8-drv { opacity: 1; transform: none; }
 }
+
+.v8 .v8-dh-hero__scope { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.5; }

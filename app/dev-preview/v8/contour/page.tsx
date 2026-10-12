@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Chapters, RiseWords } from "../_kit/client";
-import { Button, CAPTURES, Faq, Terms, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
+import { Button, CAPTURES, Capture, Faq, Terms, JoinBand, Ledger, PageHero, Section, Tag, TextLink, Wrap, captureSrc, type CaptureName } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { CAPTURE_CAPTION, CONTOUR, KIND_LABEL, OBSERVATIONS, WORKFLOW, href, type Kind } from "../_kit/site";
 import { HeroStage, ObservationTabs, type Lift, type ObservationView } from "./contour-client";
@@ -90,6 +90,16 @@ export default function ContourPage() {
               caption={<><span>{CAPTURE_CAPTION}</span><TextLink to="/contour#observations" muted>The four observations</TextLink></>}
             />
           </div>
+          {/* The full screen is context; on a phone its values are too small to read. The same app, cropped, with the
+              values in words (content review 2026-10-11). Observation 02 is an approved session's baseline waiting
+              for an explicit reload, not an unauthorized deployment, and the caption says so. */}
+          <div className="ct-crops" aria-label="Observation 02, up close">
+            <Capture name="crop-approved-cpu2" caption={<span><strong>Approved:</strong> release cpu-2, generation 2.</span>} />
+            <Capture name="crop-loaded-cpu1" caption={<span><strong>Reported loaded:</strong> cpu-1, generation 1. A worker self-report.</span>} />
+            <div className="ct-crops__wide">
+              <Capture name="crop-conclusion-pending" caption={<span><strong>Reload pending:</strong> cpu-1 is the approved session&apos;s baseline, kept until an explicit reload. Not an unauthorized deployment.</span>} />
+            </div>
+          </div>
         </Wrap>
       </section>
 
@@ -126,8 +136,14 @@ export default function ContourPage() {
             <div className="v8-head">
               <span className="v8-eyebrow">Recorded evidence</span>
               <h2 className="v8-h2">Four recorded observations</h2>
-              <p className="v8-lead">One captured run, 10 October 2026. Each report is a worker self-report.</p>
+              <p className="v8-lead">One captured run, 10 October 2026. Each report is a worker self-report, and the screens are a recording of that run, not a live control.</p>
             </div>
+            <ol className="ct-story">
+              <li><b>01</b> cpu-1 approved and reported loaded.</li>
+              <li><b>02</b> cpu-2 approved; cpu-1 stays loaded in baseline mode.</li>
+              <li><b>03</b> Explicit reload; cpu-2 reported loaded.</li>
+              <li><b>04</b> Worker unavailable; the loaded state cannot be confirmed.</li>
+            </ol>
             <ObservationTabs items={observations} label="Recorded observations" />
           </div>
         </Wrap>

@@ -67,7 +67,7 @@ function blockMd(b: Block): string[] {
     case "workflow": return [`*Diagram of the five-step workflow: ${WORKFLOW.map((w) => `${w.n} ${w.title}`).join(", then ")}.*`];
     case "ledger": return [
       "**Working in the experiment**", "", ...STATUS.working.map((i) => `- ${i}`), "",
-      "**Being built**", "", ...STATUS.building.map((i) => `- ${i}`), "",
+      "**Planned next**", "", ...STATUS.building.map((i) => `- ${i}`), "",
       "**Not claimed**", "", ...STATUS.notClaimed.map((i) => `- ${i}`),
     ];
     case "cards": return b.items.map((i) => `- [${i.title}](${abs(i.to)}): ${i.line}`);

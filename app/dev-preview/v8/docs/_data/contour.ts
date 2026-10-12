@@ -352,7 +352,7 @@ export const CONTOUR_PAGES: Page[] = [
   {
     tab: "products", section: "Vraelis Contour", group: "Scope", slug: "limits",
     title: "Limits and what is not built", nav: "Limits",
-    description: "What works in the experiment, what is being built, what Vraelis does not claim, and what the evidence does not establish.",
+    description: "What works in the experiment, what is planned next, what Vraelis does not claim, and what the evidence does not establish.",
     lead: "Where Vraelis Contour stops today. This is the same status the rest of the site uses.",
     updated: UPDATED,
     blocks: [

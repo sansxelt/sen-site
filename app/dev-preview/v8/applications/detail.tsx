@@ -1,5 +1,5 @@
 import { Band, Button, Capture, CAPTURES, Head, JoinBand, PageHero, Section, Tag, TextLink, Wrap, cx } from "../_kit/blocks";
-import { APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, KIND_LABEL, WORKFLOW, type Kind } from "../_kit/site";
+import { APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, KIND_LABEL, PHOTO_NOTE, WORKFLOW, type Kind } from "../_kit/site";
 import { FramedPhoto, NotList, RelatedResearch, Split } from "../research/parts";
 import type { AppPage } from "./content";
 import "./applications.css";
@@ -27,7 +27,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={<FramedPhoto photoKey={area.photo} />}
+        aside={<FramedPhoto photoKey={area.photo} caption={PHOTO_NOTE} />}
       />
 
       <section className="rx-notebar" aria-label="About this page">

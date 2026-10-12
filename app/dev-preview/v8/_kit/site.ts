@@ -63,6 +63,10 @@ export const CONTOUR = {
   line: "Model release security, from approval to reported runtime state.",
   status: "In private development.",
   audience: "Release, platform and security engineers at suppliers and system integrators.",
+  /** What it does, before any count (content review 2026-10-11). */
+  job: "An approved update is not proof it loaded. Contour compares the approved model release with what the receiving runtime reports running, and records differences or unavailable evidence.",
+  /** The reference path today: never broader than this. */
+  scope: "Private development. A synthetic ONNX CPU experiment; runtime reports are trusted worker self-reports.",
 } as const;
 // Founder, 2026-10-11: Foremake, Inc, Vraelis and Overlym are unincorporated brands. "Foremake, Inc" is the brand name as
 // written (keep the "Inc"), but nothing may call it a registered corporation, a holding company or a parent company.
@@ -101,7 +105,7 @@ export const STATUS = {
 } as const;
 
 export const FACTS = {
-  tests: { value: "133 of 133", label: "experiment tests at the runtime rejection-diagnostics revision, in the pinned network-disabled harness, reproduced by internal automated testing on a separate build on October 10, 2026 (Pacific)", kind: "meas" as Kind },
+  tests: { value: "133 of 133", label: "experiment tests at the runtime rejection-diagnostics revision, in the pinned network-disabled harness, reproduced by internal automated testing on a separate build on October 10, 2026 (Pacific)", short: "internal experiment tests, runtime rejection-diagnostics revision, reproduced offline", kind: "meas" as Kind },
   /** History: the earlier suite. 133 supersedes its count; they are never added together. */
   testsEarlier: { value: "131 of 131", label: "experiment tests at the earlier runtime-policy revision, reproduced by internal automated testing", kind: "meas" as Kind },
   runtime: { value: "ONNX Runtime 1.23.2", label: "on CPU, the one supported runtime", kind: "impl" as Kind },
@@ -132,13 +136,15 @@ export const RESEARCH = [
 ] as const;
 
 export const APPLICATIONS = [
-  { slug: "defense", title: "Defense", line: "AI in mission systems, where an unapproved model change is a security event.", photo: "communicationsDishes" },
+  { slug: "defense", title: "Defense", line: "AI in mission systems, where an unexpected model change can create security and operational risk.", photo: "communicationsDishes" },
   { slug: "critical-infrastructure", title: "Critical infrastructure", line: "AI in energy, water and communications, where releases cross operators.", photo: "substationNetwork" },
   { slug: "autonomous-systems", title: "Autonomous systems", line: "AI in robots and vehicles, where models ship to machines in the field.", photo: "robotMotion" },
   { slug: "government", title: "Government and institutions", line: "Public bodies that need evidence a reviewer can read.", photo: "operationalCompute" },
   { slug: "integrators", title: "Suppliers and integrators", line: "The teams who ship model updates into systems they do not own.", photo: "integrationWorkshop" },
 ] as const;
 export const APPLICATIONS_NOTE = "Intended application areas. Vraelis has no customer deployments in them.";
+/** Under editorial photographs (content review 2026-10-11): context, never a claim about Vraelis' own facilities. */
+export const PHOTO_NOTE = "Editorial photograph. It shows the kind of setting, not a Vraelis facility, its equipment or a customer installation.";
 
 /** Join us routes into the existing contact intake: audience and topic arrive already chosen. */
 export const JOIN = [
@@ -161,7 +167,7 @@ export const MENUS: Menu[] = [
     id: "contour", label: "Products", kind: "mega",
     links: [
       { label: "Vraelis Contour", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
-      { label: "Contour status", to: "/contour/status", line: "What works today, what is being built, what we do not claim.", preview: crop("crop-release-identity"), previewAlt: "Release identity for cpu-2, with preprocessing not recorded." },
+      { label: "Contour status", to: "/contour/status", line: "What works today, what is planned next, what we do not claim.", preview: crop("crop-release-identity"), previewAlt: "Release identity for cpu-2, with preprocessing not recorded." },
     ],
   },
   {

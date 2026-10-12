@@ -158,7 +158,7 @@ export function PhotoCard({ photoKey, to, title, line, style }: { photoKey: stri
 }
 
 /** The status ledger. Every "where we are" list on the site renders this, from STATUS in site.ts. */
-export function Ledger({ titles = ["Working in the experiment", "Being built", "Not claimed"] }: { titles?: [string, string, string] }) {
+export function Ledger({ titles = ["Working in the experiment", "Planned next", "Not claimed"] }: { titles?: [string, string, string] }) {
   const cols: [string, readonly string[]][] = [[titles[0], STATUS.working], [titles[1], STATUS.building], [titles[2], STATUS.notClaimed]];
   return (
     <div className="v8-ledger">

@@ -16,7 +16,7 @@ const ORGS = APPLICATIONS.slice(3);
 /** What the areas have in common: the three reasons each area page develops in its own terms. */
 const SHARED = [
   "Updates to systems others operate",
-  "A wrong release is a security event",
+  "An unexpected release can create security and operational risk",
   "Evidence reviewers can read",
 ];
 

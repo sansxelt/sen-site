@@ -166,6 +166,8 @@ export default function Home() {
                 <span className="v8-eyebrow">For release engineers</span>
                 <h2 className="v8-h2">{CONTOUR.headline}</h2>
                 <p className="v8-lead">{CONTOUR.line}</p>
+                <p className="v8-body">{CONTOUR.job}</p>
+                <p className="v8-small">{CONTOUR.scope}</p>
               </div>
               <div className="v8-actions">
                 <Button to="/contour" arrow>See how it works</Button>
@@ -174,9 +176,10 @@ export default function Home() {
               <div className="v8-facts">
                 {/* The earlier suite's count (testsEarlier) is dated history and stays on /contour/status only. */}
                 {[FACTS.tests, FACTS.runtime, FACTS.observations].map((f) => (
-                  <div key={f.value}><b>{f.value}</b><span>{f.label}</span></div>
+                  <div key={f.value}><b>{f.value}</b><span>{"short" in f ? f.short : f.label}</span></div>
                 ))}
               </div>
+              <TextLink to="/contour/status" muted>Dates, versions and limits</TextLink>
             </div>
             <CodeTabs tabs={[
               { id: "obs", label: "Recorded observation", file: "observation 02, reload pending", code: OBSERVATION_2 },

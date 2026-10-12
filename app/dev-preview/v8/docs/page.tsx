@@ -82,6 +82,7 @@ export default async function DocsHome() {
         <div className="v8-dh-hero__text" data-rv-kids>
           <h1 id="docs-title" className="v8-dh-hero__title">Get started<span>with Vraelis</span></h1>
           <p className="v8-dh-hero__lead">{CONTOUR.line} The product direction, the research behind it, and where it stops.</p>
+          <p className="v8-dh-hero__scope">Private development. Explore the recorded experiment, current capabilities and technical concepts.</p>
           <div className="v8-dh-hero__actions">
             <A to="/contact?topic=contour" className="v8-btn v8-btn--solid">Join us<span className="v8-chev" aria-hidden="true" /></A>
             <A to="/docs/introduction" className="v8-btn v8-btn--ghost">Get started</A>

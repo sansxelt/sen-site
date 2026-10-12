@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Button, Capture, JoinBand, PageHero, PhotoCard, Section, Tag, TextLink, Wrap } from "../_kit/blocks";
 import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
-import { COMPANY_LINE, CONTOUR, FACTS, FOUNDER, RESEARCH, WORK_LINE, href } from "../_kit/site";
+import { COMPANY_LINE, CONTOUR, FACTS, FOUNDER, PHOTO_NOTE, RESEARCH, WORK_LINE, href } from "../_kit/site";
 import { formatDay } from "../_content/news";
 import { CURRENT } from "../changelog/history";
 import "./company.css";
@@ -98,6 +98,7 @@ export default function Company() {
             <div className="cmp-areas">
               {RESEARCH.map((r) => <PhotoCard key={r.slug} photoKey={r.photo} to={`/research/${r.slug}`} title={r.title} line={r.line} />)}
             </div>
+            <p className="v8-small">{PHOTO_NOTE}</p>
           </div>
         </Wrap>
       </Section>

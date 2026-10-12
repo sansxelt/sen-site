@@ -5,7 +5,7 @@ import "../contour.css";
 
 export const metadata = v8meta({
   title: `${CONTOUR.name} development status`,
-  description: `What works in the ${CONTOUR.name} reference experiment, what is being built, what we do not claim, and the source for every line.`,
+  description: `What works in the ${CONTOUR.name} reference experiment, what is planned next, what we do not claim, and the source for every line.`,
   path: "/contour/status",
 });
 
@@ -50,7 +50,7 @@ const GROUPS: { title: string; rows: [string, Row][] }[] = [
     [`${FACTS.tests.value} ${FACTS.tests.label}`, { status: { kind: FACTS.tests.kind }, sources: ["qaRejection"] }],
     [`Earlier: ${FACTS.testsEarlier.value} ${FACTS.testsEarlier.label}`, { status: { kind: FACTS.testsEarlier.kind }, sources: ["qaTests"] }],
   ] },
-  { title: "Being built", rows: Object.entries(BUILDING) },
+  { title: "Planned next", rows: Object.entries(BUILDING) },
   { title: "Not claimed", rows: Object.entries(NOT_CLAIMED) },
 ];
 

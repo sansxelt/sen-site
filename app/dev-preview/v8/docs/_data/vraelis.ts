@@ -98,7 +98,7 @@ export const VRAELIS_PAGES: Page[] = [
   {
     tab: "vraelis", group: "Status", slug: "status",
     title: "Development status",
-    description: `Where ${CONTOUR.name} stands: what works in the experiment, what is being built, and what Vraelis does not claim.`,
+    description: `Where ${CONTOUR.name} stands: what works in the experiment, what is planned next, and what Vraelis does not claim.`,
     lead: `Where ${CONTOUR.name} stands today, in one place. The rest of the site uses the same lists.`,
     updated: UPDATED,
     blocks: [
