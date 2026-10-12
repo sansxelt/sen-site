@@ -12,8 +12,8 @@
 //     they white or dark mode"): WHITE BY DEFAULT with black ink, like the x.ai, Vercel and Supabase mail he
 //     pointed at, and the site's black when the reader's mail app is in dark mode (the DARK block, keyed to the
 //     vx-* classes). The real diamond lockup is a transparent PNG in two inks, swapped with the theme.
-//   - A proper bottom: a sign-off, then a hairline, the copyright line, why you got it, support, links. Every
-//     address in the footer is an explicit grey link so Gmail cannot turn it blue.
+//   - A proper bottom: a sign-off, then a hairline and three footer lines (copyright with Privacy and Terms, why
+//     you got it, support). Every link in the footer is explicit and grey so Gmail cannot turn it blue.
 //   - ONE accent for the one primary button and for links: ink on white, white on dark.
 //   - State colour only where the email reports a state, as a one-line status row.
 //   - A one-time code is the action of its email, set large in mono on a soft panel (oneTimeCode).
@@ -99,10 +99,10 @@ export type ShellOptions = {
  * blue link, which broke the footer's grey (founder 2026-10-11: "could still be better, more at the bottom");
  * an explicit link in the footer's own colour is left alone. Input is plain text; it is escaped here.
  */
-function quietLinks(text: string, style: string): string {
+function quietLinks(text: string, style: string, addressStyle = style): string {
   return escapeHtml(text).replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|\b(vraelis\.com)\b/g, (m, email) =>
     email
-      ? `<a href="mailto:${email}" style="${style}">${email}</a>`
+      ? `<a href="mailto:${email}" style="${addressStyle}">${email}</a>`
       : `<a href="https://vraelis.com" style="${style}">${m}</a>`);
 }
 
@@ -135,19 +135,25 @@ const OGSC = DARK.trim().split("\n").map((line) => {
 }).join("\n    ");
 
 export function shell(content: string, opts: ShellOptions): string {
-  const foot = `margin:0 0 14px;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};`;
-  const footLink = `color:${MUTED};text-decoration:underline;text-underline-offset:2px;`;
-  const reason = quietLinks(opts.reason ?? DEFAULT_REASON, footLink);
-  const supportLine = opts.support === false
-    ? ""
-    : `<p class="vx-muted" style="${foot}">For questions, contact <a href="mailto:${SUPPORT_EMAIL}" style="${footLink}">${SUPPORT_EMAIL}</a></p>`;
+  // THE FOOTER (founder 2026-10-12 critiqued it: four spaced lines, vraelis.com twice, underlines everywhere). Now
+  // three short lines in SpaceXAI's order: the copyright with Privacy and Terms, why you got this, who to ask.
+  // Links are quiet grey text; only an email address is underlined, because it is the one thing to act on.
+  const foot = `margin:0 0 8px;font-family:${FONT};font-size:13px;line-height:1.6;color:${MUTED};`;
+  const footLink = `color:${MUTED};text-decoration:none;`;
+  const footAddress = `color:${MUTED};text-decoration:underline;text-underline-offset:2px;`;
+  const year = new Date().getUTCFullYear();
+  const lines = [
+    `&copy; ${year} Vraelis &nbsp;&middot;&nbsp; <a href="https://vraelis.com/privacy" style="${footLink}">Privacy</a> &nbsp;&middot;&nbsp; <a href="https://vraelis.com/terms" style="${footLink}">Terms</a>`,
+    quietLinks(opts.reason ?? DEFAULT_REASON, footLink, footAddress),
+    ...(opts.support === false ? [] : [`For questions, contact <a href="mailto:${SUPPORT_EMAIL}" style="${footAddress}">${SUPPORT_EMAIL}</a>`]),
+  ];
+  const footer = lines.map((l, i) => `<p class="vx-muted" style="${foot}${i === lines.length - 1 ? "margin:0;" : ""}">${l}</p>`).join("\n              ");
   // Mail to our own inboxes (support: false) is not signed off unless asked.
   const signoffText = opts.signoff === false || (opts.signoff === undefined && opts.support === false)
     ? "" : (opts.signoff ?? "Vraelis Team");
   const signoff = signoffText
     ? `<p class="vx-text" style="margin:36px 0 0;font-family:${FONT};font-size:16px;line-height:1.75;color:${BODY};">${escapeHtml(signoffText)}</p>`
     : "";
-  const year = new Date().getUTCFullYear();
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -199,10 +205,7 @@ export function shell(content: string, opts: ShellOptions): string {
         <tr><td style="padding:44px 0 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr><td class="vx-rule" style="padding:28px 0 0;border-top:1px solid ${LINE};">
-              <p class="vx-muted" style="${foot}">&copy; ${year} Vraelis</p>
-              <p class="vx-muted" style="${foot}">${reason}</p>
-              ${supportLine}
-              <p class="vx-muted" style="${foot}margin:0;"><a href="https://vraelis.com" style="${footLink}">vraelis.com</a> &middot; <a href="https://vraelis.com/privacy" style="${footLink}">Privacy</a> &middot; <a href="https://vraelis.com/terms" style="${footLink}">Terms</a></p>
+              ${footer}
             </td></tr>
           </table>
         </td></tr>
@@ -338,4 +341,50 @@ export function textPreview(html: string, max = 140): string {
     .replace(/&quot;/g, "\"").replace(/&#39;|&apos;/g, "'")
     .replace(/\s+/g, " ").trim();
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
+}
+
+/**
+ * The plain-text part of an email, derived from its HTML (founder 2026-10-12: "make sure u have all logic of any kind
+ * of email"; a census found 23 of the 37 emails sent HTML only, which spam filters and text-only clients both
+ * penalise). Headings and paragraphs become lines, list items get a dash, a link keeps its address after its label,
+ * the hidden preheader and the logo are dropped, and the footer is set off with "--".
+ */
+export function textFromHtml(html: string): string {
+  const decode = (s: string) => s
+    .replace(/&nbsp;/g, " ").replace(/&middot;/g, "·").replace(/&copy;/g, "©").replace(/&ldquo;|&rdquo;/g, "\"")
+    .replace(/&lsquo;|&rsquo;|&#39;|&apos;/g, "'").replace(/&mdash;/g, "—").replace(/&ndash;/g, "–").replace(/&hellip;/g, "…")
+    .replace(/&quot;/g, "\"").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&#(\d+);/g, (_, n) => { const c = Number(n); return c === 847 || c === 8204 ? "" : String.fromCodePoint(c); })
+    .replace(/&zwnj;/g, "").replace(/&amp;/g, "&");
+  let s = html
+    .replace(/<head[\s\S]*?<\/head>/i, "")
+    .replace(/<div style="display:none[\s\S]*?<\/div>/i, "")          // preheader
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<img[^>]*>/gi, "")
+    .replace(/<td class="vx-rule" style="padding:28px 0 0;/i, "\n\n--\n$&");  // footer rule
+  s = s.replace(/<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href: string, inner: string) => {
+    const label = decode(inner.replace(/<[^>]+>/g, "")).trim();
+    const target = decode(href).replace(/^mailto:/, "");
+    if (!label) return ""; // an image-only link (the logo) says nothing in text
+    return label === target || target === `https://${label}` ? label : `${label} (${target})`;
+  });
+  s = s
+    .replace(/<p\b[^>]*margin:0;[^>]*>([\s\S]*?)<\/p>/gi, "$1\n") // detail lines stay together
+    .replace(/<\/(h1|h2|h3|p)>/gi, "\n\n")
+    .replace(/<li\b[^>]*>/gi, "\n- ")
+    .replace(/<\/(li|tr|ul|ol|table|div)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/td>/gi, " ")
+    .replace(/<[^>]+>/g, "");
+  return decode(s)
+    .split("\n").map((l) => l.replace(/[ \t]+/g, " ").trim()).join("\n")
+    .replace(/\n{3,}/g, "\n\n").trim() + "\n";
+}
+
+/** Wraps a Resend client so every send carries a text part: the caller's own if it wrote one, else textFromHtml. */
+export function withTextPart<C extends { emails: { send: (payload: never, options?: never) => unknown } }>(client: C): C {
+  const original = client.emails.send.bind(client.emails) as (payload: unknown, options?: unknown) => unknown;
+  (client.emails as { send: unknown }).send = (payload: { html?: string; text?: string } | undefined, options?: unknown) =>
+    original(payload && payload.html && !payload.text ? { ...payload, text: textFromHtml(payload.html) } : payload, options);
+  return client;
 }

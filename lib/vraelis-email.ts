@@ -7,12 +7,12 @@
 import { Resend } from "resend";
 // The same shell as every other Vraelis email (lib/email/shell.ts), so an owner alert and a billing receipt
 // look like they came from the same company.
-import { shell, h1, p, button, status, quote, escapeHtml, type StatusTone } from "./email/shell";
+import { shell, h1, p, button, status, quote, escapeHtml, withTextPart, type StatusTone } from "./email/shell";
 
 let resendClient: Resend | null = null;
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null;
-  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+  if (!resendClient) resendClient = withTextPart(new Resend(process.env.RESEND_API_KEY));
   return resendClient;
 }
 
@@ -187,7 +187,7 @@ export async function sendLeadReply(opts: {
 
   // A plain letter in the business's voice, deliberately without the Vraelis shell: it is the business
   // answering its own lead. Only the type follows the shared stack.
-  const bodyHtml = `<div style="font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#3F3F46;white-space:pre-wrap;">${escapeHtml(
+  const bodyHtml = `<div style="font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.75;color:#27272A;white-space:pre-wrap;">${escapeHtml(
     opts.replyText,
   )}</div>`;
 

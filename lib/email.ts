@@ -15,7 +15,7 @@ import { SUPPORT, FOOTER_STATEMENT } from "@/app/dev-preview/v6/_system/position
 // The chrome and the atoms every template is built from. See lib/email/shell.ts for the design rules.
 import {
   shell, h1, p, small, strong, link, mailto, button, status, details, list, code, quote, oneTimeCode,
-  escapeHtml, textPreview, SUPPORT_EMAIL, type DetailValue,
+  escapeHtml, textPreview, withTextPart, SUPPORT_EMAIL, type DetailValue,
 } from "./email/shell";
 
 let resendClient: Resend | null = null;
@@ -23,7 +23,7 @@ let resendClient: Resend | null = null;
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null;
   if (!resendClient) {
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+    resendClient = withTextPart(new Resend(process.env.RESEND_API_KEY));
   }
   return resendClient;
 }
