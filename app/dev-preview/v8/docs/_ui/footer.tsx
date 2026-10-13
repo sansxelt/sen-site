@@ -4,14 +4,13 @@ import { localHref } from "../../_kit/site";
 import { docsHostMain, dl } from "../_data/host";
 
 // The docs footer: one quiet row, as x.ai keeps its docs chrome. The way back to vraelis.com, the machine-readable
-// index, contact, and terms and policies. Links to the main site are absolute on the docs host (dl()).
+// index, security, and terms and policies. Links to the main site are absolute on the docs host (dl()).
 
 export function DocsFooter() {
   const main = docsHostMain();
   const links = [
     { label: "vraelis.com", to: main ? main + localHref("/") : localHref("/") },
     { label: "llms.txt", to: dl("/docs/llms.txt") },
-    { label: "Contact", to: dl("/contact") },
     { label: "Security", to: dl("/security") },
     { label: "Privacy", to: dl("/privacy") },
     { label: "Terms and policies", to: dl("/legal") },

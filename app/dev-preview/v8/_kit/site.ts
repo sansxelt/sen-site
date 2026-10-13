@@ -226,13 +226,13 @@ export const MENUS: Menu[] = [
     id: "applications", label: "Applications", kind: "list",
     links: [{ label: "All applications", to: "/applications" }, ...APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` }))],
   },
-  // No Company menu (founder, 2026-10-13: "remove company fully"): About, Partners and Contact are in the footer,
-  // Contact is also the header's Talk to us, Security sits beside the footer's policies and Changelog is in the docs.
+  // No Company menu (founder, 2026-10-13: "remove company fully"): About and Partners are in the footer,
+  // Contact is reached through the header's Talk to us, Security sits beside the footer's policies and Changelog is in the docs.
 ];
 
 /** Plain links under the footer logo, no heading (founder, 2026-10-13: "no company unless Palantir has it"; Palantir
  *  lists "About Palantir" among plain quick links). */
-export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Contact", to: "/contact" }] as const;
+export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }] as const;
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
   { title: "Vraelis Contour", links: [{ label: "Overview", to: "/contour" }, { label: "How it works", to: "/contour#how" }, { label: "Development status", to: "/contour/status" }, { label: "Documentation", to: "/docs" }] },
