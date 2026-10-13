@@ -21,8 +21,10 @@ export default function V8TrademarkPage() {
       <H>Using the names</H>
       <P>You may refer to Vraelis and Vraelis Contour by name in plain text. Do not use the names, or our logo, to suggest that Vraelis has checked, endorsed or partnered with you or your product.</P>
 
-      <H>You may link to a verification you own</H>
-      <P>A verification record you own may be shared or linked. It carries its own decision, evidence and date, so it speaks for itself.</P>
+      <section data-nosnippet aria-label="Earlier verification records">
+        <H>You may link to a verification you own</H>
+        <P>This refers to records from the retired browser-testing product. A verification record you own may be shared or linked. It carries its own decision, evidence and date; it is not a Contour certification or an endorsement. The public site does not offer a verification-record sharing service.</P>
+      </section>
 
       <H>Contact</H>
       <P>Questions about a specific use, including press and partner materials: <A href="mailto:help@vraelis.com">help@vraelis.com</A>.</P>

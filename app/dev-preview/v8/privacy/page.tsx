@@ -25,11 +25,15 @@ export default function V8PrivacyPage() {
   return (
     <LegalPage title="Privacy" updated="Updated October 2026" review>
       <OperatorSection controller />
-      <PrivacyBody {...V8_LEGAL_PRIMS} abuseSignals={ABUSE_SIGNALS} />
       <H>Contact form</H>
       <P>The contact form collects your email address, your name if you give it, who you are writing as, the topic you pick and your message. Unless you are making a privacy request, it also collects your country, how you heard about Vraelis, and your company or organization and role where you give them. Inquiries from China, including Hong Kong and Macao, are not accepted (see Where Vraelis is offered in the Terms); privacy requests are accepted from everyone. Resend delivers the message to our inbox and sends you one confirmation email. To limit abuse, your IP address and your email address are kept as rate-limit keys in our database (Supabase), each with a count and a start time. These keys are not deleted automatically at present; a key is reset when the same address is used again after its time window. Your message is kept in our support inbox, and Resend keeps its own record of the delivery.</P>
       <H>Documentation assistant</H>
       <P>Ask AI on the documentation (docs.vraelis.com) answers questions about the docs. By default it answers on our hosting (Vercel) by quoting the matching documentation, and sends nothing to an AI provider. If Vraelis switches on generated answers (the Ask AI panel says so when it does), the question, up to six earlier messages of that conversation and the documentation sections retrieved for it are sent to Anthropic, the AI model provider, to write the answer. Either way, Vraelis does not log the question text and keeps no conversation after the page is closed; your IP address is held in memory for up to an hour to limit abuse. Do not put personal or confidential information in a question. Providers are listed on <A href="/subprocessors">Subprocessors</A>.</P>
+      <H>Privacy provisions and earlier product records</H>
+      <P>The privacy-rights, browser-choice and contact provisions below also apply to this website. Descriptions of browser verification, product accounts, integrations, plans and billing concern the retired browser-testing product and its retained records. They do not describe a currently available Contour service.</P>
+      <section data-nosnippet aria-label="Privacy provisions and earlier product records">
+        <PrivacyBody {...V8_LEGAL_PRIMS} abuseSignals={ABUSE_SIGNALS} />
+      </section>
     </LegalPage>
   );
 }

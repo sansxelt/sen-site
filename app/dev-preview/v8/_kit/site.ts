@@ -226,8 +226,10 @@ export const MENUS: Menu[] = [
     id: "applications", label: "Applications", kind: "list",
     links: [{ label: "All applications", to: "/applications" }, ...APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` }))],
   },
-  // No Company menu (founder, 2026-10-13: "remove company fully"): About and Partners are in the footer,
-  // Contact is reached through the header's Talk to us, Security sits beside the footer's policies and Changelog is in the docs.
+  {
+    id: "company", label: "Company", kind: "list",
+    links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }],
+  },
 ];
 
 /** Plain links under the footer logo, no heading (founder, 2026-10-13: "no company unless Palantir has it"; Palantir

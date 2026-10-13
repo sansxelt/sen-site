@@ -9,8 +9,8 @@ export const metadata = v8meta({
   path: "/security",
 });
 
-// /security, the disclosure page. Every heading, line and rule below is v6's (app/dev-preview/v6/security/page.tsx),
-// word for word; the one new paragraph is the opening line under the h1. #status, #data-handling and #report keep
+// /security, the disclosure page. Current scope is the published Contour reference experiment.
+// #status, #data-handling and #report keep
 // their ids: other pages link to /security#report, and so does the Policy field of /.well-known/security.txt.
 // Addresses are each the only text of their own element (Cloudflare's email obfuscation on vraelis.com splits an
 // address out of a shared text node, and React then fails to hydrate it).
@@ -18,7 +18,7 @@ export const metadata = v8meta({
 type Topic = { label: string; title: string; body: string };
 
 const STATUS_TOPICS: Topic[] = [
-  { label: "Product", title: "Controls are being developed privately", body: "Vraelis Contour exists as a controlled synthetic ONNX CPU experiment with signed release and approval bindings, runtime policy enforcement and recorded observations, plus a read-only evidence app. Customer runtime adapters, a Kubernetes collector and hardware attestation are not built." },
+  { label: "Product", title: "Controls are being developed privately", body: "The published Vraelis Contour reference is a controlled synthetic ONNX CPU experiment with signed release and approval bindings, runtime policy enforcement and recorded observations, plus a read-only evidence app. Runtime reports are trusted worker self-reports. It does not establish a customer deployment, live Kubernetes integration or hardware attestation." },
   { label: "Assurance", title: "Evaluate the system and its limits", body: "Research topics, design intentions and local tests are not certifications. Any future deployment must be evaluated against its actual interfaces, threat model and operating environment." },
   { label: "Access", title: "Public account access is closed", body: "The site does not offer a self-service product account, production API or operational deployment. A contact submission does not grant access." },
 ];
@@ -84,6 +84,7 @@ export default function V8SecurityPage() {
               lead="Earlier browser-checking features and implementation references do not establish a deployed AI-security service. There is no publicly available enforcement gateway or certified physical-system protection." />
             <div>
               <Topics items={STATUS_TOPICS} />
+              <p className="v8-body">The experiment records comparisons between approved releases and trusted worker reports. Its evidence app checks imported records for internal consistency, not authenticity. Earlier browser-testing documentation describes a retired product and does not establish current Contour capabilities.</p>
               <div className="v8-sec__links">
                 <TextLink to="/contour/status">Development status</TextLink>
                 <TextLink to="/contour/status#limits">Read the limitations</TextLink>

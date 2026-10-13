@@ -14,7 +14,9 @@ export default function V8TermsPage() {
   return (
     <LegalPage title="Terms" updated={TERMS_UPDATED} review>
       <OperatorSection />
-      <TermsBody {...V8_LEGAL_PRIMS} />
+      <section data-nosnippet aria-label="Earlier product terms">
+        <TermsBody {...V8_LEGAL_PRIMS} />
+      </section>
     </LegalPage>
   );
 }

@@ -4,7 +4,7 @@ import { AcceptableUseBody, ACCEPTABLE_USE_INTRO, ACCEPTABLE_USE_UPDATED } from 
 
 export const metadata = v8meta({
   title: "Acceptable use",
-  description: "What Vraelis may and may not be used for: check only systems you own or are authorized to test, never attack or overload anything, and use only credentials you are entitled to.",
+  description: "Acceptable-use commitments for the retired Vraelis browser-testing product. Its console and APIs are closed; Vraelis Contour is in private development.",
   path: "/acceptable-use",
 });
 
@@ -15,8 +15,10 @@ const { P } = V8_LEGAL_PRIMS;
 export default function V8AcceptableUsePage() {
   return (
     <LegalPage title="Acceptable use" updated={ACCEPTABLE_USE_UPDATED} review>
-      <P>{ACCEPTABLE_USE_INTRO}</P>
-      <AcceptableUseBody {...V8_LEGAL_PRIMS} />
+      <section data-nosnippet aria-label="Earlier product acceptable-use provisions">
+        <P>{ACCEPTABLE_USE_INTRO}</P>
+        <AcceptableUseBody {...V8_LEGAL_PRIMS} />
+      </section>
     </LegalPage>
   );
 }

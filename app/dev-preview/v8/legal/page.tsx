@@ -3,7 +3,7 @@ import { PageHero, Section, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { href } from "../_kit/site";
 
-export const metadata = v8meta({ title: "Legal", description: "Vraelis policies and terms.", path: "/legal" });
+export const metadata = v8meta({ title: "Legal", description: "Policies for the Vraelis website and documentation, security disclosure, and commitments preserved for former browser-testing users.", path: "/legal" });
 
 // x.ai's /legal: one list of every policy, nothing else.
 const DOCS: [string, string][] = [
@@ -21,7 +21,7 @@ const DOCS: [string, string][] = [
 export default function LegalIndex() {
   return (
     <>
-      <PageHero eyebrow="Legal" title="Policies and terms." />
+      <PageHero eyebrow="Legal" title="Policies and terms." lead="Privacy, cookies and data rights cover this website and its documentation. Terms, acceptable use and refunds also preserve commitments to former users of the retired browser-testing product. Vraelis Contour remains in private development." />
       <Section tight style={{ paddingTop: 0 }}>
         <Wrap>
           <ul className="v8-legal-list">

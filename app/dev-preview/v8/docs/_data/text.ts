@@ -88,17 +88,17 @@ export function pageMarkdown(page: Page): string {
   return out.join("\n") + "\n";
 }
 
-/** The docs index in the llms.txt format (llmstxt.org): a title, a one-line summary, then every page by tab with
+/** The docs index in the llms.txt format (llmstxt.org): a title, a one-line summary, then current pages by tab with
  *  its Markdown twin. Served as /llms.txt on the docs host and as md/index.md; both are this one string. */
 export function indexMarkdown(): string {
   const out = [
     "# Vraelis documentation", "",
-    "> Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems. These docs cover Vraelis, its one product direction (Vraelis Contour, model release security from approval to reported runtime state), its research, and earlier implementation references kept as history.", "",
+    "> Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems. These docs cover Vraelis, its first product direction (Vraelis Contour, model release security from approval to reported runtime state), and its research.", "",
     "Vraelis Contour is not for public use: it is built for release, platform and security engineers at suppliers and system integrators. Every page labels each claim as working in the experiment, measured, proposed, hypothesis or not claimed.", "",
     `- [Docs home](${DOCS_ORIGIN}/): Get started with Vraelis.`, "",
   ];
-  for (const t of TABS) {
-    out.push(`## ${t.id === "earlier" ? "Optional: earlier references (not current)" : t.label}`, "", t.line, "");
+  for (const t of TABS.filter((t) => t.id !== "earlier")) {
+    out.push(`## ${t.label}`, "", t.line, "");
     for (const p of PAGES.filter((x) => x.tab === t.id)) out.push(`- [${p.title}](${DOCS_ORIGIN}/${p.slug}) ([Markdown](${DOCS_ORIGIN}/md/${p.slug}.md)): ${p.description}`);
     out.push("");
   }
