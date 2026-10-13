@@ -152,7 +152,7 @@ export const STATUS_SOURCES = {
  *  subjects). A page not listed uses its own short label. scripts/tab-titles-verify.ts holds every title to 24. */
 export const TAB_NAMES: Record<string, string> = {
   // Site
-  contour: "Contour", "contour-status": "Contour status", company: "Company", refunds: "Refunds",
+  contour: "Contour", "contour-status": "Contour status", company: "About", refunds: "Refunds",
   bytedance: "ByteDance", reddit: "Reddit", "stripe-startups": "Stripe",
   // Applications (site and docs)
   defense: "Defense", "critical-infrastructure": "Infrastructure", "autonomous-systems": "Autonomy", government: "Government", integrators: "Integrators",
@@ -214,8 +214,8 @@ export const MENUS: Menu[] = [
     // "everything is the same page"): the product and its status page.
     id: "contour", label: "Products", kind: "mega",
     links: [
+      // One entry per product (founder, 2026-10-13: "dont have 2 for 1"). Contour status is reached from /contour.
       { label: "Vraelis Contour", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
-      { label: "Contour status", to: "/contour/status", line: "What works today, what is planned next, what we do not claim.", preview: crop("crop-release-identity"), previewAlt: "Release identity for cpu-2, with preprocessing not recorded." },
     ],
   },
   {
@@ -226,23 +226,15 @@ export const MENUS: Menu[] = [
     id: "applications", label: "Applications", kind: "list",
     links: [{ label: "All applications", to: "/applications" }, ...APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` }))],
   },
-  {
-    id: "company", label: "Company", kind: "list",
-    links: [
-      { label: "About", to: "/company" },
-      { label: "Partners", to: "/partners" },
-      { label: "Changelog", to: "/changelog" },
-      { label: "Security", to: "/security" },
-      { label: "Contact", to: "/contact" },
-    ],
-  },
+  // No Company menu (founder, 2026-10-13: "remove company fully"): About, Partners and Contact are in the footer,
+  // Contact is also the header's Talk to us, Security sits beside the footer's policies and Changelog is in the docs.
 ];
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
   { title: "Vraelis Contour", links: [{ label: "Overview", to: "/contour" }, { label: "How it works", to: "/contour#how" }, { label: "Development status", to: "/contour/status" }, { label: "Documentation", to: "/docs" }] },
   { title: "Research", links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
-  { title: "Company", links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Changelog", to: "/changelog" }, { label: "Contact", to: "/contact" }, { label: "Join us", to: "/contact?topic=contour" }] },
+  { title: "Company", links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Contact", to: "/contact" }] },
   { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },
   { title: "Legal", links: [{ label: "Terms", to: "/terms" }, { label: "Privacy", to: "/privacy" }, { label: "Cookies", to: "/cookies" }, { label: "Acceptable use", to: "/acceptable-use" }, { label: "Trademark", to: "/trademark" }, { label: "All policies", to: "/legal" }] },
 ];

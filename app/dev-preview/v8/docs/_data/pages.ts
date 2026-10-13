@@ -88,7 +88,7 @@ const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
     { label: "Areas", slugs: ["defense", "critical-infrastructure", "autonomous-systems", "government", "integrators"] },
   ] },
   { title: "Trust", items: ["security-and-disclosure", "privacy-and-data", "where-vraelis-is-offered", "partner-scope"] },
-  { title: "Status and updates", items: ["status", "sources", "release-notes"] },
+  { title: "Status and updates", items: ["status", "sources", "release-notes", "@changelog"] },
   { title: "Reference", items: ["glossary", "faq"] },
 ];
 /** Shorter labels in the tree where the page's own label repeats its topic. */
@@ -96,6 +96,8 @@ const TREE_LABEL: Record<string, string> = { products: "Overview", contour: "Vra
 
 function leaf(slug: string): NavLeaf {
   if (slug === "@home") return { to: HOME.to, label: HOME.label };
+  // The site's changelog, listed with the docs' status pages (founder, 2026-10-13); its URL stays vraelis.com/changelog.
+  if (slug === "@changelog") return { to: "/changelog", label: "Changelog" };
   const p = getPage(slug);
   if (!p) throw new Error(`docs sidebar: no page "${slug}"`);
   return { to: `/docs/${p.slug}`, label: TREE_LABEL[slug] ?? navLabel(p), badge: p.badge };
@@ -105,7 +107,7 @@ function mainTopics(): NavTopic[] {
   const topics = MAIN_TREE.map((t) => ({
     title: t.title,
     items: t.items.map((it) => {
-      if (typeof it === "string") { seen.push(it); return leaf(it); }
+      if (typeof it === "string") { if (!it.startsWith("@")) seen.push(it); return leaf(it); }
       seen.push(...it.slugs);
       return { label: it.label, items: it.slugs.map(leaf) };
     }),

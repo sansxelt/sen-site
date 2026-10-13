@@ -26,9 +26,12 @@ for (const name of ['vraelis-physical-ai-v1.png', 'vraelis-contour-v1.png', 'vra
 assert.equal((socialCard().openGraph.images[0]).url, 'https://vraelis.com/social/vraelis-physical-ai-v1.png');
 assert.ok(socialCardFor('developers').openGraph.description.length <= 120);
 const entity = JSON.parse(entityJsonLd());
-assert.ok(entity['@graph'].some((e: { '@type': string }) => e['@type'] === 'Person'));
+// Vraelis is Vraelis (founder, 2026-10-13): the graph names the organization and the site, no person or parent brand.
+assert.ok(entity['@graph'].some((e: { '@type': string }) => e['@type'] === 'Organization'));
+assert.ok(!entity['@graph'].some((e: { '@type': string }) => e['@type'] === 'Person'));
+assert.ok(!/nishanth|foremake/i.test(entityJsonLd()));
 const { key } = JSON.parse(readFileSync('lib/indexnow-key.json', 'utf8'));
 assert.match(key, /^[a-f0-9]{32}$/);
 assert.ok(existsSync(`public/${key}.txt`));
 assert.equal(readFileSync(`public/${key}.txt`, 'utf8').trim(), key);
-console.log('PASS existing company card, founder identity, and public IndexNow ownership proof');
+console.log('PASS existing company card, organization-only identity, and public IndexNow ownership proof');

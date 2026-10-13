@@ -2,7 +2,7 @@ import { OBSERVATION_2 } from "../../_content/evidence";
 import { PARTNERS, PARTNERS_NOTE } from "../../_content/partners";
 import { APP_PAGES, type AppSlug } from "../../applications/content";
 import {
-  APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, FACTS, FOREMAKE, FOUNDER, OBSERVATIONS, OBSERVATION_TIMES, STATUS_SOURCES, WORKFLOW,
+  APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, FACTS, OBSERVATIONS, OBSERVATION_TIMES, STATUS_SOURCES, WORKFLOW,
 } from "../../_kit/site";
 import type { Block, Page } from "./types";
 
@@ -42,21 +42,17 @@ const WHO: Page = {
 
 const COMPANY: Page = {
   tab: "vraelis", group: "Get started", slug: "company-and-brands", title: "Company and brands", nav: "Company and brands",
-  description: "Foremake, Inc, Vraelis and Overlym: how the brands relate, who founded Vraelis, and who operates the site.",
+  description: "What Vraelis is, its first product, and who operates the site.",
   updated: UPDATED,
   blocks: [
-    { t: "p", text: FOREMAKE },
     { t: "facts", rows: [
-      ["Umbrella brand", "Foremake, Inc"],
       ["Vraelis", "AI cybersecurity software"],
       ["First product", `${CONTOUR.name}, in private development`],
-      ["Overlym", "A separate fintech venture, in development"],
-      ["Founder", FOUNDER],
     ] },
     { t: "h2", text: "Who operates the site" },
     { t: "p", text: "The site and the services described on it are operated by Foremake, Inc. Foremake, Inc, Vraelis and Overlym are brands, and none of them is incorporated: \"Inc\" is part of the Foremake, Inc brand name. The [Terms](/terms) say this in full." },
     { t: "cards", items: [
-      { to: "/company", title: "Company", line: "People, brands and what Vraelis works on." },
+      { to: "/company", title: "About", line: "Why Vraelis exists, what is built and where it stops." },
       { to: "/docs/partner-scope", title: "Partnerships", line: "The official partnerships and what they cover." },
     ] },
   ],

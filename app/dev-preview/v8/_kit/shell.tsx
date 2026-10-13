@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, INTRO_SKIP, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
-import { FOOTER, JOIN, MENUS, href, localHref, type Menu } from "./site";
+import { FOOTER, MENUS, href, localHref, type Menu } from "./site";
 
 /** The docs draw their own header and footer (docs/layout.tsx), on this host as on docs.vraelis.com, so the site's
  *  step aside there. Decided from the path, so it also holds after a client-side navigation into or out of the docs. */
@@ -156,7 +156,7 @@ export function V8Header() {
           <div className="v8-header__end">
             {/* One way in, as on scale.com where Contact and Get Started are the same form (founder, 2026-10-11). */}
             {/* The nav items' height, 36px, so it sits on their line (founder, 2026-10-12: the hero size was "way too big"). */}
-            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href(JOIN[0].to)}>Join us</Link>
+            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href("/contact")}>Talk to us</Link>
             <button type="button" className="v8-burger" aria-label={drawer ? "Close menu" : "Open menu"} aria-expanded={drawer} aria-controls="v8-drawer"
               onClick={() => setDrawer((d) => !d)}><span aria-hidden="true" /></button>
           </div>
@@ -173,7 +173,7 @@ export function V8Header() {
         <Link href={href("/docs")} onClick={() => setDrawer(false)}>Docs</Link>
         {/* x.ai's phone menu: the one button at the foot, the small links under it. */}
         <div className="v8-drawer__ctas">
-          <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href(JOIN[0].to)} onClick={() => setDrawer(false)}>Join us</Link>
+          <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href("/contact")} onClick={() => setDrawer(false)}>Talk to us</Link>
           <nav className="v8-drawer__links" aria-label="More">
             {[["/contact", "Contact"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([to, label], i) => (
               <span key={to}>{i ? <i aria-hidden="true">·</i> : null}<Link href={href(to)} onClick={() => setDrawer(false)}>{label}</Link></span>
@@ -208,10 +208,6 @@ export function V8Footer() {
         <div className="v8-footer__bottom">
           <div className="v8-footer__legal">
             <ThemeToggle />
-            <a className="v8-affil" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/v8/brand/foremake-logo.jpg" alt="" width={22} height={22} />Affiliated with Foremake, Inc.
-            </a>
           </div>
           <nav aria-label="Footer">
             <a href="https://www.linkedin.com/company/vraelis" rel="noopener noreferrer" target="_blank">LinkedIn</a>

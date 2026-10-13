@@ -1,4 +1,4 @@
-import { APPLICATIONS_NOTE, COMPANY_LINE, CONTOUR, FACTS, FOREMAKE, FOUNDER, KIND_LABEL, RESEARCH, TERMS, WORK_LINE } from "../../_kit/site";
+import { APPLICATIONS_NOTE, COMPANY_LINE, CONTOUR, FACTS, KIND_LABEL, RESEARCH, TERMS, WORK_LINE } from "../../_kit/site";
 import { NEWS } from "../../_content/news";
 import type { Page } from "./types";
 
@@ -48,7 +48,7 @@ export const VRAELIS_PAGES: Page[] = [
       { t: "h2", text: "Where it applies" },
       { t: "p", text: `Defense, critical infrastructure and autonomous systems. ${APPLICATIONS_NOTE}` },
       { t: "h2", text: "The company" },
-      { t: "p", text: `${FOREMAKE} Vraelis was founded by ${FOUNDER}. [Company](/company)` },
+      { t: "p", text: `Vraelis develops AI cybersecurity software. ${CONTOUR.name}, its first product, is in private development. [About](/company)` },
       { t: "h2", text: "What these docs cover" },
       { t: "ul", items: [
         "Vraelis: this introduction, how to read the docs, development status, release notes and a glossary.",

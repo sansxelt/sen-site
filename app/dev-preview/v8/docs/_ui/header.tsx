@@ -107,12 +107,12 @@ function JoinMenu() {
   const id = useId();
   const home = main ? main + localHref("/") : localHref("/");
   const groups: { title: string; links: { to: string; label: string; out?: boolean }[] }[] = [
-    { title: "Vraelis", links: [{ to: home, label: "vraelis.com", out: !!main }, { to: link("/contact"), label: "Contact" }] },
+    { title: "Vraelis", links: [{ to: home, label: "vraelis.com", out: !!main }, { to: link("/changelog"), label: "Changelog" }, { to: link("/contact"), label: "Contact" }] },
     { title: "Resources", links: [{ to: link("/docs/llms.txt"), label: "llms.txt" }, { to: link("/security#report"), label: "Report a security issue" }, { to: link("/legal"), label: "Terms and policies" }] },
   ];
   return (
     <div ref={box} className="v8-dhd__split" data-open={open}>
-      <Go to={link("/contact?topic=contour")} className="v8-dhd__join">Join us</Go>
+      <Go to={link("/contact")} className="v8-dhd__join">Talk to us</Go>
       <button ref={button} type="button" className="v8-dhd__joinmore" aria-label="More links" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}><Chevron /></button>
       {open ? (
         <div id={id} className="v8-dhd__card v8-dhd__card--end">
@@ -248,7 +248,7 @@ export function DocsHeader({ nav, slugTab }: { nav: NavTab[]; slugTab: Record<st
       <div id="v8-dhd-sheet" className="v8-dhd-sheet" hidden={!sheet} data-no-reveal>
         <nav aria-label={`${current.label} pages`} className="v8-dsb v8-dsb--sheet"><NavTree tab={current} onNavigate={() => setSheet(false)} /></nav>
         <div className="v8-dhd-sheet__end">
-          <Go to={link("/contact?topic=contour")} className="v8-btn v8-btn--solid v8-btn--lg" onClick={() => setSheet(false)}>Join us</Go>
+          <Go to={link("/contact")} className="v8-btn v8-btn--solid v8-btn--lg" onClick={() => setSheet(false)}>Talk to us</Go>
           <Go to={link("/contact")} className="v8-btn v8-btn--soft v8-btn--lg" onClick={() => setSheet(false)}>Contact</Go>
           <div className="v8-dhd-sheet__row">
             <Go to={home} className="v8-dhd-sheet__home">vraelis.com{main ? <OutArrow /> : null}</Go>
