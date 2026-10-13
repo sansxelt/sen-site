@@ -47,7 +47,7 @@ export const VRAELIS_PAGES: Page[] = [
       ] },
       { t: "h2", text: "Where it applies" },
       { t: "p", text: `Defense, critical infrastructure and autonomous systems. ${APPLICATIONS_NOTE}` },
-      { t: "h2", text: "The company" },
+      { t: "h2", text: "About Vraelis" },
       { t: "p", text: `Vraelis develops AI cybersecurity software. ${CONTOUR.name}, its first product, is in private development. [About](/company)` },
       { t: "h2", text: "What these docs cover" },
       { t: "ul", items: [

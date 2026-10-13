@@ -160,7 +160,7 @@ export const TAB_NAMES: Record<string, string> = {
   "model-integrity": "Integrity", "adversarial-threats": "Threats", "machine-trust": "Machine trust", "security-evidence": "Evidence",
   "model-release-security": "Release guide", "operating-constraints": "Constraints", "ai-security-evaluation": "Evaluation",
   // Docs
-  introduction: "Introduction", "reading-the-docs": "Reading guide", "who-its-for": "Who it is for", "company-and-brands": "Company",
+  introduction: "Introduction", "reading-the-docs": "Reading guide", "who-its-for": "Who it is for", "company-and-brands": "About Vraelis",
   "application-areas": "Applications", "security-and-disclosure": "Security", "privacy-and-data": "Privacy", "where-vraelis-is-offered": "Availability",
   "partner-scope": "Partnerships", status: "Status", "release-notes": "Release notes", sources: "Sources", glossary: "Glossary", faq: "FAQ",
   products: "Products", "release-identity": "Identity", "approval-binding": "Binding", "runtime-integration": "Runtime",
@@ -230,11 +230,14 @@ export const MENUS: Menu[] = [
   // Contact is also the header's Talk to us, Security sits beside the footer's policies and Changelog is in the docs.
 ];
 
+/** Plain links under the footer logo, no heading (founder, 2026-10-13: "no company unless Palantir has it"; Palantir
+ *  lists "About Palantir" among plain quick links). */
+export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Contact", to: "/contact" }] as const;
+
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
   { title: "Vraelis Contour", links: [{ label: "Overview", to: "/contour" }, { label: "How it works", to: "/contour#how" }, { label: "Development status", to: "/contour/status" }, { label: "Documentation", to: "/docs" }] },
   { title: "Research", links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
-  { title: "Company", links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "Contact", to: "/contact" }] },
   { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },
   { title: "Legal", links: [{ label: "Terms", to: "/terms" }, { label: "Privacy", to: "/privacy" }, { label: "Cookies", to: "/cookies" }, { label: "Acceptable use", to: "/acceptable-use" }, { label: "Trademark", to: "/trademark" }, { label: "All policies", to: "/legal" }] },
 ];

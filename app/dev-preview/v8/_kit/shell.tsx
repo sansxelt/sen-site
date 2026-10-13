@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, INTRO_SKIP, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
-import { FOOTER, MENUS, href, localHref, type Menu } from "./site";
+import { FOOTER, FOOTER_QUICK, MENUS, href, localHref, type Menu } from "./site";
 
 /** The docs draw their own header and footer (docs/layout.tsx), on this host as on docs.vraelis.com, so the site's
  *  step aside there. Decided from the path, so it also holds after a client-side navigation into or out of the docs. */
@@ -194,6 +194,7 @@ export function V8Footer() {
           <div className="v8-footer__brand">
             <button type="button" className="v8-lockup" aria-label="Back to top" onClick={glideToTop}><Mark /><Wordmark height={14.25} /></button>
             <p className="v8-small" style={{ color: "var(--ink-4)" }}>© 2026 Vraelis</p>
+            <ul className="v8-footer__quick">{FOOTER_QUICK.map((l) => <li key={l.to}><Link href={href(l.to)}>{l.label}</Link></li>)}</ul>
           </div>
           {FOOTER.map((col) => (
             <div key={col.title}>

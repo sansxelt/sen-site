@@ -41,7 +41,7 @@ const WHO: Page = {
 };
 
 const COMPANY: Page = {
-  tab: "vraelis", group: "Get started", slug: "company-and-brands", title: "Company and brands", nav: "Company and brands",
+  tab: "vraelis", group: "Get started", slug: "company-and-brands", title: "About Vraelis", nav: "About Vraelis",
   description: "What Vraelis is, its first product, and who operates the site.",
   updated: UPDATED,
   blocks: [
@@ -226,7 +226,7 @@ const FAQ: Page = {
     { t: "h3", text: "Where is Vraelis offered?" },
     { t: "p", text: "Not in China, including Hong Kong and Macao. Privacy requests are accepted from everyone. [Where Vraelis is offered](/docs/where-vraelis-is-offered)" },
     { t: "h3", text: "Who operates Vraelis?" },
-    { t: "p", text: "Foremake, Inc, an unincorporated brand. [Company and brands](/docs/company-and-brands)" },
+    { t: "p", text: "Foremake, Inc, an unincorporated brand. [About Vraelis](/docs/company-and-brands)" },
   ],
 };
 
