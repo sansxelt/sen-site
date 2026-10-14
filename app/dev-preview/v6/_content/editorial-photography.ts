@@ -1,6 +1,6 @@
 // Licensed editorial context, not product evidence. See public/site/photography/CREDITS.md.
 export const EDITORIAL_PHOTOGRAPHS = {
-  robotAssembly: {"file": "editorial-robotAssembly", "w": 1280, "h": 853, "alt": "A robot arm with a two-finger gripper against a dark background.", "author": "Diego Martinez", "id": "29320998"},
+  robotAssembly: {"file": "editorial-robotAssembly", "w": 1280, "h": 853, "alt": "An orange industrial robot arm beside a conveyor rig in an engineering laboratory.", "author": "Diego Martinez", "id": "29320998"},
   instrumentControls: {"file": "editorial-instrumentControls", "w": 1280, "h": 854, "alt": "An engineer adjusting laboratory equipment.", "author": "ThisIsEngineering", "id": "3862631"},
   developerDesk: {"file": "editorial-developerDesk", "w": 1280, "h": 854, "alt": "A software developer working at a computer.", "author": "ThisIsEngineering", "id": "3861972"},
   networkLinks: {"file": "editorial-networkLinks", "w": 1280, "h": 852, "alt": "Network cables connected to equipment.", "author": "Brett Sayles", "id": "2881233"},
@@ -54,7 +54,7 @@ export const EDITORIAL_PHOTOGRAPHS = {
   substationNetwork: {"file": "editorial-substationNetwork", "w": 1920, "h": 1182, "alt": "Electrical equipment at a power substation.", "author": "Robert So", "id": "18468536"},
   windOperations: {"file": "editorial-windOperations", "w": 1920, "h": 1013, "alt": "Wind turbines in an open landscape.", "author": "Mikhail Nilov", "id": "8412772"},
   robotMotion: {"file": "editorial-robotMotion", "w": 1920, "h": 1280, "alt": "A small blue robot arm with a suction gripper behind glass, with packaged sweets around its base.", "author": "Freek Wolsink", "id": "34207369"},
-  robotGripper: {"file": "editorial-robotGripper", "w": 1920, "h": 1282, "alt": "An industrial robot arm inside a manufacturing cell.", "author": "Pavel Danilyuk", "id": "8438865"},
+  robotGripper: {"file": "editorial-robotGripper", "w": 1920, "h": 1282, "alt": "A robot arm with a two-finger gripper against a dark background.", "author": "Pavel Danilyuk", "id": "8438865"},
   communicationsDishes: {"file": "editorial-communicationsDishes", "w": 1920, "h": 1280, "alt": "Satellite dishes on a rooftop.", "author": "Francesco Ungaro", "id": "8476867"},
   integrationWorkshop: {"file": "editorial-integrationWorkshop", "w": 1920, "h": 1280, "alt": "An engineer inspecting equipment in a workshop.", "author": "Mikhail Nilov", "id": "9242208"},
   embeddedInterfaces: {"file": "editorial-embeddedInterfaces", "w": 1920, "h": 1280, "alt": "Electronic components on a circuit board.", "author": "Craig Dennis", "id": "57007"},
