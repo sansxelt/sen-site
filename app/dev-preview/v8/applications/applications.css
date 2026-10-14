@@ -34,3 +34,9 @@
 .v8 .v8-rx--apps .rx-orgs > a { aspect-ratio: 16 / 9; }
 @media (max-width: 720px) { .v8 .v8-rx--apps .rx-orgs { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx--apps .rx-orgs > a { aspect-ratio: 4 / 3; } }
 .v8 .v8-rx--apps .rx-shared > div { display: grid; gap: 12px; align-content: start; padding-top: 20px; border-top: 1px solid var(--line-2); }
+
+/* The overview hero's film (website handoff 2026-10-12): the existing civilian edit, with a caption beneath. */
+.v8 .v8-rx--apps .rx-film { margin: 0; display: grid; gap: 10px; }
+.v8 .v8-rx--apps .rx-film__frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--r-xl); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
+.v8 .v8-rx--apps .rx-film__frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.v8 .v8-rx--apps .rx-film figcaption { color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }

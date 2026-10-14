@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Highlight } from "./highlight";
+import { motionPaused, useMotionPaused } from "./motion";
 
 // Highlight lives in ./highlight (no "use client") so the docs' server-rendered code blocks share it.
 export { Highlight };
@@ -53,17 +54,20 @@ export function RiseWords({ text }: { text: string }) {
   );
 }
 
-/** A muted, looping video that plays only while on screen and never under reduced motion. */
+/** A muted, looping video that plays only while on screen, never under reduced motion, and holds while the visitor
+ *  has paused motion (motion.tsx). */
 export function AutoVideo({ src, webm, poster, label, className, rate = 1 }: { src: string; webm?: string; poster: string; label: string; className?: string; rate?: number }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const held = useMotionPaused();
   useEffect(() => {
     const v = ref.current; if (!v) return;
     v.defaultPlaybackRate = rate; v.playbackRate = rate;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (held) { v.pause(); return; }
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 });
     io.observe(v);
     return () => io.disconnect();
-  }, [rate]);
+  }, [rate, held]);
   return (
     <video ref={ref} className={className} muted loop playsInline preload="metadata" poster={poster} aria-label={label}>
       {webm ? <source src={webm} type="video/webm" /> : null}
@@ -80,7 +84,7 @@ function useTicker(el: RefObject<HTMLElement | null>, ms: number, tick: () => vo
     const node = el.current; if (!node || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let id: ReturnType<typeof setInterval> | undefined;
     const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !id) id = setInterval(() => fn.current(), ms);
+      if (e.isIntersecting && !id) id = setInterval(() => { if (!motionPaused()) fn.current(); }, ms);
       if (!e.isIntersecting && id) { clearInterval(id); id = undefined; }
     }, { threshold: .25 });
     io.observe(node);
@@ -88,17 +92,21 @@ function useTicker(el: RefObject<HTMLElement | null>, ms: number, tick: () => vo
   }, [el, ms]);
 }
 
-/** Real captures crossfading in turn (homepage tiles; founder 2026-10-10: "cut to the chase and faster"). */
-export function CaptureCycle({ images, ms = 1900 }: { images: { src: string; alt: string; w: number; h: number }[]; ms?: number }) {
+/** Real captures crossfading in turn (homepage tiles; founder 2026-10-10: "cut to the chase and faster"). With a
+ *  caption, each capture carries one plain sentence that states its values, so a small tile is still readable
+ *  (website handoff 2026-10-12, item 3); `fit: "contain"` shows a tall or wide exact-source crop whole. */
+export function CaptureCycle({ images, ms = 1900 }: { images: { src: string; alt: string; w: number; h: number; caption?: string; fit?: "contain" }[]; ms?: number }) {
   const [i, setI] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   useTicker(ref, ms, () => setI((n) => (n + 1) % images.length));
+  const caption = images[i].caption;
   return (
-    <div ref={ref} className="v8-cycle">
+    <div ref={ref} className={`v8-cycle${caption ? " v8-cycle--cap" : ""}`}>
       {images.map((m, k) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={m.src} src={m.src} alt={k === i ? m.alt : ""} aria-hidden={k !== i} width={m.w} height={m.h} data-on={k === i} loading="lazy" decoding="async" />
+        <img key={m.src} src={m.src} alt={k === i ? m.alt : ""} aria-hidden={k !== i} width={m.w} height={m.h} data-on={k === i} data-fit={m.fit} loading="lazy" decoding="async" />
       ))}
+      {caption ? <p className="v8-cycle__cap">{caption}</p> : null}
     </div>
   );
 }

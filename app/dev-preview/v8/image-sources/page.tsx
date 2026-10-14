@@ -117,7 +117,7 @@ export default function ImageSources() {
           <div className="v8-head imgs-head">
             <span className="v8-eyebrow">Films</span>
             <h2 className="v8-h2">Systems film.</h2>
-            <p className="v8-body">A silent original edit of these seven clips from Pexels under the <Out to={PEXELS_LICENSE}>Pexels License</Out> (file /home/systems-film-civil.mp4, poster from the same edit). The footage is context, not Vraelis hardware, customers or deployments. No endorsement or relationship is implied.</p>
+            <p className="v8-body">A silent original edit of these seven clips from Pexels under the <Out to={PEXELS_LICENSE}>Pexels License</Out> (file /home/systems-film-civil.mp4, poster from the same edit). It plays on the homepage and on the Applications overview. The footage is context, not Vraelis hardware, customers or deployments. No endorsement or relationship is implied.</p>
           </div>
           <div className="v8-table-wrap imgs-table-wrap">
             <table className="v8-table imgs-table">

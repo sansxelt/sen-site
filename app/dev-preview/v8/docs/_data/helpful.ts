@@ -148,6 +148,7 @@ const REVIEW: Page = {
       "Runtime. Whether the reported ONNX Runtime version and execution providers satisfy the policy. Python is recorded only.",
       "Provenance. Where the observation came from (the worker's self-report), when it was received, and its reason code if there is one.",
     ] },
+    { t: "capture", name: "crop-observation-unavailable", caption: "Observation 04 in the evidence app: cpu-2 approved, no loaded report, no session, reason code RUNTIME_UNAVAILABLE. A self-report from the managed ONNX session, not independent attestation." },
     { t: "h2", text: "What each state means" },
     { t: "table", label: "States", head: ["State", "Typical cause", "What it tells a reviewer", "What to check next"], rows: [
       ["Matched (`matched`)", "The approved release is loaded and the runtime satisfies the policy.", "The worker reports running exactly what was approved.", "Nothing for this observation. The claim rests on the worker's self-report."],
@@ -252,6 +253,7 @@ const CODES: Page = {
   updated: UPDATED,
   blocks: [
     { t: "h2", text: "Observation statuses" },
+    { t: "capture", name: "crop-observations-list", caption: "The captured run's four observations as the evidence app lists them: Matched, Reload pending, Matched, Evidence unavailable." },
     { t: "table", label: "Statuses", head: ["In the trace", "Shown as", "Meaning"], rows: [
       ["`matched`", "Matched", "Every identity field is equal, and the reported runtime satisfies the policy."],
       ["`pending`", "Reload pending", "The reported identity differs from the approved one; in baseline mode the runtime waits for an explicit reload."],

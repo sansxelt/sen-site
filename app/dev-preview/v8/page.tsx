@@ -10,6 +10,7 @@ import { NEWS, formatDay } from "./_content/news";
 import { PARTNERS, showsLogo } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
+import { MotionToggle } from "./_kit/motion";
 
 // The browser tab just says Home (founder, 2026-10-11); link previews keep the tagline, which says what Vraelis is.
 export const metadata = {
@@ -23,15 +24,21 @@ export const metadata = {
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
-/** The Recorded evidence tile: real captures of the evidence app, one after another. */
-const EVIDENCE_TILE = (["crop-approved-cpu2", "crop-loaded-cpu1", "crop-loaded-unavailable", "crop-release-approval", "crop-source-json"] as const).map((n) => ({
-  src: captureSrc(n), alt: CAPTURES[n].alt, w: CAPTURES[n].w, h: CAPTURES[n].h,
+/** The Recorded evidence tile: how the evidence is kept, one job per capture (website handoff 2026-10-12, item 2).
+ *  The approved-versus-loaded comparison is the Contour tile's video, once; it is not repeated here. Each capture
+ *  carries one sentence with its values, read from the captured run (item 3). */
+const EVIDENCE_TILE = ([
+  ["crop-observations-list", "Every observation kept in order, 07:41:29.606 to 07:41:29.723 UTC.", "contain"],
+  ["crop-observation-unavailable", "Observation 04: the worker stopped. cpu-2 stays approved; reason code RUNTIME_UNAVAILABLE.", undefined],
+  ["crop-pair-reloaded", "Observation 03: after an explicit reload, cpu-2 is loaded and every field matches.", undefined],
+] as const).map(([n, caption, fit]) => ({
+  src: captureSrc(n), alt: CAPTURES[n].alt, w: CAPTURES[n].w, h: CAPTURES[n].h, caption, fit,
 }));
 
 /** The research tile: each area beside a real capture of the evidence it is about (x.ai shows its product, not stock photos). */
 const RESEARCH_SHOT: Record<string, CaptureName> = {
   "model-integrity": "crop-release-identity",
-  "adversarial-threats": "crop-loaded-cpu1",
+  "adversarial-threats": "crop-where-cpu2",
   "machine-trust": "crop-release-approval",
   "security-evidence": "crop-source-json",
 };
@@ -109,6 +116,8 @@ export default function Home() {
               <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
+            {/* One steady sentence under the moving keyword, so the hero says what Contour does at any moment. */}
+            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Compare approved model releases with what the runtime reports loaded.</p>
             <div className="v8-actions v8-fade hm-hero__actions" style={{ ["--d" as string]: ".7s" }}>
               {/* Join us lives in the header; the hero leads to the product instead of repeating it (founder, 2026-10-12). */}
               <Button to="/contour" size="lg" arrow>See how Contour works</Button>
@@ -122,6 +131,7 @@ export default function Home() {
 
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
+          <div className="hm-motion"><MotionToggle /></div>
           <div className="v8-bento">
             <Link href={href("/contour")} className="v8-tile">
               <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,106,43,.16), transparent 70%), #0C0C0E" }}>
@@ -134,7 +144,7 @@ export default function Home() {
             <Link href={href("/contour#observations")} className="v8-tile">
               <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(90,180,255,.12), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
-                  <CaptureCycle images={EVIDENCE_TILE} />
+                  <CaptureCycle images={EVIDENCE_TILE} ms={4200} />
                 </div>
               </div>
               <div className="v8-tile__foot"><span>Recorded evidence</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>

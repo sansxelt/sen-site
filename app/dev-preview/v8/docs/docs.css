@@ -186,6 +186,10 @@
 
 .v8 .v8-docs-body > .v8-docs-capture { margin-top: 28px; margin-bottom: 8px; }
 .v8 .v8-docs-capture .v8-figure__frame img { height: auto; }
+.v8 .v8-docs-capture__full { display: inline-block; margin-top: 6px; color: var(--ink-3); font-size: 12.5px; text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; }
+.v8 .v8-docs-capture__full:hover { color: var(--ink); }
+/* On a phone a full app window is unreadable: a short preview from its top left, the full image one tap away. */
+@media (max-width: 640px) { .v8 .v8-docs-capture .v8-figure__frame { max-height: 220px; overflow: hidden; } .v8 .v8-docs-capture .v8-figure__frame img { object-fit: cover; object-position: left top; } }
 
 /* Status lines with their kind label. */
 .v8 .v8-docs-kinds { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--line); }

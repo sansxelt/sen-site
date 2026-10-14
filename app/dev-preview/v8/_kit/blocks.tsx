@@ -33,6 +33,10 @@ export const CAPTURES = {
   "crop-release-identity": { w: 1100, h: 530, alt: "Release identity for cpu-2: model, configuration, release and receipt digests; preprocessing not recorded." },
   "crop-release-approval": { w: 1100, h: 530, alt: "Approval for cpu-2: destination, policy, a 60 second age limit and the runtime." },
   "crop-source-json": { w: 1638, h: 768, alt: "The source JSON of a recorded observation." },
+  // Exact-source crops of the captures above, pixels unchanged (website handoff 2026-10-12: readable at tile size).
+  "crop-observations-list": { w: 467, h: 561, alt: "The four recorded observations in order, 07:41:29.606 to 07:41:29.723 UTC: Matched, Reload pending, Matched, Evidence unavailable." },
+  "crop-observation-unavailable": { w: 1046, h: 429, alt: "Observation 04: cpu-2 approved, no loaded report, no session, reason code RUNTIME_UNAVAILABLE." },
+  "crop-where-cpu2": { w: 1879, h: 549, alt: "Where cpu-2 appears: not involved, approved not loaded, approved and loaded, approved with loaded state unknown." },
 } as const;
 export type CaptureName = keyof typeof CAPTURES;
 /** Path for a capture. Full screens have a 2400 master and a 1200 version. */

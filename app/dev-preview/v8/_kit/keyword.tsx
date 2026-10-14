@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { spectrumAt } from "./spectrum";
+import { motionPaused } from "./motion";
 
 // THE HERO KEYWORD (founder, 2026-10-10: "do like the logo animation thing with the homepage, one keyword at a time").
 //
@@ -17,8 +18,9 @@ const spec = (t: number) => spectrumAt(t);
 const ease = (t: number) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 type P = { x: number; y: number; a: number; r: number; j: number };
 
-// Fifteen phrases: a shorter hold keeps the list moving, long enough to read each one.
-const HOLD = 1600, OUT = 820, IN = 900;
+// Readable first (website handoff 2026-10-12, item 1): each phrase holds 2.8 s, crisp, and the change between two
+// takes about 1.2 s, so the line is mostly words, not particles. (Was 1.6 s held and 1.72 s changing.)
+const HOLD = 2800, OUT = 560, IN = 620;
 
 export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?: number }) {
   const [i, setI] = useState(0);
@@ -99,10 +101,15 @@ export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?:
 
     const cycle = async () => {
       if (stopped || !line.current || !word.current || !canvas.current) return;
+      // Motion paused by the visitor: keep the current phrase crisp and look again shortly.
+      if (motionPaused()) { timer = setTimeout(cycle, 400); return; }
       const ctx = sizeCanvas(), pad = 80;
       // Out: the current keyword breaks up right to left.
       const a = sample(words[idx]);
-      await run(OUT, (t) => {
+      // The two halves overlap in effect: OUT ends before its faint tail and IN starts where fragments already show,
+      // so there is no instant with neither word on the line.
+      await run(OUT, (t0) => {
+        const t = t0 * .66;
         ctx.clearRect(0, 0, 1e5, 1e5);
         mask("left", 1 - (t * 1.6) / .6);
         for (const p of a.parts) {
@@ -122,7 +129,10 @@ export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?:
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (stopped || !word.current) return;
       const b = sample(words[idx]);
-      await run(IN, (t) => {
+      // Fragments cool to the page's own text colour, not white: white vanished on the light theme.
+      const ink = getComputedStyle(word.current).color;
+      await run(IN, (t0) => {
+        const t = .2 + t0 * .8;
         ctx.clearRect(0, 0, 1e5, 1e5);
         mask("left", (t * 1.6 - .5) / .6);
         for (const p of b.parts) {
@@ -131,7 +141,7 @@ export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?:
           const k = Math.min(1, rel / .55), e = ease(k);
           if (k >= 1) continue;
           ctx.globalAlpha = p.a * Math.min(1, k * 2.2) * (1 - Math.pow(k, 3));
-          ctx.fillStyle = k > .92 ? "#FAFAFA" : spec(p.x / b.W);
+          ctx.fillStyle = k > .92 ? ink : spec(p.x / b.W);
           ctx.fillRect(p.x + b.ox + pad + 60 * (1 - e) + p.j * 18 * Math.sin(k * Math.PI), p.y + b.oy + 40 + p.j * 10 * (1 - k), STEP + 6 * (1 - k) * (.4 + p.r), STEP);
         }
         ctx.globalAlpha = 1;

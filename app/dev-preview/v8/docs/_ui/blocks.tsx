@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
-import { Capture, Ledger, Tag } from "../../_kit/blocks";
+import { Capture, Ledger, Tag, captureSrc } from "../../_kit/blocks";
 import { KIND_LABEL, WORKFLOW } from "../../_kit/site";
 import { dl } from "../_data/host";
 import { headingIds } from "../_data/pages";
@@ -122,7 +122,8 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "note": return <div key={i} className="v8-docs-note" role="note"><b>{b.label.replace(/[.:]$/, "")}</b><p><Rich text={b.text} /></p></div>;
           case "code": return <CodeBlock key={i} label={b.label} code={b.text} lang={b.lang} />;
           case "table": return <Table key={i} block={b} />;
-          case "capture": return <div key={i} className="v8-docs-capture"><Capture name={b.name} caption={b.caption} /></div>;
+          // Every screen opens full size, and on a phone shows as a short preview (website handoff 2026-10-12, item 7).
+          case "capture": return <div key={i} className="v8-docs-capture"><Capture name={b.name} caption={b.caption} /><a className="v8-docs-capture__full" href={captureSrc(b.name)} target="_blank" rel="noopener">Open full size<span className="v8-sr"> (opens in a new tab)</span></a></div>;
           case "kinds": return (
             <ul key={i} className="v8-docs-kinds">
               {b.items.map((it, j) => <li key={j}><Tag kind={it.kind}>{it.label ?? KIND_LABEL[it.kind]}</Tag><span><Rich text={it.text} /></span></li>)}

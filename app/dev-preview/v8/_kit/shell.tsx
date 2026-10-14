@@ -7,6 +7,7 @@ import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, INTRO_SKIP, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
 import { FOOTER, FOOTER_QUICK, MENUS, href, localHref, type Menu } from "./site";
+import { MotionToggle } from "./motion";
 
 /** The docs draw their own header and footer (docs/layout.tsx), on this host as on docs.vraelis.com, so the site's
  *  step aside there. Decided from the path, so it also holds after a client-side navigation into or out of the docs. */
@@ -209,6 +210,7 @@ export function V8Footer() {
         <div className="v8-footer__bottom">
           <div className="v8-footer__legal">
             <ThemeToggle />
+            <MotionToggle className="v8-motion--quiet" />
             <a className="v8-affil" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/v8/brand/foremake-logo.jpg" alt="" width={22} height={22} />Affiliated with Foremake, Inc.
