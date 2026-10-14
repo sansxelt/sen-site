@@ -27,7 +27,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={<FramedPhoto photoKey={area.photo} caption={PHOTO_NOTE} />}
+        aside={<FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} caption={PHOTO_NOTE} />}
       />
 
       <section className="rx-notebar" aria-label="About this page">
