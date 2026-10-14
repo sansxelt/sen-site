@@ -10,7 +10,6 @@ import { NEWS, formatDay } from "./_content/news";
 import { PARTNERS, showsLogo } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
-import { MotionToggle } from "./_kit/motion";
 
 // The browser tab just says Home (founder, 2026-10-11); link previews keep the tagline, which says what Vraelis is.
 export const metadata = {
@@ -134,7 +133,6 @@ export default function Home() {
 
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
-          <div className="hm-motion"><MotionToggle /></div>
           <div className="v8-bento">
             <Link href={href("/contour")} className="v8-tile">
               <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,106,43,.16), transparent 70%), #0C0C0E" }}>
