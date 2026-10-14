@@ -52,4 +52,4 @@
 
 .pt-scope-note { color: var(--ink-2); font-size: 14px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 20px; }
 .pt-scope-note summary { cursor: pointer; width: fit-content; padding: 8px 0; }
-.pt-scope-note summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+.pt-scope-note summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
