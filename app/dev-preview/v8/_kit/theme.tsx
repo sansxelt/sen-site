@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { preferencesAllowed } from "@/lib/privacy-choice";
 import { LIGHT_TOKENS, THEME_KEY, THEME_STYLE_ID } from "./scripts";
 
@@ -38,6 +38,11 @@ function subscribe(onChange: () => void) {
 
 export function ThemeToggle() {
   const light = useSyncExternalStore(subscribe, isLight, serverTheme);
+  useEffect(() => {
+    // Shared by the site and docs: retire the removed motion control's saved choice.
+    try { localStorage.removeItem("v8-motion"); } catch { /* storage blocked */ }
+    document.getElementById("v8-motion-paused")?.remove();
+  }, []);
   const flip = () => {
     const next = !light; apply(next);
     window.dispatchEvent(new Event(THEME_CHANGE));
