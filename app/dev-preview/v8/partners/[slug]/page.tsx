@@ -30,7 +30,7 @@ export default async function PartnerPage({ params }: Props) {
           </div>
           <header className="pt-head">
             <h1 className="v8-h1">{p.title}</h1>
-            <span className="pt-chip">Partnership</span>
+            <span className="pt-chip">Official partnership</span>
             <p className="v8-lead">{p.lede}</p>
           </header>
           <div style={{ marginTop: 40 }}><LogoCard p={p} className="pt-story-logo" /></div>
@@ -40,23 +40,20 @@ export default async function PartnerPage({ params }: Props) {
             <div><dt>Focus</dt><dd>{p.focus}</dd></div>
             <div><dt>Status</dt><dd>Official partnership</dd></div>
           </dl>
-          <div className="pt-two">
+          <div className="v8-stack--lg">
             <section className="v8-stack">
-              <h2 className="v8-h3">Scope</h2>
+              <h2 className="v8-h3">What the partnership brings</h2>
               <ul>{p.means.map((m) => <li key={m}>{m}</li>)}</ul>
             </section>
-            <section className="v8-stack">
-              <h2 className="v8-h3">Limits</h2>
+            <details className="pt-scope-note">
+              <summary>Relationship details</summary>
               <ul>{p.boundary.map((m) => <li key={m}>{m}</li>)}</ul>
-            </section>
+            </details>
           </div>
           <div className="v8-actions" style={{ marginTop: 28 }}>
             {p.links.map((l) => <a key={l.href} className="v8-btn v8-btn--soft v8-btn--sm" href={l.href} target="_blank" rel="noopener noreferrer">{l.label}<span className="v8-arrow" aria-hidden="true" /></a>)}
           </div>
-          <figure className="pt-photo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.photo.src} alt={p.photo.alt} width={1400} height={700} loading="lazy" decoding="async" />
-          </figure>
+
         </article>
       </Wrap>
       <Section rule style={{ marginTop: "var(--section)" }}>

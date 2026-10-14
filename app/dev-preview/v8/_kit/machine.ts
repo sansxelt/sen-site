@@ -25,8 +25,21 @@ export function sitePages(): { path: string; label: string }[] {
   add("/contact", "Contact"); // The header CTA remains even when Contact is absent from footer navigation.
   for (const m of MENUS) for (const l of m.links) add(l.to, l.label === "All research" ? "Research" : l.label === "All applications" ? "Applications" : l.label === "Overview" ? (m.id === "contour" ? "Vraelis Contour" : m.label) : l.label);
   for (const col of FOOTER) for (const l of col.links) add(l.to, l.label);
-  for (const p of PARTNERS) add(`/partners/${p.slug}`, `Partnership with ${p.name}`);
+  for (const p of PARTNERS) add(`/partners/${p.slug}`, `${p.name} partnership — ${p.focus}`);
   return [...seen].map(([path, label]) => ({ path, label }));
+}
+
+/** Public relationship summaries share the exact page registry and dates. */
+function partnershipMarkdown(): string {
+  return ["## Official partnerships", "",
+    ...PARTNERS.flatMap((p) => [
+      `### ${p.title}`, "", p.lede, "",
+      `Established: ${p.established}. Focus: ${p.focus}.`, "",
+      ...p.means.map((m) => `- ${m}`), "",
+      `Record: ${SITE_ORIGIN}/partners/${p.slug}`, "",
+    ]),
+    "These partnerships concern Vraelis’s company activities. Vraelis Contour remains in private development.", "",
+  ].join("\n");
 }
 
 /** Current docs pages; the earlier references are history, kept out of the indexes as they are out of Ask AI. */
@@ -40,6 +53,7 @@ export function llmsTxt(): string {
     `${COMPANY_LINE} Vraelis Contour, model release security from approval to reported runtime state, is its first product direction. It is not for public use: it is built for release, platform and security engineers at suppliers and system integrators. What exists today is a controlled synthetic ONNX CPU reference experiment and a read-only evidence app over the trace it recorded.`, "",
     "## Site", "",
     ...sitePages().map((p) => `- [${p.label}](${SITE_ORIGIN}${p.path === "/" ? "/" : p.path})`), "",
+    partnershipMarkdown(),
     "## Documentation", "",
     docsIndex.trim(), "",
   ].join("\n");
@@ -51,7 +65,7 @@ export function llmsFullTxt(): string {
     "The current documentation in full, as Markdown. Every claim is labelled as working in the experiment, measured, proposed, hypothesis or not claimed.", "",
     `Site: ${SITE_ORIGIN}/  Documentation: ${DOCS_ORIGIN}/`, "",
   ].join("\n");
-  return `${intro}\n---\n\n${currentDocs().map(pageMarkdown).join("\n---\n\n")}`;
+  return `${intro}\n${partnershipMarkdown()}\n---\n\n${currentDocs().map(pageMarkdown).join("\n---\n\n")}`;
 }
 
 /** Sitemap entries: the site's pages, then the docs home and every current docs page. */

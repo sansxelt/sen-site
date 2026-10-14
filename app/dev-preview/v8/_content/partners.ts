@@ -58,12 +58,11 @@ export const PARTNERS: Partner[] = [
     established: "2026-09-27",
     firstContact: "2026-08-17",
     focus: "AI models: the Seed family",
-    summary: "An official partnership centred on ByteDance's Seed model family.",
-    lede: "An official partnership centred on ByteDance's Seed models.",
+    summary: "An official partnership around ByteDance’s Seed models, with a direct line to the team behind them.",
+    lede: "An official partnership around ByteDance’s Seed model family, spanning images, video and language models.",
     means: [
       "Seedream for images, Seedance for video, Seed language models",
       "A direct line to the team behind them",
-      "Projects named only once they exist",
     ],
     boundary: [
       "Does not cover or endorse Vraelis Contour",
@@ -84,11 +83,11 @@ export const PARTNERS: Partner[] = [
     title: "Vraelis and Reddit",
     established: "2026-09-14",
     focus: "Advertising: Reddit Ads",
-    summary: "An advertising partnership with Reddit, through Reddit Ads.",
-    lede: "An advertising partnership to reach technical communities through Reddit Ads.",
+    summary: "An official advertising partnership with Reddit to reach technical communities through Reddit Ads.",
+    lede: "An official partnership with Reddit focused on reaching technical communities through Reddit Ads.",
     means: [
       "Advertising through Reddit Ads",
-      "Campaigns and results named only once they exist",
+      "Reaching technical communities through Reddit’s advertising platform",
     ],
     boundary: [
       "Does not cover or endorse Vraelis Contour or our security work",
@@ -108,8 +107,8 @@ export const PARTNERS: Partner[] = [
     established: "2026-10-08",
     firstContact: "2026-10-06",
     focus: "Startup program: Stripe Startups",
-    summary: "Vraelis is part of Stripe Startups, Stripe's program for startups, joined through Supabase Select.",
-    lede: "Vraelis is part of Stripe Startups, the program Stripe runs for startups.",
+    summary: "An official partnership through Stripe Startups, with Stripe fee credits and startup resources.",
+    lede: "Vraelis joined Stripe Startups through Supabase Select. The partnership provides Stripe fee credits and access to startup benefits and resources.",
     means: [
       "Membership in the Stripe Startups program",
       "Stripe fee credits on Vraelis's Stripe account",
@@ -132,12 +131,11 @@ export const PARTNERS: Partner[] = [
     title: "Vraelis and Cloudflare",
     established: "2026-10-01",
     focus: "Cloudflare Connect 2026",
-    summary: "A partnership with Cloudflare, with an invitation to Cloudflare Connect 2026 in San Francisco.",
-    lede: "A partnership with Cloudflare. Invited to Cloudflare Connect 2026, October 19 to 21, at Moscone West in San Francisco.",
+    summary: "An official partnership with Cloudflare, including Partner registration for Cloudflare Connect 2026.",
+    lede: "An official partnership with Cloudflare. Vraelis’s parent brand, Foremake, is registered as a Partner for Cloudflare Connect 2026, October 19 to 21 at Moscone West in San Francisco.",
     means: [
       "Registered as a partner for Cloudflare Connect 2026",
       "October 19 to 21, 2026, Moscone West, San Francisco",
-      "Projects named only once they exist",
     ],
     boundary: [
       "Does not cover or endorse Vraelis Contour or our security work",
@@ -153,7 +151,7 @@ export const PARTNERS: Partner[] = [
   },
 ];
 
-export const PARTNERS_NOTE = "No partnership covers Vraelis Contour or endorses its security capabilities.";
+export const PARTNERS_NOTE = "Our partnerships span AI models, advertising, startup resources and the technology ecosystem.";
 export const partner = (slug: string) => PARTNERS.find((p) => p.slug === slug);
 
 /** Whether a partner's official logo is shown: written permission on record, or the founder's decision to show it. */

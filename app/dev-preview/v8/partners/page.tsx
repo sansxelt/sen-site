@@ -1,14 +1,14 @@
 import Link from "next/link";
 import "./partners.css";
-import { Section, TextLink, Wrap } from "../_kit/blocks";
+import { Section, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { href } from "../_kit/site";
-import { PARTNERS, PARTNERS_NOTE } from "../_content/partners";
+import { PARTNERS } from "../_content/partners";
 import { LogoCard, day } from "./logo-card";
 
 export const metadata = v8meta({
   title: "Partners",
-  description: "Vraelis's partnerships with ByteDance, centred on its Seed models, with Reddit, around Reddit Ads, with Stripe Startups and with Cloudflare. None covers Vraelis Contour.",
+  description: "Official Vraelis partnerships with ByteDance, Reddit, Stripe Startups and Cloudflare. Explore their scope, benefits and milestones.",
   path: "/partners",
 });
 
@@ -21,6 +21,7 @@ export default function PartnersPage() {
           <div className="pt-featured">
             <div className="v8-stack">
               <span className="v8-eyebrow">Partners</span>
+              <p className="v8-small">Working with ByteDance, Reddit, Stripe Startups and Cloudflare across AI models, advertising and startup resources.</p>
               <h1 className="v8-h1">{featured.title}</h1>
               <p className="v8-lead">{featured.summary}</p>
               <p className="pt-meta"><span>Official partnership since {day(featured.established)}</span><span>{featured.focus}</span></p>
@@ -44,11 +45,7 @@ export default function PartnersPage() {
                   <p className="v8-small">{p.summary}</p>
                 </Link>
               ))}
-              <div className="v8-box" style={{ display: "grid", gap: 14, alignContent: "start" }}>
-                <h2 className="v8-h3">What they are not</h2>
-                <p className="v8-body">{PARTNERS_NOTE}</p>
-                <TextLink to="/changelog">Changelog entries</TextLink>
-              </div>
+
             </div>
           </div>
         </Wrap>
