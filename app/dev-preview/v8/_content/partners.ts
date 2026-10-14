@@ -5,18 +5,22 @@
 // the changelog entries of 2026-09-17 and 2026-09-27). Logos are the official files each company serves:
 //   reddit-lockup.svg         https://redditinc.com/hubfs/Reddit%20Inc/Content/Brand%20Page/Reddit_Lockup_Logo.svg
 //   bytedance-logo-white.svg  the logo in the header of https://www.bytedance.com/en/ (retrieved 2026-10-10)
+//   cloudflare-logo-white.svg Cloudflare's own white single-colour horizontal logo, CF_logo_horizontal_singlecolor_wht.svg
+//                             from https://www.cloudflare.com/press-kit/ (retrieved 2026-10-13), unmodified
 //   stripe-startups-white.svg the Stripe Startups program lockup (flag mark and STRIPE STARTUPS) on
 //                             https://stripe.com/startups (retrieved 2026-10-13), its one colour set to white
 // Stripe Startups: Stripe's startup program. Vraelis joined it through Supabase Select; Stripe's Startups lead granted
 // its Stripe fee credits on acct_1TLKsqIHI0UhMM0R on 2026-10-08 (founder confirmed they landed).
-// No written logo-use permission is on record for any of the three. Reddit's brand system says partnership lockups
+// Cloudflare (founder, 2026-10-13: "we officially partnered oct 1"). What is on record: Foremake was invited to
+// Cloudflare Connect 2026 (October 19-21, Moscone West) with registrant type Partner. The record says only that.
+// No written logo-use permission is on record for any of the four. Reddit's brand system says partnership lockups
 // apply "if we have agreed for our brands to appear together". Get each company's written OK before the public switch.
 //
 // No partnership covers Vraelis Contour, and neither is an endorsement of it or a validation of its security
 // capabilities. Nothing here may say otherwise unless an agreement establishes it.
 
 export type Partner = {
-  slug: "bytedance" | "reddit" | "stripe-startups";
+  slug: "bytedance" | "reddit" | "stripe-startups" | "cloudflare";
   name: string;
   title: string;
   established: string; // ISO day the partnership record carries
@@ -116,6 +120,31 @@ export const PARTNERS: Partner[] = [
     glow: "radial-gradient(80% 90% at 75% 20%, rgba(99,91,255,.5), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(0,212,255,.2), transparent 70%), #0D0B26",
     photo: { src: "/home/menu/pics/stripe-partnership.jpg", alt: "A hand holding a black card.", credit: "cottonbro studio, Pexels", href: "https://www.pexels.com/photo/hand-holding-a-black-card-8657364/" },
     links: [{ label: "Stripe Startups", href: "https://stripe.com/startups" }, { label: "Stripe", href: "https://stripe.com/" }],
+  },
+  {
+    slug: "cloudflare",
+    name: "Cloudflare",
+    title: "Vraelis and Cloudflare",
+    established: "2026-10-01",
+    focus: "Cloudflare Connect 2026",
+    summary: "A partnership with Cloudflare, with an invitation to Cloudflare Connect 2026 in San Francisco.",
+    lede: "A partnership with Cloudflare. Invited to Cloudflare Connect 2026, October 19 to 21, at Moscone West in San Francisco.",
+    means: [
+      "Registered as a partner for Cloudflare Connect 2026",
+      "October 19 to 21, 2026, Moscone West, San Francisco",
+      "Projects named only once they exist",
+    ],
+    boundary: [
+      "Does not cover or endorse Vraelis Contour or our security work",
+      "Cloudflare does not review or certify Vraelis",
+      "No exclusivity",
+    ],
+    logo: { src: "/v8/partners/cloudflare-logo-white.svg", w: 651, h: 95, alt: "Cloudflare" },
+    logoShown: true,
+    logoMono: true,
+    glow: "radial-gradient(80% 90% at 75% 20%, rgba(243,128,32,.42), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(250,174,64,.18), transparent 70%), #150B04",
+    photo: { src: "/home/menu/pics/cloudflare-partnership.jpg", alt: "A server rack's perforated front panel lit blue.", credit: "panumas nikhomkhai, Pexels", href: "https://www.pexels.com/photo/close-up-of-a-blue-server-rack-in-datacenter-37730211/" },
+    links: [{ label: "Cloudflare", href: "https://www.cloudflare.com/" }, { label: "Cloudflare Connect", href: "https://www.cloudflare.com/connect/" }],
   },
 ];
 

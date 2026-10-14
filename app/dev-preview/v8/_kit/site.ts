@@ -153,7 +153,7 @@ export const STATUS_SOURCES = {
 export const TAB_NAMES: Record<string, string> = {
   // Site
   contour: "Contour", "contour-status": "Contour status", company: "About", refunds: "Refunds",
-  bytedance: "ByteDance", reddit: "Reddit", "stripe-startups": "Stripe",
+  bytedance: "ByteDance", reddit: "Reddit", "stripe-startups": "Stripe", cloudflare: "Cloudflare",
   // Applications (site and docs)
   defense: "Defense", "critical-infrastructure": "Infrastructure", "autonomous-systems": "Autonomy", government: "Government", integrators: "Integrators",
   // Research (site and docs)

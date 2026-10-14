@@ -141,7 +141,7 @@ export default function ImageSources() {
         <Wrap>
           <div className="v8-stack">
             <h2 className="v8-h2">Partner names and photographs.</h2>
-            <p className="v8-body">The homepage band and the Partners pages show each partner&apos;s official logo as the company publishes it: Reddit&apos;s lockup from Reddit&apos;s brand page, ByteDance&apos;s logo from bytedance.com and the Stripe Startups lockup from stripe.com/startups, the last two shown in white on our dark pages. Reddit, ByteDance, Stripe and Stripe Startups are trademarks of their owners. The partner pages also use three licensed Pexels photographs: an aerial view of a city at night by Denys Mikhalevych (photo 12534226), a person holding a phone in the dark by Jaroslav Maléř (photo 19949818) and a hand holding a black card by cottonbro studio (photo 8657364).</p>
+            <p className="v8-body">The homepage band and the Partners pages show each partner&apos;s official logo as the company publishes it: Reddit&apos;s lockup from Reddit&apos;s brand page, ByteDance&apos;s logo from bytedance.com the Stripe Startups lockup from stripe.com/startups and Cloudflare&apos;s white logo from its press kit; ByteDance&apos;s and Stripe&apos;s are shown in white on our dark pages. Reddit, ByteDance, Stripe, Stripe Startups and Cloudflare are trademarks of their owners. The partner pages also use four licensed Pexels photographs: an aerial view of a city at night by Denys Mikhalevych (photo 12534226), a person holding a phone in the dark by Jaroslav Maléř (photo 19949818) a hand holding a black card by cottonbro studio (photo 8657364) and a server rack lit blue by panumas nikhomkhai (photo 37730211).</p>
           </div>
         </Wrap>
       </Section>
