@@ -69,8 +69,8 @@ const DOCS_QUERIES = (() => {
 /* THE PARTNER BAND (founder, 2026-10-11, after deccan.ai: "the homepage has the unclickable scroll ... we should
    have that"). A band of names drifting sideways at the foot of the hero, nothing in it clickable. Deccan's says
    "trusted by"; ours names what is true, the official partnerships (Stripe Startups added 2026-10-13), each by its official logo and name (the
-   lockups carry both; founder 2026-10-11 "use logos and names"), in its own colours. ByteDance's is one-colour white,
-   so the light theme shows it in black (LIGHT_TOKENS). The partnership records stay one click away below.
+   lockups carry both; founder 2026-10-11 "use logos and names"), in its own colours. Since 2026-10-13 all in colour (founder);
+   a logo with a light-page version (Cloudflare's black wordmark) swaps to it in the light theme (LIGHT_TOKENS). The partnership records stay one click away below.
    One group is repeated enough to overfill a wide screen, then the whole group twice, so moving by half loops
    without a seam. Screen readers get one sentence; reduced motion holds it still. */
 function PartnerBand() {
@@ -89,7 +89,10 @@ function PartnerBand() {
                 <span key={i} className="hm-band__item">
                   {showsLogo(p)
                     // eslint-disable-next-line @next/next/no-img-element
-                    ? <img className={`hm-band__logo hm-band__logo--${p.slug}${p.logoMono ? " hm-band__logo--mono" : ""}`} src={p.logo.src} alt="" width={p.logo.w} height={p.logo.h} loading="eager" decoding="async" />
+                    ? <>
+                        <img className={`hm-band__logo hm-band__logo--${p.slug}${p.logoMono ? " hm-band__logo--mono" : ""}${p.logoLight ? " hm-band__logo--dark-only" : ""}`} src={p.logo.src} alt="" width={p.logo.w} height={p.logo.h} loading="eager" decoding="async" />
+                        {p.logoLight ? <img className={`hm-band__logo hm-band__logo--${p.slug} hm-band__logo--light-only`} src={p.logoLight} alt="" width={p.logo.w} height={p.logo.h} loading="eager" decoding="async" /> : null}
+                      </>
                     : <span className="hm-band__name">{p.name}</span>}
                 </span>
               ))}

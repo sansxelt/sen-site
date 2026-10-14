@@ -4,9 +4,13 @@
 // Facts come from the published partnership records (git: app/dev-preview/v6/partnerships/* before 79ec4b28, and
 // the changelog entries of 2026-09-17 and 2026-09-27). Logos are the official files each company serves:
 //   reddit-lockup.svg         https://redditinc.com/hubfs/Reddit%20Inc/Content/Brand%20Page/Reddit_Lockup_Logo.svg
-//   bytedance-logo-white.svg  the logo in the header of https://www.bytedance.com/en/ (retrieved 2026-10-10)
-//   cloudflare-logo-white.svg Cloudflare's own white single-colour horizontal logo, CF_logo_horizontal_singlecolor_wht.svg
-//                             from https://www.cloudflare.com/press-kit/ (retrieved 2026-10-13), unmodified
+//   bytedance-logo.svg        ByteDance's colour logo (bars #3C8CFF #00C8D2 #78E6DD, wordmark #3259B4), from Wikimedia
+//                             Commons "ByteDance logo English.svg" (public domain), metadata stripped (2026-10-13;
+//                             founder: colour logos). bytedance-logo-white.svg, the header logo of bytedance.com, is kept.
+//   cloudflare-logo.svg       Cloudflare's horizontal logo from its press kit (CF_logo_horizontal_singlecolor_wht.svg),
+//                             the cloud in Cloudflare's oranges (#F38020, #FAAE40 from cloudflare.com/logo.svg) with the
+//                             wordmark white for dark grounds; cloudflare-logo-light.svg has it black for light grounds.
+//   stripe-startups-logo.svg  the Stripe Startups program lockup in Stripe's purple #635BFF (founder: colour logos);
 //   stripe-startups-white.svg the Stripe Startups program lockup (flag mark and STRIPE STARTUPS) on
 //                             https://stripe.com/startups (retrieved 2026-10-13), its one colour set to white
 // Stripe Startups: Stripe's startup program. Vraelis joined it through Supabase Select; Stripe's Startups lead granted
@@ -38,6 +42,8 @@ export type Partner = {
   logoShown?: boolean;
   /** The logo is one colour, white: shown in black on a light page (light theme). */
   logoMono?: boolean;
+  /** A version of the logo for light pages (the homepage band in the light theme). */
+  logoLight?: string;
   glow: string;
   photo: { src: string; alt: string; credit: string; href: string };
   links: { label: string; href: string }[];
@@ -64,10 +70,10 @@ export const PARTNERS: Partner[] = [
       "Seed models are not used in Vraelis Contour or in defense work",
       "No exclusivity, no private data",
     ],
-    logo: { src: "/v8/partners/bytedance-logo-white.svg", w: 256, h: 44, alt: "ByteDance" },
+    logo: { src: "/v8/partners/bytedance-logo.svg", w: 1622, h: 280, alt: "ByteDance" },
     logoShown: true,
-    logoMono: true,
-    glow: "radial-gradient(80% 90% at 75% 20%, rgba(60,140,255,.55), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(50,90,180,.5), transparent 70%), #0B1530",
+    // A light card: the colour wordmark is ByteDance's dark blue, which a navy card would swallow.
+    glow: "radial-gradient(80% 90% at 75% 15%, rgba(120,230,221,.38), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(60,140,255,.26), transparent 70%), #F3F6FC",
     photo: { src: "/home/menu/pics/bytedance-partnership.jpg", alt: "A person holding a phone in the dark.", credit: "Jaroslav Maléř, Pexels", href: "https://www.pexels.com/photo/man-holding-a-mobile-phone-in-the-dark-19949818/" },
     links: [{ label: "ByteDance", href: "https://www.bytedance.com/en/" }, { label: "ByteDance Seed", href: "https://seed.bytedance.com/en/" }],
     changelogId: "2026-09-27-vraelis-and-bytedance",
@@ -114,9 +120,8 @@ export const PARTNERS: Partner[] = [
       "Stripe does not review or certify Vraelis",
       "No exclusivity",
     ],
-    logo: { src: "/v8/partners/stripe-startups-white.svg", w: 127, h: 15, alt: "Stripe Startups" },
+    logo: { src: "/v8/partners/stripe-startups-logo.svg", w: 127, h: 15, alt: "Stripe Startups" },
     logoShown: true,
-    logoMono: true,
     glow: "radial-gradient(80% 90% at 75% 20%, rgba(99,91,255,.5), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(0,212,255,.2), transparent 70%), #0D0B26",
     photo: { src: "/home/menu/pics/stripe-partnership.jpg", alt: "A hand holding a black card.", credit: "cottonbro studio, Pexels", href: "https://www.pexels.com/photo/hand-holding-a-black-card-8657364/" },
     links: [{ label: "Stripe Startups", href: "https://stripe.com/startups" }, { label: "Stripe", href: "https://stripe.com/" }],
@@ -139,9 +144,9 @@ export const PARTNERS: Partner[] = [
       "Cloudflare does not review or certify Vraelis",
       "No exclusivity",
     ],
-    logo: { src: "/v8/partners/cloudflare-logo-white.svg", w: 651, h: 95, alt: "Cloudflare" },
+    logo: { src: "/v8/partners/cloudflare-logo.svg", w: 651, h: 95, alt: "Cloudflare" },
     logoShown: true,
-    logoMono: true,
+    logoLight: "/v8/partners/cloudflare-logo-light.svg",
     glow: "radial-gradient(80% 90% at 75% 20%, rgba(243,128,32,.42), transparent 65%), radial-gradient(60% 70% at 10% 100%, rgba(250,174,64,.18), transparent 70%), #150B04",
     photo: { src: "/home/menu/pics/cloudflare-partnership.jpg", alt: "A server rack's perforated front panel lit blue.", credit: "panumas nikhomkhai, Pexels", href: "https://www.pexels.com/photo/close-up-of-a-blue-server-rack-in-datacenter-37730211/" },
     links: [{ label: "Cloudflare", href: "https://www.cloudflare.com/" }, { label: "Cloudflare Connect", href: "https://www.cloudflare.com/connect/" }],

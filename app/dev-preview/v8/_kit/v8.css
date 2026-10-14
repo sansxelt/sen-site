@@ -589,6 +589,7 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .hm-band__group { display: flex; flex: none; }
 .hm-band__item { flex: none; display: flex; align-items: center; padding-inline: clamp(26px, 3vw, 48px); }
 .hm-band__logo { display: block; height: clamp(20px, 1.8vw, 26px); width: auto; }
+.hm-band__logo--light-only { display: none; }
 .hm-band__name { flex: none; color: var(--ink-3); font: 500 clamp(20px, 2vw, 28px)/1.4 var(--display); letter-spacing: -.01em; white-space: nowrap; }
 @keyframes hm-band { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .hm-band__track { animation: none; } }
