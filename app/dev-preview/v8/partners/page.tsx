@@ -13,43 +13,51 @@ export const metadata = v8meta({
 });
 
 export default function PartnersPage() {
-  const [featured, ...rest] = PARTNERS;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Vraelis partners",
+    url: "https://vraelis.com/partners",
+    description: "Official Vraelis partnerships with ByteDance, Reddit, Stripe Startups and Cloudflare.",
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: PARTNERS.map((p, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "WebPage",
+          name: p.title,
+          url: `https://vraelis.com/partners/${p.slug}`,
+          description: p.summary,
+        },
+      })),
+    },
+  };
   return (
-    <>
-      <Section>
-        <Wrap>
-          <div className="pt-featured">
-            <div className="v8-stack">
-              <span className="v8-eyebrow">Partners</span>
-              <p className="v8-small">Working with ByteDance, Reddit, Stripe Startups and Cloudflare across AI models, advertising and startup resources.</p>
-              <h1 className="v8-h1">{featured.title}</h1>
-              <p className="v8-lead">{featured.summary}</p>
-              <p className="pt-meta"><span>Official partnership since {day(featured.established)}</span><span>{featured.focus}</span></p>
-              <div className="v8-actions" style={{ marginTop: 6 }}>
-                <Link className="v8-btn v8-btn--solid" href={href(`/partners/${featured.slug}`)}>Read more<span className="v8-arrow" aria-hidden="true" /></Link>
-              </div>
-            </div>
-            <Link href={href(`/partners/${featured.slug}`)} aria-label={`${featured.title}: read the partnership record`}><LogoCard p={featured} /></Link>
-          </div>
-        </Wrap>
-      </Section>
-      <Section rule>
-        <Wrap>
-          <div className="v8-stack--lg">
-            <div className="pt-cards">
-              {rest.map((p) => (
-                <Link key={p.slug} href={href(`/partners/${p.slug}`)} className="pt-card">
-                  <LogoCard p={p} />
-                  <p className="pt-meta"><span>Since {day(p.established)}</span><span>{p.focus}</span></p>
-                  <h3>{p.title}</h3>
+    <Section>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
+      <Wrap>
+        <div className="pt-overview v8-stack--lg">
+          <header className="pt-intro v8-stack">
+            <span className="v8-eyebrow">Company</span>
+            <h1 className="v8-h1">Partners</h1>
+            <p className="v8-lead">Working with ByteDance, Reddit, Stripe Startups and Cloudflare across AI models, advertising and startup resources.</p>
+          </header>
+          <div className="pt-cards pt-cards--equal">
+            {PARTNERS.map((p) => (
+              <Link key={p.slug} href={href(`/partners/${p.slug}`)} className="pt-card">
+                <LogoCard p={p} />
+                <div className="pt-card__copy">
+                  <p className="pt-meta"><span>Official partnership</span><time dateTime={p.established}>{day(p.established)}</time></p>
+                  <h2>{p.title}</h2>
                   <p className="v8-small">{p.summary}</p>
-                </Link>
-              ))}
-
-            </div>
+                  <span className="pt-card__read">Read partnership<span className="v8-arrow" aria-hidden="true" /></span>
+                </div>
+              </Link>
+            ))}
           </div>
-        </Wrap>
-      </Section>
-    </>
+        </div>
+      </Wrap>
+    </Section>
   );
 }

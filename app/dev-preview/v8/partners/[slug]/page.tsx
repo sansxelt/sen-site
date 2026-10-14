@@ -20,8 +20,15 @@ export default async function PartnerPage({ params }: Props) {
   const p = partner((await params).slug);
   if (!p) notFound();
   const others = PARTNERS.filter((o) => o.slug !== p.slug);
+  const structuredData = {
+    "@context": "https://schema.org", "@type": "WebPage",
+    name: p.title, url: `https://vraelis.com/partners/${p.slug}`,
+    description: p.summary,
+    isPartOf: { "@type": "CollectionPage", name: "Vraelis partners", url: "https://vraelis.com/partners" },
+  };
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <Wrap>
         <article className="pt-story">
           <div className="pt-top">
