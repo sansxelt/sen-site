@@ -1,5 +1,6 @@
 "use client";
 
+import { GENERAL_INBOX } from "@/lib/contact-routing";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { CONTACT_AUDIENCES, COUNTRIES, HEARD_OPTIONS, INTAKE_ERRORS, contactAudience, isRestrictedCountry, validateContactIntake, type ContactAudience, type IntakeField } from "@/lib/contact-intake";
 
@@ -17,7 +18,8 @@ const TOPICS = [
   { key: "fleets", label: "Autonomous systems", to: "sales@vraelis.com" },
   { key: "enterprise", label: "Suppliers and system integrators", to: "sales@vraelis.com" },
   { key: "partnerships", label: "Technical collaboration", to: "sales@vraelis.com" },
-  { key: "support", label: "General inquiry", to: "help@vraelis.com" },
+  { key: "general", label: "General inquiry or feedback", to: GENERAL_INBOX },
+  { key: "support", label: "Product and account support", to: "help@vraelis.com" },
   { key: "privacy", label: "Privacy", to: "privacy@vraelis.com" },
 ] as const;
 type TopicKey = typeof TOPICS[number]["key"];
@@ -28,7 +30,7 @@ const PRESETS: Record<string, { audience?: ContactAudience; topic?: TopicKey }> 
   "ai-security": { topic: "sales" },
   beta: { topic: "sales" },
   research: { audience: "research", topic: "partnerships" },
-  government: { audience: "government", topic: "support" },
+  government: { audience: "government", topic: "general" },
   privacy: { audience: "privacy" },
   infrastructure: { topic: "public-sector" },
   "critical-infrastructure": { topic: "public-sector" },
@@ -41,8 +43,8 @@ const MSG = {
   topic: "Choose a topic.", email: "Enter a valid email address.", message: "Write a message of at least 10 characters.",
   send: "Submit", sending: "Submitting", sent: "Sent. A person at Vraelis reads every message.",
   bad: "Check the fields above and try again.",
-  limited: "Too many messages from this network. Try again in ten minutes or write to help@vraelis.com.",
-  failed: "The message did not send. Try again, or write to help@vraelis.com.",
+  limited: `Too many messages from this network. Try again in ten minutes or write to ${GENERAL_INBOX}.`,
+  failed: `The message did not send. Try again, or write to ${GENERAL_INBOX}.`,
 } as const;
 const CONTOUR_LABEL = "Your release path and requirements";
 const CONTOUR_NOTE = "Vraelis Contour is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.";

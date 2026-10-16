@@ -79,11 +79,11 @@ function blocksMd(blocks: Block[]): string {
 }
 
 /** The page as Markdown: what "View as Markdown" serves and "Copy for LLM" copies. */
-export function pageMarkdown(page: Page): string {
+export function pageMarkdown(page: Page, options: { currentOnly?: boolean } = {}): string {
   const tab = tabOf(page.tab);
   const out = [`# ${page.title}`, ""];
   if (page.banner) out.push(`> **${page.banner.label.replace(/[.:]$/, "")}.** ${page.banner.text}`, "");
-  out.push(page.lead ?? page.description, "", blocksMd(page.blocks), "", "---", "",
+  out.push(page.lead ?? page.description, "", blocksMd(options.currentOnly ? page.blocks.filter((b) => !b.historical) : page.blocks), "", "---", "",
     `Vraelis documentation, ${tab.label}. ${DOCS_ORIGIN}/${page.slug}`);
   return out.join("\n") + "\n";
 }
@@ -133,6 +133,7 @@ export function buildSearchIndex(): SearchEntry[] {
     const secs: Sec[] = [{ title: page.title, anchor: "", blocks: [], lead: page.lead ?? page.description }];
     let h2: string | undefined;
     page.blocks.forEach((b, i) => {
+      if (b.historical && page.tab !== "earlier") return;
       if (b.t === "h2") { h2 = b.text; secs.push({ title: b.text, anchor: ids.get(i)!, blocks: [] }); return; }
       if (b.t === "h3") { secs.push({ title: b.text, anchor: ids.get(i)!, parent: h2, blocks: [] }); return; }
       secs[secs.length - 1].blocks.push(b);

@@ -109,6 +109,7 @@ export default function Home() {
       <section className="v8-hero">
         <Wrap>
           <div className="v8-hero__inner">
+            <p className="v8-small"><a className="v8-under" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">Vraelis by Foremake, Inc</a></p>
             <Link href={href("/contour")} className="v8-pill v8-fade" style={{ ["--d" as string]: ".05s" }}>
               <em><span className="v8-spec-text">Latest</span></em><b>{CONTOUR.name}</b>
               <span className="v8-arrow" aria-hidden="true" />
@@ -122,7 +123,7 @@ export default function Home() {
             <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Compare approved model releases with what the runtime reports loaded.</p>
             <div className="v8-actions v8-fade hm-hero__actions" style={{ ["--d" as string]: ".7s" }}>
               {/* Join us lives in the header; the hero leads to the product instead of repeating it (founder, 2026-10-12). */}
-              <Button to="/contour" size="lg" arrow>See how Contour works</Button>
+              <Button to="/contour" size="lg" arrow>Explore Vraelis Contour</Button>
               {/* On a phone the two sit on one centered row, as x.ai's do, so the second says less. */}
               <Button to="/docs" kind="soft" size="lg"><span className="hm-wide">Read the documentation</span><span className="hm-narrow">Read the docs</span></Button>
             </div>

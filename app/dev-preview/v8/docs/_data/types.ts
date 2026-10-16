@@ -14,7 +14,7 @@ export type TabId = "vraelis" | "products" | "research" | "earlier";
 /** The id of the JSON script tag that holds a page's Markdown once, for both Copy for LLM buttons. */
 export const MARKDOWN_ID = "v8-docs-markdown";
 
-export type Block =
+export type Block = (
   | { t: "p"; text: string }
   | { t: "h2"; text: string; id?: string }
   | { t: "h3"; text: string; id?: string }
@@ -36,7 +36,8 @@ export type Block =
   /** The kit's status ledger (STATUS in the kit), the one "where we are" list on the site. */
   | { t: "ledger" }
   /** Linked cards to read next. */
-  | { t: "cards"; items: { to: string; title: string; line: string }[] };
+  | { t: "cards"; items: { to: string; title: string; line: string }[] }
+) & { /** Historical context remains on the page; excluded from current-product aggregates. */ historical?: true };
 
 export type Page = {
   tab: TabId;

@@ -1,3 +1,4 @@
+import { GENERAL_INBOX } from "@/lib/contact-routing";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CONTOUR } from "../../_kit/site";
@@ -17,7 +18,7 @@ import { CopyForLLM, Toc } from "./client";
 const formatDay = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 
 /** Feedback goes to the address the contact page uses for general inquiries. */
-export const feedbackHref = (title: string) => `mailto:help@vraelis.com?subject=${encodeURIComponent(`Docs feedback: ${title}`)}`;
+export const feedbackHref = (title: string) => `mailto:${GENERAL_INBOX}?subject=${encodeURIComponent(`Docs feedback: ${title}`)}`;
 
 function DocIcon() {
   return (

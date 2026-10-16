@@ -31,19 +31,19 @@ export const VRAELIS_PAGES: Page[] = [
   {
     tab: "vraelis", group: "Get started", slug: "introduction",
     title: "Introduction to Vraelis", nav: "Introduction",
-    description: "What Vraelis is, the research it works on, its one product direction, and where these docs fit.",
+    description: "What Vraelis is, the research it works on, its first product direction, and where these docs fit.",
     lead: COMPANY_LINE,
     updated: UPDATED,
     blocks: [
       { t: "h2", text: "What Vraelis works on" },
       { t: "p", text: `${WORK_LINE} Those four are research areas, not products.` },
       { t: "table", label: "The four research areas", head: ["Area", "What it studies"], rows: RESEARCH.map((r) => [`[${r.title}](/docs/${r.slug})`, r.line]) },
-      { t: "h2", text: "One product direction" },
+      { t: "h2", text: "Our first product" },
       { t: "p", text: `${CONTOUR.name} is the first product direction: ${CONTOUR.line.charAt(0).toLowerCase()}${CONTOUR.line.slice(1)} It is not for public use. It is built for release, platform and security engineers at suppliers and system integrators.` },
-      { t: "p", text: "There are no other Vraelis products." },
+      { t: "p", text: "We are also researching public products with distinct user workflows. No additional public product is available or named yet." },
       { t: "cards", items: [
         { to: "/docs/contour", title: `${CONTOUR.name} overview`, line: "The five-step workflow and where it stands." },
-        { to: "/docs/products", title: "Products", line: "The one product direction, and what is not a product." },
+        { to: "/docs/products", title: "Products", line: "Vraelis Contour and public-product research." },
       ] },
       { t: "h2", text: "Where it applies" },
       { t: "p", text: `Defense, critical infrastructure and autonomous systems. ${APPLICATIONS_NOTE}` },
@@ -54,7 +54,6 @@ export const VRAELIS_PAGES: Page[] = [
         "Vraelis: this introduction, how to read the docs, development status, release notes and a glossary.",
         `Products: ${CONTOUR.name}, from release identity to the evidence it keeps and where it stops.`,
         "Research: the four research areas and three guides.",
-        "Earlier references: the earlier browser-testing product, kept as history. Not current.",
       ] },
     ],
   },
@@ -91,8 +90,8 @@ export const VRAELIS_PAGES: Page[] = [
       { t: "p", text: "If generated answers are switched on, each one is labelled as generated, and the panel says where your question is sent." },
       { t: "h2", text: "Markdown for AI assistants" },
       { t: "p", text: "Every page has a Markdown twin. Copy for LLM copies the page as Markdown, and View as Markdown opens it. [llms.txt](/docs/llms.txt) lists every page with its twin." },
-      { t: "h2", text: "Earlier references" },
-      { t: "p", text: "The Earlier references tab keeps the documentation of the earlier browser-testing product, as history. Those pages are not current, and each carries a banner that says so." },
+      { historical: true, t: "h2", text: "Earlier references" },
+      { historical: true, t: "p", text: "The Earlier references tab keeps the documentation of the earlier browser-testing product, as history. Those pages are not current, and each carries a banner that says so." },
     ],
   },
   {
@@ -127,8 +126,8 @@ export const VRAELIS_PAGES: Page[] = [
     updated: UPDATED,
     blocks: [
       ...releaseNotes(),
-      { t: "h2", text: "Earlier direction" },
-      { t: "p", text: "Entries before October 7, 2026 describe the earlier browser-testing product. They are kept as history on the changelog. [Changelog](/changelog)" },
+      { historical: true, t: "h2", text: "Earlier direction" },
+      { historical: true, t: "p", text: "Entries before October 7, 2026 describe the earlier browser-testing product. They are kept as history on the changelog. [Changelog](/changelog)" },
     ],
   },
   {
@@ -162,12 +161,12 @@ export const VRAELIS_PAGES: Page[] = [
   },
 ];
 
-/** Products: the one product direction, said plainly. Vraelis Contour's own pages follow it in the tab (contour.ts). */
+/** Products: the current private product and public-product research. Vraelis Contour's own pages follow it in the tab (contour.ts). */
 export const PRODUCTS_OVERVIEW: Page = {
   tab: "products", group: "Products", slug: "products",
   title: "Products", nav: "Overview",
-  description: `Vraelis has one product direction, ${CONTOUR.name}. There are no other Vraelis products.`,
-  lead: `Vraelis has one product direction: ${CONTOUR.name}. There are no other Vraelis products.`,
+  description: `${CONTOUR.name} is in private development. Additional public products are under research, with no new product or name adopted.`,
+  lead: `${CONTOUR.name} is our first product, in private development. Additional public products are being researched; none is available or named yet.`,
   updated: UPDATED,
   blocks: [
     { t: "h2", text: CONTOUR.name },
@@ -185,7 +184,7 @@ export const PRODUCTS_OVERVIEW: Page = {
     ] },
     { t: "h2", text: "What is not a product" },
     { t: "p", text: "The four research areas, model integrity, adversarial threats, machine trust and security evidence, are workstreams, not products. [Research](/docs/research)" },
-    { t: "p", text: "The earlier browser-testing product is history. Its documentation is kept under Earlier references and is not current." },
+    { historical: true, t: "p", text: "The earlier browser-testing product is history. Its documentation is kept under Earlier references and is not current." },
     { t: "h2", text: "Access" },
     { t: "p", text: `${CONTOUR.name} is not for public use. There is no public API, command line tool, console or account. To talk about it, use Join us. [Join us](/contact?topic=contour)` },
   ],

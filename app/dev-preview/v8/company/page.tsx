@@ -2,10 +2,7 @@ import Link from "next/link";
 import { Button, Capture, PageHero, Section, Tag, Wrap } from "../_kit/blocks";
 import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
-import { COMPANY_LINE, WORK_LINE, CONTOUR, FACTS, RESEARCH, STATUS, href, TAB_NAMES } from "../_kit/site";
-import { PARTNERS, PARTNERS_NOTE } from "../_content/partners";
-import { LogoCard } from "../partners/logo-card";
-import "../partners/partners.css";
+import { COMPANY_LINE, WORK_LINE, CONTOUR, FACTS, RESEARCH, STATUS, FOREMAKE, href, TAB_NAMES } from "../_kit/site";
 import "./company.css";
 
 export const metadata = v8meta({
@@ -15,9 +12,7 @@ export const metadata = v8meta({
   tab: TAB_NAMES.company,
 });
 
-// ABOUT (founder, 2026-10-13): why Vraelis exists, the problem, what is actually built, its limits and the partners.
-// Concrete facts only, read from STATUS and FACTS so they match /contour/status. Vraelis is Vraelis: no founder, no
-// umbrella brand on this page ("dont say anything about me thats foremake"). The URL stays /company.
+// About explains the company and its work. Relationship details live on Partners.
 export default function About() {
   return (
     <div className="cmp">
@@ -27,6 +22,15 @@ export default function About() {
         lead={<>{COMPANY_LINE} {WORK_LINE}</>}
         actions={<><Button to="/contact" arrow>Talk to us</Button><Button to="/contour/status" kind="soft">Development status</Button></>}
       />
+
+      <Section rule id="company">
+        <Wrap><div className="v8-stack--lg">
+          <div className="v8-head"><span className="v8-eyebrow">Vraelis by Foremake, Inc</span><h2 className="v8-h2">A company built around AI security.</h2></div>
+          <p className="v8-body">{FOREMAKE}</p>
+          <p className="v8-body">Our first product, Vraelis Contour, has private access. We are researching public products with distinct user workflows; no additional product is available or named yet.</p>
+          <p className="v8-body"><a className="v8-under" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">About Foremake, Inc</a></p>
+        </div></Wrap>
+      </Section>
 
       <Section rule id="problem">
         <Wrap>
@@ -92,24 +96,12 @@ export default function About() {
         </Wrap>
       </Section>
 
-      <Section rule id="partners">
-        <Wrap>
-          <div className="v8-stack--lg">
-            <div className="v8-head">
-              <span className="v8-eyebrow">Partners</span>
-              <h2 className="v8-h2">{new Intl.ListFormat("en", { type: "conjunction" }).format(PARTNERS.map((p) => p.name))}.</h2>
-              <p className="v8-body">{PARTNERS_NOTE}</p>
-            </div>
-            <div className="cmp-partners">
-              {PARTNERS.map((p) => (
-                <Link key={p.slug} href={href(`/partners/${p.slug}`)} className="pt-card" aria-label={`${p.title}: the partnership record`}>
-                  <LogoCard p={p} />
-                  <p className="pt-meta"><span>{p.focus}</span></p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </Wrap>
+      <Section rule id="company-connections">
+        <Wrap><div className="v8-stack">
+          <h2 className="v8-h2">Our partnerships.</h2>
+          <p className="v8-body">Explore our official relationships with ByteDance, Reddit, Stripe Startups and Cloudflare, with each partnership’s scope and milestones.</p>
+          <Link className="v8-under" href={href("/partners")}>Meet our partners<span className="v8-arrow" aria-hidden="true" /></Link>
+        </div></Wrap>
       </Section>
     </div>
   );

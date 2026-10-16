@@ -214,7 +214,7 @@ const FAQ: Page = {
     { t: "h3", text: `Is ${CONTOUR.name} available?` },
     { t: "p", text: `Not publicly. It is built for ${lower(CONTOUR.audience)} [Join us](/contact) to tell us about your release path.` },
     { t: "h3", text: "Is there a public API, command line tool or console?" },
-    { t: "p", text: "No. Product access is closed while the product is in private development. The earlier product's API and command line tool are retired." },
+    { t: "p", text: "No. Vraelis Contour has private access. It does not currently offer a public API or command line tool." },
     { t: "h3", text: "Does it roll back automatically?" },
     { t: "p", text: "No. Baseline mode serves what it loaded until an explicit, recorded reload. The experiment also has a reconcile mode." },
     { t: "h3", text: "Where is the source?" },
