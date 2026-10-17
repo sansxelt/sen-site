@@ -39,7 +39,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
   "model-integrity": {
     slug: "model-integrity",
     metaTitle: "Model integrity",
-    description: "A research area, not a product: whether the model that runs is the model that was approved. What we study, what exists in the Vraelis Contour experiment, and what is still open.",
+    description: "Research on model identity, artifact and configuration integrity, and the connection between an approved release and reported runtime state.",
     title: "Know which model is running.",
     lead: "Whether the model that runs is the model that was approved. A research area, not a product.",
     studyTitle: "Four questions about one release.",
@@ -79,7 +79,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
   "adversarial-threats": {
     slug: "adversarial-threats",
     metaTitle: "Adversarial threats",
-    description: "A research area, not a product: inputs, training data, updates and supply paths built to change what a model does. Research direction with no product claim.",
+    description: "Research on adversarial inputs, data poisoning, unauthorized updates, and the AI supply-chain paths that can change model behavior.",
     title: "Investigate how AI can be manipulated.",
     lead: "Inputs, training data, updates and supply paths built to change what a model does. A research area, not a product.",
     studyTitle: "Separate the attack from the conditions.",
@@ -114,7 +114,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
   "machine-trust": {
     slug: "machine-trust",
     metaTitle: "Machine trust",
-    description: "A research area, not a product: zero trust described as concrete boundaries. Explicit identity, limited permissions, approval tied to a change and destination, and checks at execution boundaries.",
+    description: "Research on machine trust through explicit identities, limited permissions, and approval tied to the exact change and destination.",
     title: "Authority must be explicit.",
     lead: "How AI systems are given authority, with zero trust as concrete boundaries. A research area, not a product.",
     studyTitle: "Four boundaries a request should cross.",
@@ -150,7 +150,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
   "security-evidence": {
     slug: "security-evidence",
     metaTitle: "Security evidence",
-    description: "A research area, not a product: records a person can read, kept in order, including what could not be confirmed. What exists in the Vraelis Contour experiment, and what is still open.",
+    description: "Research on readable security records: observations kept in order, with discrepancies, recovery, and uncertainty visible.",
     title: "Keep the record, including what could not be confirmed.",
     lead: "Ordered records that someone outside the team can read. A research area, not a product.",
     studyTitle: "What a record has to hold.",

@@ -42,7 +42,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   defense: {
     slug: "defense",
     metaTitle: "Defense",
-    description: "An intended application area, not a deployment: model release integrity for AI in defense systems. Vraelis builds security software for AI. It does not build weapons or mission software.",
+    description: "AI security for defense systems: model integrity, destination-bound release approval, and reviewable security evidence.",
     title: "AI security for defense systems.",
     lead: "Model release integrity for defense systems. Vraelis does not build weapons or mission software.",
     whyTitle: "A model update crosses organizations.",
@@ -75,7 +75,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   "critical-infrastructure": {
     slug: "critical-infrastructure",
     metaTitle: "Critical infrastructure",
-    description: "An intended application area, not a deployment: model release integrity where vendors ship AI models into energy, water and communications systems that operators run.",
+    description: "Model release integrity for energy, water, and communications systems, connecting approved updates with reported runtime state.",
     title: "AI security for critical infrastructure.",
     lead: "In energy, water and communications, vendors ship models into systems operators own.",
     whyTitle: "The model changes. The operational record must keep up.",
@@ -108,7 +108,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   "autonomous-systems": {
     slug: "autonomous-systems",
     metaTitle: "Autonomous systems",
-    description: "An intended application area, not a deployment: model release integrity where AI models ship as updates to robots and vehicles in the field.",
+    description: "Model release integrity for robots and autonomous vehicles, from release approval to reported runtime state.",
     title: "AI security for autonomous systems.",
     lead: "Robots and vehicles get model updates in the field, often from a supplier.",
     whyTitle: "A model update changes what a machine can do.",
@@ -142,7 +142,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   government: {
     slug: "government",
     metaTitle: "Government and institutions",
-    description: "An intended application area, not a deployment: model release evidence that a reviewer at a public body can read.",
+    description: "Model release evidence for public-sector review: what was approved, for which system, and what the runtime reports.",
     title: "Model release evidence a reviewer can read.",
     lead: "Which model was approved, for which system, and what that system reports running.",
     whyTitle: "Oversight runs on records.",
@@ -171,7 +171,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   integrators: {
     slug: "integrators",
     metaTitle: "Suppliers and integrators",
-    description: "An intended application area, not a deployment: for release, platform and security engineers who ship model updates into systems they do not own.",
+    description: "A shared model release record for suppliers and integrators: approvals, runtime reports, and evidence both sides can review.",
     title: "For teams who ship models into systems they do not own.",
     lead: "Release, platform and security engineers at suppliers and system integrators.",
     whyTitle: "You ship it. Someone else runs it.",
