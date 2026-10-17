@@ -27,7 +27,28 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={page.slug === "defense" ? undefined : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
+        aside={page.slug === "defense" ? undefined : page.handoff ? (
+          // The handoff takes the hero media's place, stacked under the introduction (founder, 2026-10-17: option A).
+          <div id="contour" className="rx-handoff-wrap">
+            <div className="v8-head--row v8-head">
+              <Head eyebrow="The handoff" title={page.handoff.title} lead={page.handoff.lead} />
+              <TextLink to="/contour#how">How {CONTOUR.name} works</TextLink>
+            </div>
+            <ol className="rx-handoff">
+              {page.handoff.steps.map((s, i) => (
+                <li key={s.title}>
+                  <span className="rx-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="v8-h3">{s.title}</h3>
+                  <div className="rx-handoff__shot">
+                    {s.shots.map((n) => <Capture key={n} name={n} caption={false} style={{ maxWidth: CAPTURES[n].w }} />)}
+                  </div>
+                  <p className="v8-body">{s.body}</p>
+                  <p className="rx-handoff__decides"><b>{s.term}:</b> {s.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
       />
 
       <Section rule id="why">
@@ -50,7 +71,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         </Wrap>
       </Section>
 
-      <Section rule id="contour">
+      {page.handoff ? null : <Section rule id="contour">
         <Wrap>
           <div className="v8-stack--lg">
             <div className="v8-head--row v8-head">
@@ -82,7 +103,7 @@ export function AppDetail({ page }: { page: AppPage }) {
             </div>
           </div>
         </Wrap>
-      </Section>
+      </Section>}
 
       {page.stance ? (
         <Section rule id="position">
