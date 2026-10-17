@@ -53,6 +53,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval: test approval cannot carry into operations.", "", "", ""],
     capture: "crop-release-approval",
+    review: {
+      title: "An approval a reviewer can check against what runs.",
+      lead: "A proposed release-review workflow for defense programs, illustrated by the recorded synthetic ONNX experiment. It involves no defense system, network or authorization process.",
+      steps: [
+        { title: "Name where the update may run", body: "Approval for a test environment should not carry into operations. In the recorded experiment, the approval names one destination, non-actuating-lab / onnx-cpu, under one policy, cpu-lab version 1." },
+        { title: "Bound it in time and runtime", body: "The recorded approval carries a 60 second age limit and names the runtime it requires: ONNX Runtime 1.23.2 with CPUExecutionProvider." },
+        { title: "Compare what runs with the approval", body: "The runtime reports which release it loaded, and the record shows matched, reload pending or evidence unavailable. Each report is the worker's own, not hardware attestation." },
+      ],
+    },
     stance: {
       title: "The builder should not be the only judge.",
       cards: [
