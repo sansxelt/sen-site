@@ -222,6 +222,8 @@ html:has(.vr-pc__bar) body { padding-bottom: var(--vr-pc-bar-h, 0px); }
 @media (prefers-reduced-motion: reduce) { .vr-pc__corner { animation: none; } }
 /* The v8 light theme (a style element #v8-theme-light): the corner card follows it. */
 html:has(#v8-theme-light) .vr-pc__corner { background: rgba(255,255,255,.97); color: rgba(10,10,11,.78); box-shadow: 0 0 0 1px rgba(10,10,11,.12), 0 24px 60px -18px rgba(0,0,0,.25); }
+/* The global p colour (--fg-3, a dark-theme grey) would otherwise leave the text at 2.56:1 on the light card. */
+html:has(#v8-theme-light) .vr-pc__corner-p { color: inherit; }
 html:has(#v8-theme-light) .vr-pc__corner-p a { color: #0A0A0B; text-decoration-color: rgba(10,10,11,.3); }
 html:has(#v8-theme-light) .vr-pc__corner-x, html:has(#v8-theme-light) .vr-pc__corner-link { color: rgba(10,10,11,.62); }
 html:has(#v8-theme-light) .vr-pc__corner-x:hover { color: #0A0A0B; background: rgba(10,10,11,.06); }

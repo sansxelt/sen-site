@@ -25,6 +25,8 @@ export const CAPTURES = {
   "crop-conclusion-unavailable": { w: 2226, h: 262, alt: "cpu-2 is approved. Nothing reports what is loaded. Evidence unavailable." },
   "crop-approved-cpu2": { w: 1100, h: 538, alt: "Approved release cpu-2, generation 2, from the experiment's local release store, whose signatures the experiment checks." },
   "crop-loaded-cpu1": { w: 1100, h: 538, alt: "Reported loaded release cpu-1, generation 1, a worker self-report." },
+  "crop-approved-cpu2-head": { w: 330, h: 122, alt: "Approved release: cpu-2, generation 2." },
+  "crop-loaded-cpu1-head": { w: 330, h: 122, alt: "Reported loaded release: cpu-1, generation 1, a worker self-report." },
   "crop-loaded-unavailable": { w: 1100, h: 538, alt: "No loaded report is available for this observation." },
   "crop-pair-pending": { w: 2226, h: 538, alt: "Approved cpu-2 beside reported loaded cpu-1, with the differing fields marked." },
   "crop-pair-reloaded": { w: 2226, h: 538, alt: "Approved cpu-2 beside reported loaded cpu-2, every field the same." },

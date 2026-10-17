@@ -462,13 +462,6 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-chapters__frame img, .v8-chapters__list img { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: 0 0 0 1px var(--line-2), 0 40px 80px -40px rgba(0,0,0,.9); }
 .v8-chapters__media .v8-caption { grid-area: 2 / 1; margin-top: 14px; }
 .v8-chapters__list { display: none; margin: 0; padding: 0; list-style: none; }
-/* Phone-width list: a full app screen is unreadable there, so a step may swap in legible crops of the same screen,
-   shown no larger than their own pixels. Wider lists (reduced motion on desktop) keep the full screen. */
-.v8-chapters__list img.v8-chapters__narrow { display: none; width: auto; max-width: 100%; }
-@media (max-width: 900px) {
-  .v8-chapters__list img.v8-chapters__wide { display: none; }
-  .v8-chapters__list img.v8-chapters__narrow { display: block; }
-}
 @media (max-width: 900px) {
   .v8-chapters { height: auto; }
   .v8-chapters__pin { position: static; display: block; height: auto; padding: 0 0 12px; }
@@ -576,6 +569,15 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 /* Tight (founder, 2026-10-12: "too much space to the partnerships"): close under the actions, close above the tiles. */
 /* Hero buttons: centered under the headline; on a phone one row, the second labelled short. */
 .hm-hero__lead { margin: 6px auto 0; max-width: 40ch; text-align: center; color: var(--ink-2); }
+/* Product proof: the real evidence app on one task, above the bento. Wide screen on desktop, identity crops on phones. */
+.hm-proof { display: grid; gap: clamp(20px, 3vw, 32px); padding-block: clamp(8px, 2vw, 24px) clamp(48px, 6vw, 88px); }
+.hm-proof__head { display: grid; gap: 12px; max-width: 760px; }
+.hm-proof__label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font-size: 13px; color: var(--ink-3); }
+.hm-proof__label b { color: var(--ink); font-weight: 600; }
+.hm-proof__label span::before { content: ""; display: inline-block; width: 3px; height: 3px; margin-right: 10px; border-radius: 50%; background: currentColor; vertical-align: middle; }
+.hm-proof__narrow { display: none; gap: 12px; }
+.hm-proof__links { display: flex; flex-wrap: wrap; gap: 10px 24px; }
+@media (max-width: 720px) { .hm-proof__wide { display: none; } .hm-proof__narrow { display: grid; } }
 .hm-hero__actions { justify-content: center; margin-top: 30px; }
 .hm-narrow { display: none; }
 @media (max-width: 560px) {
