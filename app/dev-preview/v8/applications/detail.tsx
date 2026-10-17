@@ -1,10 +1,10 @@
 import { Band, Button, Capture, CAPTURES, Head, JoinBand, PageHero, Section, Tag, TextLink, Wrap, cx } from "../_kit/blocks";
-import { APPLICATIONS, APPLICATIONS_NOTE, CONTOUR, KIND_LABEL, WORKFLOW, type Kind } from "../_kit/site";
+import { APPLICATIONS, CONTOUR, KIND_LABEL, WORKFLOW, type Kind } from "../_kit/site";
 import { FramedPhoto, NotList, RelatedResearch, Split } from "../research/parts";
 import type { AppPage } from "./content";
 import "./applications.css";
 
-// One application area's page: hero with its photograph, the application-research note, why release integrity
+// One application area's page: a concise hero, optional contextual photograph, why release integrity
 // matters there, how Vraelis Contour is intended to apply (the five workflow steps, each tagged with what exists in
 // the experiment), Vraelis's position (defense only), what we do not claim, related research, and Join us.
 /** Step tags say their status in words ("Proposed: customer runtime adapters"), so no legend is needed. */
@@ -27,14 +27,8 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={<FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} caption="Editorial photograph · Application context." />}
+        aside={page.slug === "defense" ? undefined : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
       />
-
-      {!page.review ? <section className="rx-notebar" aria-label="About this page">
-        <Wrap>
-          <p className="v8-note"><b>{APPLICATIONS_NOTE}</b></p>
-        </Wrap>
-      </section> : null}
 
       <Section rule id="why">
         <Wrap>

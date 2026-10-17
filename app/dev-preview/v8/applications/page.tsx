@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AutoVideo } from "../_kit/client";
 import { Button, Head, JoinBand, PageHero, PhotoCard, Section, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { APPLICATIONS, APPLICATIONS_NOTE, COMPANY_LINE, CONTOUR, href } from "../_kit/site";
+import { APPLICATIONS, COMPANY_LINE, CONTOUR, href } from "../_kit/site";
 import "../research/research.css";
 import "./applications.css";
 
@@ -28,16 +28,14 @@ export default function ApplicationsOverview() {
       <PageHero
         eyebrow="Applications"
         title="Intended for defense, critical infrastructure and autonomous systems."
-        lead={APPLICATIONS_NOTE}
+        lead="Model integrity and release evidence across the systems people depend on."
         actions={<><Button to="/contact?topic=contour" arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
         aside={
-          // The existing civilian film beside the intent (website handoff 2026-10-12, item 6): editorial context for
-          // the environments, captioned so it never reads as Vraelis hardware or a deployment. Credits: /image-sources.
+          // Existing civilian context film; source and licensing records remain at /image-sources.
           <figure className="rx-film">
             <div className="rx-film__frame">
               <AutoVideo src="/home/systems-film-civil.mp4" poster="/home/systems-poster-civil.jpg" label="Editorial footage: factory robots, a power substation, a civilian drone, a solar farm and software on screen." />
             </div>
-            <figcaption>Editorial footage of the kinds of systems these areas cover. Not Vraelis hardware, customers or deployments. <Link className="v8-under" href={href("/image-sources#films")}>Credits</Link></figcaption>
           </figure>
         }
       />
@@ -45,7 +43,13 @@ export default function ApplicationsOverview() {
       <section aria-label="Main application areas" className="rx-areas-sec">
         <Wrap>
           <div className="v8-areas-grid">
-            {MAIN.map((a) => <PhotoCard key={a.slug} photoKey={a.photo} to={`/applications/${a.slug}`} title={a.title} line={a.line} />)}
+            {MAIN.map((a) => a.slug === "defense" ? (
+              <Link key={a.slug} href={href(`/applications/${a.slug}`)} className="v8-box rx-area-text">
+                <b className="v8-h3">{a.title}</b>
+                <span className="v8-body">{a.line}</span>
+                <span className="v8-under">Explore defense →</span>
+              </Link>
+            ) : <PhotoCard key={a.slug} photoKey={a.photo} to={`/applications/${a.slug}`} title={a.title} line={a.line} />)}
           </div>
         </Wrap>
       </section>
