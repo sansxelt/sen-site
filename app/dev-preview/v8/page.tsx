@@ -118,8 +118,8 @@ export default function Home() {
               <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
-            {/* One steady sentence under the moving keyword, so the hero says what Contour does at any moment. */}
-            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Compare approved model releases with what the runtime reports loaded.</p>
+            {/* One steady company-level sentence under the moving application areas. */}
+            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Security for AI models and the physical systems that depend on them.</p>
             <div className="v8-actions v8-fade hm-hero__actions" style={{ ["--d" as string]: ".7s" }}>
               {/* Join us lives in the header; the hero leads to the product instead of repeating it (founder, 2026-10-12). */}
               <Button to="/contour" size="lg" arrow>Explore Vraelis Contour</Button>
