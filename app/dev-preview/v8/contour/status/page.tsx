@@ -27,7 +27,7 @@ const WORKING: Record<(typeof STATUS.working)[number], Row> = {
   "A read-only evidence app over the recorded trace": { status: { kind: "impl" }, sources: ["brief", "qaApp"] },
 };
 const BUILDING: Record<(typeof STATUS.building)[number], Row> = {
-  "A Kubernetes collector (proposed in specification v1.3)": { status: { kind: "prop", text: "Proposed, not applied" }, sources: ["spec", "brief"] },
+  "Private collector prototype; host-checked": { status: { text: "Live-cluster validation of the current revision pending" }, sources: ["collector", "spec"] },
   "Heartbeat freshness for runtime reports": { status: { text: "Not done yet" }, sources: ["brief"] },
   "Live fault runs": { status: { text: "Not done yet" }, sources: ["brief"] },
   "A latency study": { status: { text: "Not done yet" }, sources: ["brief"] },

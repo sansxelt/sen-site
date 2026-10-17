@@ -110,6 +110,7 @@ export default function ContourPage() {
                   body: STEP_LINE[s.n],
                   tags: <Tag kind={s.kinds[0][0]}>{tagText(s.kinds[0][0], s.kinds[0][1])}</Tag>,
                   image: { src: captureSrc(s.shot), alt: c.alt, w: c.w, h: c.h },
+                  narrow: "narrow" in s ? s.narrow.map((n) => ({ src: captureSrc(n), alt: CAPTURES[n].alt, w: CAPTURES[n].w, h: CAPTURES[n].h })) : undefined,
                 };
               })}
             />

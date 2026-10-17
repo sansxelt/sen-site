@@ -15,6 +15,12 @@
 .v8 .v8-rx--apps .rx-apply--wide { grid-template-columns: minmax(0, 1fr); }
 .v8 .v8-rx--apps .rx-apply--wide .rx-apply__media { position: static; }
 .v8 .v8-rx--apps .rx-apply--wide .rx-steps { max-width: 920px; }
+/* Real evidence as the hero media: the wide crop is unreadable at phone width, so its legible crop replaces it. */
+.v8 .v8-rx--apps .rx-hero-capture > .v8-figure + .v8-figure { display: none; }
+@media (max-width: 720px) {
+  .v8 .v8-rx--apps .rx-hero-capture > .v8-figure:first-child { display: none; }
+  .v8 .v8-rx--apps .rx-hero-capture > .v8-figure + .v8-figure { display: block; }
+}
 @media (max-width: 960px) { .v8 .v8-rx--apps .rx-apply { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx--apps .rx-apply__media { position: static; } }
 .v8 .v8-rx--apps .rx-steps { list-style: none; margin: 0; padding: 0; display: grid; }
 .v8 .v8-rx--apps .rx-steps li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px 12px; padding: 22px 0; border-top: 1px solid var(--line); }

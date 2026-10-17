@@ -462,6 +462,13 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-chapters__frame img, .v8-chapters__list img { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: 0 0 0 1px var(--line-2), 0 40px 80px -40px rgba(0,0,0,.9); }
 .v8-chapters__media .v8-caption { grid-area: 2 / 1; margin-top: 14px; }
 .v8-chapters__list { display: none; margin: 0; padding: 0; list-style: none; }
+/* Phone-width list: a full app screen is unreadable there, so a step may swap in legible crops of the same screen,
+   shown no larger than their own pixels. Wider lists (reduced motion on desktop) keep the full screen. */
+.v8-chapters__list img.v8-chapters__narrow { display: none; width: auto; max-width: 100%; }
+@media (max-width: 900px) {
+  .v8-chapters__list img.v8-chapters__wide { display: none; }
+  .v8-chapters__list img.v8-chapters__narrow { display: block; }
+}
 @media (max-width: 900px) {
   .v8-chapters { height: auto; }
   .v8-chapters__pin { position: static; display: block; height: auto; padding: 0 0 12px; }

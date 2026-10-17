@@ -29,6 +29,7 @@ export const CAPTURES = {
   "crop-pair-pending": { w: 2226, h: 538, alt: "Approved cpu-2 beside reported loaded cpu-1, with the differing fields marked." },
   "crop-pair-reloaded": { w: 2226, h: 538, alt: "Approved cpu-2 beside reported loaded cpu-2, every field the same." },
   "crop-policy": { w: 2226, h: 146, alt: "Runtime policy satisfied: ONNX Runtime 1.23.2 required and reported, CPUExecutionProvider." },
+  "crop-policy-requirements": { w: 536, h: 250, alt: "Execution requirements in the signed policy: ONNX Runtime 1.23.2, CPUExecutionProvider, policy version 1, approval age limit 60 seconds." },
   "crop-timeline-pending": { w: 2226, h: 172, alt: "The four recorded observations, with Update awaiting reload selected." },
   "crop-release-identity": { w: 1100, h: 530, alt: "Release identity for cpu-2: model, configuration, release and receipt digests; preprocessing not recorded." },
   "crop-release-approval": { w: 1100, h: 530, alt: "Approval for cpu-2: destination, policy, a 60 second age limit and the runtime." },
@@ -36,6 +37,8 @@ export const CAPTURES = {
   // Exact-source crops of the captures above, pixels unchanged (website handoff 2026-10-12: readable at tile size).
   "crop-observations-list": { w: 467, h: 561, alt: "The four recorded observations in order, 07:41:29.606 to 07:41:29.723 UTC: Matched, Reload pending, Matched, Evidence unavailable." },
   "crop-observation-unavailable": { w: 1046, h: 429, alt: "Observation 04: cpu-2 approved, no loaded report, no session, reason code RUNTIME_UNAVAILABLE." },
+  "crop-unavailable-panel": { w: 1376, h: 446, alt: "Observation 04 in Vraelis Contour: runtime report unavailable. cpu-2, generation 2 is approved; no loaded report, no session, reason code RUNTIME_UNAVAILABLE. A self-report, not independent attestation." },
+  "crop-unavailable-fields": { w: 576, h: 148, alt: "Observation 04 fields: reported loaded, no report; session, none; reason code RUNTIME_UNAVAILABLE." },
   "crop-where-cpu2": { w: 1879, h: 549, alt: "Where cpu-2 appears: not involved, approved not loaded, approved and loaded, approved with loaded state unknown." },
 } as const;
 export type CaptureName = keyof typeof CAPTURES;

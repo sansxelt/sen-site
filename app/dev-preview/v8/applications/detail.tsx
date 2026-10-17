@@ -27,7 +27,12 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={page.slug === "defense" ? undefined : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
+        aside={page.slug === "defense" ? undefined : page.heroCapture ? (
+          <div className="rx-hero-capture">
+            <Capture name={page.heroCapture.wide} caption={false} />
+            <Capture name={page.heroCapture.narrow} caption={false} />
+          </div>
+        ) : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
       />
 
       <Section rule id="why">
@@ -77,7 +82,8 @@ export function AppDetail({ page }: { page: AppPage }) {
                 ))}
               </ol>
               <div className="rx-apply__media">
-                <Capture name={page.capture} />
+                {/* Never wider than its own pixels: a small crop beside the steps stays sharp. */}
+                <Capture name={page.capture} style={{ maxWidth: cap.w }} />
               </div>
             </div>
           </div>

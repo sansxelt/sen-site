@@ -26,6 +26,8 @@ export type AppPage = {
   /** The area's own line under each workflow step, or "" for none. */
   steps: [string, string, string, string, string];
   capture: CaptureName;
+  /** Real evidence in place of the hero photograph: a wide crop, and a legible crop of it for narrow viewports. */
+  heroCapture?: { wide: CaptureName; narrow: CaptureName };
   /** Sector-specific review questions, grounded in the recorded reference experiment. */
   review?: { title: string; lead: string; steps: Point[] };
   /** Defense only: Vraelis's position. */
@@ -53,6 +55,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval: test approval cannot carry into operations.", "", "", ""],
     capture: "crop-release-approval",
+    review: {
+      title: "An approval a reviewer can check against what runs.",
+      lead: "A proposed release-review workflow for defense programs, illustrated by the recorded synthetic ONNX experiment. It involves no defense system, network or authorization process.",
+      steps: [
+        { title: "Name where the update may run", body: "Approval for a test environment should not carry into operations. In the recorded experiment, the approval names one destination, non-actuating-lab / onnx-cpu, under one policy, cpu-lab version 1." },
+        { title: "Bound it in time and runtime", body: "The recorded approval carries a 60 second age limit and names the runtime it requires: ONNX Runtime 1.23.2 with CPUExecutionProvider." },
+        { title: "Compare what runs with the approval", body: "The runtime reports which release it loaded, and the record shows matched, reload pending or evidence unavailable. Each report is the worker's own, not hardware attestation." },
+      ],
+    },
     stance: {
       title: "The builder should not be the only judge.",
       cards: [
@@ -152,7 +163,17 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "Readable by someone outside engineering", body: "Including what could not be confirmed." },
     ],
     steps: ["", "Destination-bound approval covers that system and no more.", "", "Version mismatch shown as reload pending, in a view a reviewer can follow.", ""],
-    capture: "crop-pair-pending",
+    capture: "crop-observations-list",
+    heroCapture: { wide: "crop-unavailable-panel", narrow: "crop-unavailable-fields" },
+    review: {
+      title: "What a reviewer can confirm, and what they cannot.",
+      lead: "A proposed review workflow for a public body, illustrated by the recorded synthetic ONNX experiment. No agency review, procurement or authorization process is implemented.",
+      steps: [
+        { title: "Start from the approval on record", body: "A supplier's release notes describe a model; a reviewer needs what was approved, and for which system. In the experiment, approval binds release cpu-2 to one destination, and its identity comes from a local release store whose signatures the experiment checks." },
+        { title: "Read the observations in order", body: "The recorded run keeps four observations with their times: matched, reload pending, matched, then evidence unavailable. A later observation does not replace an earlier one, so the record shows how the state changed." },
+        { title: "Treat \"unconfirmed\" as a finding", body: "When the worker stopped reporting, the record says evidence unavailable, with reason code RUNTIME_UNAVAILABLE, instead of assuming the approved release is still loaded. Each report is the worker's own, not independent attestation." },
+      ],
+    },
     notClaimed: [
       "No government deployments, contracts or customers.",
       "No procurement status, and no authorization to operate.",
