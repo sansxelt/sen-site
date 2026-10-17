@@ -155,7 +155,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval covers that system and no more.", "", "Version mismatch shown as reload pending, in a view a reviewer can follow.", ""],
     capture: "app-observations-unavailable",
-    narrowCapture: "crop-observations-list",
+    narrowCapture: "crop-unavailable-fields",
     review: {
       title: "What a reviewer can confirm, and what they cannot.",
       lead: "A proposed review workflow for a public body, illustrated by the recorded synthetic ONNX experiment. No agency review, procurement or authorization process is implemented.",
