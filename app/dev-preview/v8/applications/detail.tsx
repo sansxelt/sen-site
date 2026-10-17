@@ -76,8 +76,9 @@ export function AppDetail({ page }: { page: AppPage }) {
                   </li>
                 ))}
               </ol>
-              <div className="rx-apply__media">
+              <div className={cx("rx-apply__media", page.narrowCapture && "rx-apply__media--paired")}>
                 <Capture name={page.capture} />
+                {page.narrowCapture ? <Capture name={page.narrowCapture} /> : null}
               </div>
             </div>
           </div>
