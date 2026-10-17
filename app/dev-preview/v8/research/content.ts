@@ -41,7 +41,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Model integrity",
     description: "Research on model identity, artifact and configuration integrity, and the connection between an approved release and reported runtime state.",
     title: "Know which model is running.",
-    lead: "Whether the model that runs is the model that was approved. A research area, not a product.",
+    lead: "The connection between an approved model release and the identity reported by its runtime.",
     studyTitle: "Four questions about one release.",
     study: [
       { title: "What exactly is a release?", body: "The model, its preprocessing and its configuration, each by digest." },
@@ -81,7 +81,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Adversarial threats",
     description: "Research on adversarial inputs, data poisoning, unauthorized updates, and the AI supply-chain paths that can change model behavior.",
     title: "Investigate how AI can be manipulated.",
-    lead: "Inputs, training data, updates and supply paths built to change what a model does. A research area, not a product.",
+    lead: "How adversarial inputs, poisoned data, and compromised updates can change model behavior.",
     studyTitle: "Separate the attack from the conditions.",
     study: [
       { title: "Which path does the attack use?", body: "Sensor input, training data and model file each need their own threat model." },
@@ -116,7 +116,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Machine trust",
     description: "Research on machine trust through explicit identities, limited permissions, and approval tied to the exact change and destination.",
     title: "Authority must be explicit.",
-    lead: "How AI systems are given authority, with zero trust as concrete boundaries. A research area, not a product.",
+    lead: "Explicit identities, bounded permissions, and approval at the point where an AI system acts.",
     studyTitle: "Four boundaries a request should cross.",
     studyAs: "flow",
     studyCaption: "Diagram: the four boundaries, in the order a request meets them.",
@@ -152,7 +152,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
     metaTitle: "Security evidence",
     description: "Research on readable security records: observations kept in order, with discrepancies, recovery, and uncertainty visible.",
     title: "Keep the record, including what could not be confirmed.",
-    lead: "Ordered records that someone outside the team can read. A research area, not a product.",
+    lead: "An ordered record of observations, discrepancies, and recovery that reviewers can follow.",
     studyTitle: "What a record has to hold.",
     study: [
       { title: "What belongs in one observation?", body: "Approved identity, reported identity, policy result and arrival time." },

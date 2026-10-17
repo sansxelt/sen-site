@@ -44,7 +44,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     metaTitle: "Defense",
     description: "AI security for defense systems: model integrity, destination-bound release approval, and reviewable security evidence.",
     title: "AI security for defense systems.",
-    lead: "Model release integrity for defense systems. Vraelis does not build weapons or mission software.",
+    lead: "Model integrity and release evidence for teams working across defense systems.",
     whyTitle: "A model update crosses organizations.",
     why: [
       { title: "Updates cross organizations", body: "Trained by one team, integrated by another, operated by a third." },

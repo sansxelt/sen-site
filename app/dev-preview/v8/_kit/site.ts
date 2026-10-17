@@ -191,7 +191,7 @@ export const APPLICATIONS = [
   { slug: "government", title: "Government and institutions", line: "Public bodies that need evidence a reviewer can read.", photo: "operationalCompute" },
   { slug: "integrators", title: "Suppliers and integrators", line: "The teams who ship model updates into systems they do not own.", photo: "integrationWorkshop" },
 ] as const;
-export const APPLICATIONS_NOTE = "Intended application areas. Vraelis has no customer deployments in them.";
+export const APPLICATIONS_NOTE = "Application research, grounded in the Vraelis Contour reference experiment.";
 /** Under editorial photographs (content review 2026-10-11): context, never a claim about Vraelis' own facilities. */
 export const PHOTO_NOTE = "Editorial photograph. It shows the kind of setting, not a Vraelis facility, its equipment or a customer installation.";
 
