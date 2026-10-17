@@ -212,9 +212,9 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       title: "Who decides what, and what each side can check.",
       lead: "Illustrated by the recorded experiment, where these roles ran in one controlled setup. Vraelis Contour does not connect two organizations or enforce this handoff today.",
       steps: [
-        { title: "Supplier approval", body: "The supplier approves the release it ships, for one intended destination.", term: "Supplier decides", text: "which release, and where it may run.", shots: ["crop-approved-cpu2-head", "crop-approval-destination"] },
+        { title: "Supplier approval", body: "In this recorded run, the supplier approves cpu-2 for non-actuating-lab / onnx-cpu.", term: "Supplier decides", text: "which release, and where it may run.", shots: ["crop-approved-cpu2-head", "crop-approval-destination"] },
         { title: "Operator observation", body: "The operator's worker reports which release it loaded. The report is a worker self-report.", term: "Operator decides", text: "whether and when to reload.", shots: ["crop-loaded-cpu1-head"] },
-        { title: "Review", body: "Either side compares the two records. The review changes neither system.", term: "Here", text: "the records differ, so the comparison stays at reload pending.", shots: ["crop-conclusion-pending-head"] },
+        { title: "Review", body: "Either side compares approved cpu-2 with reported loaded cpu-1. The review changes neither system.", term: "Here", text: "the records differ, so the comparison stays at reload pending.", shots: ["crop-conclusion-pending-head"] },
       ],
     },
     notClaimed: [
