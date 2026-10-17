@@ -88,7 +88,7 @@ export const CONTOUR_PAGES: Page[] = [
         { kind: "impl", text: "A read-only evidence app over the recorded trace." },
         { kind: "meas", text: "At the runtime rejection-diagnostics revision, 133 of 133 internal experiment tests passed in the pinned, network-disabled harness. Internal automated testing reproduced that suite on a separate build on October 10, 2026 (Pacific), and the retained test log was checked against its SHA-256. This is automated reference-experiment evidence, not a formal product milestone, independent human review, production validation or customer demand. The earlier runtime-policy revision passed 131 of 131; 133 supersedes that count and is not 133 additional tests." },
         { kind: "meas", text: "A runtime-version mismatch was checked by a separate internal automated test with a real ONNX Runtime 1.22.1 worker. Receipt integrity is covered by signature tests in the suite, not by external signature verification." },
-        { kind: "prop", text: "A Kubernetes collector, in specification v1.3. The proposal has not been applied." },
+        { kind: "prop", label: "Private prototype", text: "A Kubernetes collector, host-checked. Live-cluster validation of the current revision is pending." },
         { kind: "not", label: "Not built yet", text: "Heartbeat freshness, live fault runs, a latency study and adapters for customer runtimes." },
         { kind: "not", text: "Hardware attestation. Worker reports are self-reports, not independent attestation." },
       ] },
@@ -212,7 +212,6 @@ export const CONTOUR_PAGES: Page[] = [
       { t: "h2", text: "Not built yet" },
       { t: "kinds", items: [
         { kind: "prop", text: "Adapters for customer runtimes. Today the experiment supports one runtime, on CPU." },
-        { kind: "prop", text: "A Kubernetes collector, in specification v1.3. The proposal has not been applied." },
         { kind: "not", label: "Not built yet", text: "A latency study. There are no latency measurements to report." },
       ] },
     ],
@@ -372,7 +371,6 @@ export const CONTOUR_PAGES: Page[] = [
       ] },
       { t: "h2", text: "Not built yet" },
       { t: "table", label: "Not built yet", head: ["Item", "Where it stands"], rows: [
-        ["Kubernetes collector", "Proposed in specification v1.3. Not applied."],
         ["Heartbeat freshness", "Not built. Nothing checks that a runtime is still reporting between observations."],
         ["Live fault runs", "Not built. The captured run is one scripted sequence."],
         ["Latency study", "Not built. There are no latency measurements."],

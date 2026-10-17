@@ -90,7 +90,7 @@ export const STATUS = {
     "A read-only evidence app over the recorded trace",
   ],
   building: [
-    "A Kubernetes collector (proposed in specification v1.3)",
+    "Private collector prototype; host-checked",
     "Heartbeat freshness for runtime reports",
     "Live fault runs",
     "A latency study",
@@ -143,7 +143,8 @@ export const STATUS_SOURCES = {
   qaTests: { label: "Internal automated testing, runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on a separate pinned Docker build. Runtime policy enforcement checked." },
   qaRejection: { label: "Internal automated testing, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
   qaApp: { label: "Internal automated review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
-  spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
+  spec: { label: "Specification v1.3", line: "Internal proposal that describes the Kubernetes collector. Not frozen." },
+  collector: { label: "Private engineering record, October 17, 2026", line: "Host checks of the private Kubernetes collector prototype. Live-cluster validation of the current revision has not been run. The record is not public." },
 } as const;
 
 /** Short names for the browser tab (founder, 2026-10-12: "ensure all tabs actually fit"). A tab shows about 24
