@@ -30,6 +30,8 @@ export type AppPage = {
   heroCapture?: { wide: CaptureName; narrow: CaptureName };
   /** Sector-specific review questions, grounded in the recorded reference experiment. */
   review?: { title: string; lead: string; steps: Point[] };
+  /** A handoff between parties, shown directly under a text-only hero in place of the workflow steps. */
+  handoff?: { title: string; lead: string; steps: { title: string; body: string; term: string; text: string; shots: CaptureName[] }[] };
   /** Defense only: Vraelis's position. */
   stance?: { title: string; lead?: string; cards: Point[] };
   notClaimed: string[];
@@ -204,6 +206,17 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     hypothesis: "These teams meet this problem first. We are testing it.",
     steps: ["", "Release authorization may need two approvals: the supplier's and the operator's.", "", "", "Both sides start from the same deployment evidence."],
     capture: "app-release-cpu2",
+    // Founder, 2026-10-17: option A, no workshop photo, and the third step is a review either side can do, not a
+    // third party. Every image is an exact crop of one recorded run.
+    handoff: {
+      title: "Who decides what, and what each side can check.",
+      lead: "Illustrated by the recorded experiment, where these roles ran in one controlled setup. Vraelis Contour does not connect two organizations or enforce this handoff today.",
+      steps: [
+        { title: "Supplier approval", body: "The supplier approves the release it ships, for one intended destination.", term: "Supplier decides", text: "which release, and where it may run.", shots: ["crop-approved-cpu2-head", "crop-approval-destination"] },
+        { title: "Operator observation", body: "The operator's worker reports which release it loaded. The report is a worker self-report.", term: "Operator decides", text: "whether and when to reload.", shots: ["crop-loaded-cpu1-head"] },
+        { title: "Review", body: "Either side compares the two records. The review changes neither system.", term: "Here", text: "the records differ, so the comparison stays at reload pending.", shots: ["crop-conclusion-pending-head"] },
+      ],
+    },
     notClaimed: [
       "No customers or deployments, and no partner endorsement of Vraelis Contour.",
       "No pricing or general availability. Not for public use.",
