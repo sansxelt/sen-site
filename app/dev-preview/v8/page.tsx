@@ -109,7 +109,6 @@ export default function Home() {
       <section className="v8-hero">
         <Wrap>
           <div className="v8-hero__inner">
-            <p className="v8-small"><a className="v8-under" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">Vraelis by Foremake, Inc</a></p>
             <Link href={href("/contour")} className="v8-pill v8-fade" style={{ ["--d" as string]: ".05s" }}>
               <em><span className="v8-spec-text">Latest</span></em><b>{CONTOUR.name}</b>
               <span className="v8-arrow" aria-hidden="true" />
