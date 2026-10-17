@@ -1,4 +1,4 @@
-import { GENERAL_INBOX, GENERAL_INBOX_READY } from "@/lib/contact-routing";
+import { GENERAL_INBOX } from "@/lib/contact-routing";
 import Link from "next/link";
 import { Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
@@ -22,8 +22,7 @@ export const metadata = v8meta({
 // reach out over many things"): the heading is the same for every arrival; ?topic= only presets the form, and the
 // Vraelis Contour context (its note, the requirements prompt) appears in the form when that topic is chosen.
 const ADDRESSES: [string, string][] = [
-  ...(GENERAL_INBOX_READY ? [[GENERAL_INBOX, "General inquiries and feedback"] as [string, string]] : []),
-  ["help@vraelis.com", GENERAL_INBOX_READY ? "Product and account support" : "Support and inquiries"],
+  [GENERAL_INBOX, "General inquiries, feedback and product support"],
   ["sales@vraelis.com", "Vraelis Contour, AI security and organizational inquiries"],
   ["privacy@vraelis.com", "Privacy and data rights"],
 ];

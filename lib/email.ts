@@ -72,7 +72,6 @@ const fromBilling = "Vraelis <noreply@vraelis.com>";
  */
 function fromForInbox(inbox: SupportInbox): string {
   switch (inbox) {
-    case "general@vraelis.com": return "Vraelis <general@vraelis.com>";
     case "sales@vraelis.com":   return "Vraelis sales <sales@vraelis.com>";
     case "privacy@vraelis.com": return "Vraelis privacy <privacy@vraelis.com>";
     case "help@vraelis.com":
