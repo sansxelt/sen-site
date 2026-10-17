@@ -27,14 +27,14 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={<FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} caption={PHOTO_NOTE} />}
+        aside={<FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} caption={page.review ? "Editorial photograph. Application research; no customer deployments." : PHOTO_NOTE} />}
       />
 
-      <section className="rx-notebar" aria-label="About this page">
+      {!page.review ? <section className="rx-notebar" aria-label="About this page">
         <Wrap>
           <p className="v8-note"><b>{APPLICATIONS_NOTE}</b></p>
         </Wrap>
-      </section>
+      </section> : null}
 
       <Section rule id="why">
         <Wrap>
@@ -60,12 +60,18 @@ export function AppDetail({ page }: { page: AppPage }) {
         <Wrap>
           <div className="v8-stack--lg">
             <div className="v8-head--row v8-head">
-              <Head eyebrow={`How ${CONTOUR.name} would apply`} title="Five steps, release to record." />
+              <Head eyebrow={`How ${CONTOUR.name} would apply`} title={page.review?.title ?? "Five steps, release to record."} lead={page.review?.lead} />
               <TextLink to="/contour#how">How {CONTOUR.name} works</TextLink>
             </div>
             <div className={cx("rx-apply", wide && "rx-apply--wide")}>
               <ol className="rx-steps">
-                {WORKFLOW.map((w, i) => (
+                {page.review ? page.review.steps.map((step, i) => (
+                  <li key={step.title}>
+                    <span className="rx-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </li>
+                )) : WORKFLOW.map((w, i) => (
                   <li key={w.n}>
                     <span className="rx-n" aria-hidden="true">{w.n}</span>
                     <h3>{w.title}</h3>

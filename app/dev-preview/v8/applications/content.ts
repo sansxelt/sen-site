@@ -26,6 +26,8 @@ export type AppPage = {
   /** The area's own line under each workflow step, or "" for none. */
   steps: [string, string, string, string, string];
   capture: CaptureName;
+  /** Sector-specific review questions, grounded in the recorded reference experiment. */
+  review?: { title: string; lead: string; steps: Point[] };
   /** Defense only: Vraelis's position. */
   stance?: { title: string; lead?: string; cards: Point[] };
   notClaimed: string[];
@@ -76,7 +78,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     description: "An intended application area, not a deployment: model release integrity where vendors ship AI models into energy, water and communications systems that operators run.",
     title: "AI security for critical infrastructure.",
     lead: "In energy, water and communications, vendors ship models into systems operators own.",
-    whyTitle: "The vendor ships it. The operator runs it.",
+    whyTitle: "The model changes. The operational record must keep up.",
     why: [
       { title: "Releases cross operators", body: "Both sides need to know which release is running." },
       { title: "An unexpected release is a security and operational risk", body: "A change to an operational system, to be reviewed as one." },
@@ -84,6 +86,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval: one site's approval does not cover another.", "", "", "Deployment evidence kept for the operator's change process."],
     capture: "crop-loaded-unavailable",
+    review: {
+      title: "A site needs its own release record.",
+      lead: "A proposed operator workflow, illustrated by the recorded synthetic ONNX experiment. Control-system integration and customer deployments are not implemented.",
+      steps: [
+        { title: "Start with the site's approval", body: "A supplier's release and the operator's authorization answer different questions. In the experiment, approval binds a release to one destination; another site's approval cannot substitute for it." },
+        { title: "Keep missing evidence visible", body: "A rollout record does not establish what is loaded. The reference view separates an available runtime report from unavailable evidence. It does not establish continuous freshness or disconnected operation." },
+        { title: "Carry the record into change review", body: "Compare the approved release with the reported loaded release and retain each observation, including uncertainty. Integration into an operator's change-management process remains future work." },
+      ],
+    },
     notClaimed: [
       "No deployments with utilities or other operators, and no customers.",
       "No integration with control systems or operational technology networks.",
@@ -100,7 +111,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     description: "An intended application area, not a deployment: model release integrity where AI models ship as updates to robots and vehicles in the field.",
     title: "AI security for autonomous systems.",
     lead: "Robots and vehicles get model updates in the field, often from a supplier.",
-    whyTitle: "Models ship to machines in the field.",
+    whyTitle: "A model update changes what a machine can do.",
     why: [
       { title: "Updates land in someone else's fleet", body: "In a facility or fleet the supplier does not operate." },
       { title: "An unexpected release is a security and operational risk", body: "A different release, or the wrong machine, changes what it does." },
@@ -109,6 +120,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     hypothesis: "Robotics is one segment we study. Release and platform engineers at robotics suppliers and integrators meet this problem early.",
     steps: ["", "Destination-bound approval: one machine's approval does not cover another.", "", "A version mismatch shows as reload pending, not assumed.", ""],
     capture: "crop-pair-pending",
+    review: {
+      title: "The update arrived. Did the runtime load it?",
+      lead: "A release-review scenario for machines in the field, illustrated by a synthetic ONNX CPU run. It is not a robot integration or evidence of physical safety.",
+      steps: [
+        { title: "Identify the approved update", body: "A release label alone can hide a different artifact or configuration. The experiment records model and policy identity with destination-bound approval." },
+        { title: "Read what the runtime reports", body: "In the recorded run, cpu-2 is approved while cpu-1 remains loaded. The view shows reload pending. The report comes from the worker; it is not independent hardware attestation." },
+        { title: "Check again after an explicit reload", body: "The next observation records cpu-2 loaded after a requested reload. That demonstrates the reference sequence, not automatic recovery across a fleet or proof that a robot behaves safely." },
+      ],
+    },
     notClaimed: [
       "No deployments on robots or vehicles, and no customers.",
       "No robot or vehicle integration. The experiment is a synthetic ONNX CPU workload.",
