@@ -1,4 +1,5 @@
-﻿import { Resend } from "resend";
+import { resolveSupportInbox, type SupportInbox } from "./contact-routing";
+import { Resend } from "resend";
 // One conversion rule and one price, shared with the charging path rather than restated in copy. A number
 // in an email that disagrees with the number on the invoice is the kind of thing customers screenshot.
 import { creditsToCents } from "./preflight/auto-recharge";
@@ -488,20 +489,11 @@ export async function sendContactConfirmEmail(
  * back to help@ so a stray/malicious payload can't be used to spam a
  * third-party address.
  */
-export const SUPPORT_INBOXES = [
-  "help@vraelis.com",
-  "sales@vraelis.com",
-  "privacy@vraelis.com",
-] as const;
-export type SupportInbox = (typeof SUPPORT_INBOXES)[number];
-
-export function resolveSupportInbox(candidate: string | null | undefined): SupportInbox {
-  const v = (candidate ?? "").trim().toLowerCase();
-  return SUPPORT_INBOXES.find((addr) => addr === v) ?? "help@vraelis.com";
-}
+export type { SupportInbox } from "./contact-routing";
+export { SUPPORT_INBOXES, resolveSupportInbox } from "./contact-routing";
 
 /**
- * Send the actual support email.  Routes to one of the three support
+ * Send the actual support email.  Routes to one of the enabled support
  * inboxes (defaults to help@ if no routing supplied).
  *
  * Throws on Resend failure, the caller (the API route) surfaces the

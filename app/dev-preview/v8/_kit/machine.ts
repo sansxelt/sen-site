@@ -50,7 +50,7 @@ export function llmsTxt(): string {
   return [
     "# Vraelis", "",
     `> ${TAGLINE}`, "",
-    `${COMPANY_LINE} Vraelis Contour, model release security from approval to reported runtime state, is its first product direction. It is not for public use: it is built for release, platform and security engineers at suppliers and system integrators. What exists today is a controlled synthetic ONNX CPU reference experiment and a read-only evidence app over the trace it recorded.`, "",
+    `${COMPANY_LINE} Vraelis Contour, model release security from approval to reported runtime state, is its first product direction. It has private access and is built for release, platform and security engineers at suppliers and system integrators. Additional public products are being researched; no additional public product or name has been adopted. What exists today is a controlled synthetic ONNX CPU reference experiment and a read-only evidence app over the trace it recorded.`, "",
     "## Site", "",
     ...sitePages().map((p) => `- [${p.label}](${SITE_ORIGIN}${p.path === "/" ? "/" : p.path})`), "",
     partnershipMarkdown(),
@@ -65,7 +65,7 @@ export function llmsFullTxt(): string {
     "The current documentation in full, as Markdown. Every claim is labelled as working in the experiment, measured, proposed, hypothesis or not claimed.", "",
     `Site: ${SITE_ORIGIN}/  Documentation: ${DOCS_ORIGIN}/`, "",
   ].join("\n");
-  return `${intro}\n${partnershipMarkdown()}\n---\n\n${currentDocs().map(pageMarkdown).join("\n---\n\n")}`;
+  return `${intro}\n${partnershipMarkdown()}\n---\n\n${currentDocs().map((page) => pageMarkdown(page, { currentOnly: true })).join("\n---\n\n")}`;
 }
 
 /** Sitemap entries: the site's pages, then the docs home and every current docs page. */
