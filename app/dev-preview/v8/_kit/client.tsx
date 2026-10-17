@@ -200,7 +200,9 @@ export function CodeTabs({ tabs }: { tabs: CodeTab[] }) {
   );
 }
 
-export type Chapter = { n: string; title: string; body: ReactNode; tags?: ReactNode; image: { src: string; alt: string; w: number; h: number } };
+type ChapterImage = { src: string; alt: string; w: number; h: number };
+/** `narrow`: legible crops of the same recorded screen for the phone list, where a full app screen is unreadable. */
+export type Chapter = { n: string; title: string; body: ReactNode; tags?: ReactNode; image: ChapterImage; narrow?: ChapterImage[] };
 /** Pinned chapters (x.ai /grok; founder 2026-10-10 "center paragraph", "1 at a time"). On wide screens the section
  *  pins for a stretch of scrolling: one step's text, centred beside its own capture, and scrolling advances to the
  *  next step, crossfading both. The capture is shown plain, with no stage frame around it ("this layering is worse").
@@ -259,7 +261,11 @@ export function Chapters({ items, head, caption }: { items: Chapter[]; head?: Re
             <div className="v8-body">{c.body}</div>
             {c.tags ? <div className="v8-tags">{c.tags}</div> : null}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={c.image.src} alt={c.image.alt} width={c.image.w} height={c.image.h} loading="lazy" decoding="async" />
+            <img src={c.image.src} alt={c.image.alt} width={c.image.w} height={c.image.h} loading="lazy" decoding="async" className={c.narrow ? "v8-chapters__wide" : undefined} />
+            {c.narrow?.map((img) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={img.src} src={img.src} alt={img.alt} width={img.w} height={img.h} loading="lazy" decoding="async" className="v8-chapters__narrow" />
+            ))}
           </li>
         ))}
       </ol>
