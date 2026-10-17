@@ -249,7 +249,6 @@ export function DocsHeader({ nav, slugTab }: { nav: NavTab[]; slugTab: Record<st
         <nav aria-label={`${current.label} pages`} className="v8-dsb v8-dsb--sheet"><NavTree tab={current} onNavigate={() => setSheet(false)} /></nav>
         <div className="v8-dhd-sheet__end">
           <Go to={link("/contact")} className="v8-btn v8-btn--solid v8-btn--lg" onClick={() => setSheet(false)}>Talk to us</Go>
-          <Go to={link("/contact")} className="v8-btn v8-btn--soft v8-btn--lg" onClick={() => setSheet(false)}>Contact</Go>
           <div className="v8-dhd-sheet__row">
             <Go to={home} className="v8-dhd-sheet__home">vraelis.com{main ? <OutArrow /> : null}</Go>
             {sheet ? <ThemeToggle /> : null}
