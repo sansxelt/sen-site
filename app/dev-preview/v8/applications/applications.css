@@ -15,11 +15,11 @@
 .v8 .v8-rx--apps .rx-apply--wide { grid-template-columns: minmax(0, 1fr); }
 .v8 .v8-rx--apps .rx-apply--wide .rx-apply__media { position: static; }
 .v8 .v8-rx--apps .rx-apply--wide .rx-steps { max-width: 920px; }
-/* A full app screen is unreadable at phone width; a paired page swaps in its legible crop of the same screen. */
-.v8 .v8-rx--apps .rx-apply__media--paired > .v8-figure + .v8-figure { display: none; }
+/* Real evidence as the hero media: the wide crop is unreadable at phone width, so its legible crop replaces it. */
+.v8 .v8-rx--apps .rx-hero-capture > .v8-figure + .v8-figure { display: none; }
 @media (max-width: 720px) {
-  .v8 .v8-rx--apps .rx-apply__media--paired > .v8-figure:first-child { display: none; }
-  .v8 .v8-rx--apps .rx-apply__media--paired > .v8-figure + .v8-figure { display: block; }
+  .v8 .v8-rx--apps .rx-hero-capture > .v8-figure:first-child { display: none; }
+  .v8 .v8-rx--apps .rx-hero-capture > .v8-figure + .v8-figure { display: block; }
 }
 @media (max-width: 960px) { .v8 .v8-rx--apps .rx-apply { grid-template-columns: minmax(0, 1fr); } .v8 .v8-rx--apps .rx-apply__media { position: static; } }
 .v8 .v8-rx--apps .rx-steps { list-style: none; margin: 0; padding: 0; display: grid; }

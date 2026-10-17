@@ -26,8 +26,8 @@ export type AppPage = {
   /** The area's own line under each workflow step, or "" for none. */
   steps: [string, string, string, string, string];
   capture: CaptureName;
-  /** A legible crop of the same recorded screen, shown instead of a full app capture on narrow viewports. */
-  narrowCapture?: CaptureName;
+  /** Real evidence in place of the hero photograph: a wide crop, and a legible crop of it for narrow viewports. */
+  heroCapture?: { wide: CaptureName; narrow: CaptureName };
   /** Sector-specific review questions, grounded in the recorded reference experiment. */
   review?: { title: string; lead: string; steps: Point[] };
   /** Defense only: Vraelis's position. */
@@ -154,8 +154,8 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "Readable by someone outside engineering", body: "Including what could not be confirmed." },
     ],
     steps: ["", "Destination-bound approval covers that system and no more.", "", "Version mismatch shown as reload pending, in a view a reviewer can follow.", ""],
-    capture: "app-observations-unavailable",
-    narrowCapture: "crop-unavailable-fields",
+    capture: "crop-observations-list",
+    heroCapture: { wide: "crop-unavailable-panel", narrow: "crop-unavailable-fields" },
     review: {
       title: "What a reviewer can confirm, and what they cannot.",
       lead: "A proposed review workflow for a public body, illustrated by the recorded synthetic ONNX experiment. No agency review, procurement or authorization process is implemented.",
