@@ -3,20 +3,14 @@
 import { usePathname } from "next/navigation";
 import { useLayoutEffect } from "react";
 import { REVEAL_STYLE_ID } from "./scripts";
+import { revealInOrder } from "./reveal-order";
 
-// LAYERED ENTRANCES (founder, 2026-10-10: every page's content comes in "layered up to down", as on x.ai).
-//
-// On every page, each section's blocks rise in, in reading order: the eyebrow, then the heading, the lead, the
-// actions, then each card of a grid one after another. Blocks already on screen go on load with a short stagger;
-// lower ones go as they scroll into view. The blocks are found, not hand-tagged: inside each section, a grid or flex
-// container, or a plain wrapper of blocks, is opened up and its children become the layers, down to four levels.
-// Elements that already have their own entrance (.v8-fade, the homepage hero and bento, the pinned chapters) are
-// left alone. REVEAL_SCRIPT hides the sections before first paint so nothing shows and then vanishes; this removes
-// that once the layers are marked, and a timer in the script removes it anyway if this never runs.
+// One top-to-bottom entrance sequence for visible content on every route.
+// Hero, fades and cards share the scheduler; pinned chapters retain their scroll-linked motion.
+// Docs use the same scheduler with their explicit content layers.
 
-const SKIP = ".v8-hero, .v8-fade, .v8-bento, .v8-chapters, [data-no-reveal]";
-const LEAF = "figure, img, video, picture, pre, table, canvas, svg, form, details, .v8-tabs, .v8-chapters, .v8-code, .v8-codeframe";
-const STEP = 70, MAX = 8;
+const SKIP = ".v8-chapters, [data-no-reveal]";
+const LEAF = "figure, img, video, picture, pre, table, canvas, svg, form, details, .v8-tabs, .v8-chapters, .v8-code, .v8-codeframe, .v8-tile, .v8-fade";
 
 function layers(root: Element, depth: number, out: Element[]) {
   for (const child of Array.from(root.children)) {
@@ -52,37 +46,15 @@ export function RevealOnRoute() {
       if (root.tagName === "SECTION" || /grid|flex/.test(getComputedStyle(root).display)) layers(root, 0, els);
       else if (root instanceof HTMLElement && root.children.length) layers(root, 0, els);
     }
-    for (const el of els) el.classList.add("v8-rv");
+    // One owner for entrances, including the hero and bento. Keep independent product/keyword motion intact.
+    for (const el of els) el.setAttribute("data-v8-entrance", "");
+    const cleanup = revealInOrder(els as HTMLElement[], "v8-rv", "--rv-d");
     pending();
-    const vh = window.innerHeight;
-    let n = 0;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    // Once a layer has landed, its classes come off so its own hover transitions and transforms apply again.
-    const show = (el: Element, i: number) => {
-      const d = Math.min(i, MAX) * STEP;
-      (el as HTMLElement).style.setProperty("--rv-d", `${d}ms`);
-      el.classList.add("v8-rv--in");
-      timers.push(setTimeout(() => { el.classList.remove("v8-rv", "v8-rv--in"); (el as HTMLElement).style.removeProperty("--rv-d"); }, d + 900));
-    };
-    const below: Element[] = [];
-    let io: IntersectionObserver | undefined;
-    requestAnimationFrame(() => {
-      for (const el of els) {
-        const r = el.getBoundingClientRect();
-        if (r.top < vh * .92) show(el, n++); else below.push(el);
-      }
-      if (!below.length) return;
-      io = new IntersectionObserver((entries) => {
-        let k = 0;
-        for (const e of entries) if (e.isIntersecting) { show(e.target, k++); io?.unobserve(e.target); }
-      }, { rootMargin: "0px 0px -8% 0px" });
-      below.forEach((el) => io!.observe(el));
-    });
     return () => {
-      io?.disconnect();
-      timers.forEach(clearTimeout);
-      for (const el of els) { el.classList.remove("v8-rv", "v8-rv--in"); (el as HTMLElement).style.removeProperty("--rv-d"); }
+      cleanup();
+      for (const el of els) el.removeAttribute("data-v8-entrance");
     };
   }, [pathname]);
   return null;
 }
+
