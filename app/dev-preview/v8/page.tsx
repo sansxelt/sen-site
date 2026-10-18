@@ -31,7 +31,7 @@ const EVIDENCE_DECK: EvidenceItem[] = OBSERVATIONS.map((o) => {
   const c = CAPTURES[shot];
   const src = captureSrc(shot);
   return {
-    n: o.n, time: OBSERVATION_TIMES[o.n].time, title: o.title, state: o.state, tone: o.tone,
+    n: o.n, time: OBSERVATION_TIMES[o.n].time, title: o.title, state: o.state,
     img: { src, srcSet: `${src.replace(".webp", "-954.webp")} 954w, ${src} 1908w`, alt: c.alt, w: c.w, h: c.h },
   };
 });
