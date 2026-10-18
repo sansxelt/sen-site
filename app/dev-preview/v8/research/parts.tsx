@@ -44,7 +44,7 @@ export function AreaVisual({ slug, studyTitle, study, caption }: { slug: Researc
       </div>
       <ul className="rx-vis__states">
         <li><b>Matched</b><span>Every field of the reported identity equals the approved one.</span></li>
-        <li><b>Differs</b><span>Another release is loaded. In the recorded run: reload pending.</span></li>
+        <li><b>Differs</b><span>The reported identity differs from the approved one. In the recorded run: reload pending.</span></li>
         <li><b>Unavailable</b><span>No usable runtime report. Kept as its own result.</span></li>
       </ul>
     </figure>

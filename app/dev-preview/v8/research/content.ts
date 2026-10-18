@@ -94,7 +94,7 @@ export const RESEARCH_PAGES: Record<ResearchSlug, ResearchPage> = {
       kind: "direction",
       title: "Research direction, with no product claim.",
       paragraphs: [
-        "Nothing Vraelis has built tests, detects or blocks these attacks. No detector, no measured result.",
+        "Nothing Vraelis has built tests, detects or blocks manipulated inputs or poisoned training data. No detector, no measured result. On the model-update path, the release identity and approval checks in the Vraelis Contour experiment show that a release changed, not where its bytes came from.",
         "The one overlap is the supply path: unauthorized changes, a wrong destination or changed components, are specified as scripted fault tests, not run. That does not cover manipulated inputs or poisoned training data.",
       ],
     },
