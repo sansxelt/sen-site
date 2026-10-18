@@ -6,6 +6,7 @@
 // site's pages, the partners list, and the docs page registry. A page added to the nav or the docs appears here;
 // one removed stops appearing. The root route handlers use this only when NEXT_PUBLIC_VRAELIS_V8_PUBLIC is on.
 import { DOCS_ORIGIN, SITE_ORIGIN } from "@/lib/docs-host";
+import { ARTICLES } from "../_content/articles";
 import { PARTNERS } from "../_content/partners";
 import { PAGES } from "../docs/_data/pages";
 import { indexMarkdown, pageMarkdown } from "../docs/_data/text";
@@ -26,6 +27,8 @@ export function sitePages(): { path: string; label: string }[] {
   for (const m of MENUS) for (const l of m.links) add(l.to, l.label === "All research" ? "Research" : l.label === "All applications" ? "Applications" : l.label === "Overview" ? (m.id === "contour" ? "Vraelis Contour" : m.label) : l.label);
   for (const col of FOOTER) for (const l of col.links) add(l.to, l.label);
   for (const p of PARTNERS) add(`/partners/${p.slug}`, `${p.name} partnership — ${p.focus}`);
+  add("/news", "News");
+  for (const a of ARTICLES) add(`/news/${a.slug}`, a.title);
   return [...seen].map(([path, label]) => ({ path, label }));
 }
 

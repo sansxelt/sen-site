@@ -7,8 +7,8 @@ import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type Cap
 import { v8meta } from "./_kit/meta";
 import { CONTOUR, FACTS, HERO_KEYWORDS, OBSERVATIONS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
-import { NEWS, formatDay } from "./_content/news";
-import { ARTICLES } from "./_content/articles";
+import { formatDay } from "./_content/news";
+import { ARTICLES, coverSet, coverSrc } from "./_content/articles";
 import { PARTNERS, showsLogo } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
@@ -28,7 +28,7 @@ export const metadata = {
 /** The bento's News tile is editorial: the newest published post that has a photograph, its headline and its date.
  *  The Status tile is product UI: the recorded comparison, approved cpu-2 against reported cpu-1, reload pending, in
  *  exact crops of the app. Details stay on the linked pages (founder, 2026-10-18). */
-const NEWS_FEATURES = ARTICLES.filter((a) => a.image.photo);
+const NEWS_FEATURES = ARTICLES.slice(0, 4);
 /** Status cycles the recorded states after the approval of cpu-2: reload pending, reloaded, report unavailable. */
 const STATUS_STATES = (["02", "03", "04"] as const).map((n) => {
   const k = { "02": "pending", "03": "reloaded", "04": "unavailable" }[n];
@@ -139,7 +139,7 @@ export default function Home() {
                 <Rotate className="hm-news" ms={4200} slides={NEWS_FEATURES.map((n) => (
                   <Fragment key={n.slug}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={n.image.src} alt={n.image.alt} width={n.image.w} height={n.image.h} loading="lazy" decoding="async" />
+                    <img src={coverSrc(n.cover.name, true)} srcSet={coverSet(n.cover.name)} sizes="(max-width: 720px) 100vw, 420px" alt={n.cover.alt} width={2400} height={1500} loading="lazy" decoding="async" />
                     <div className="hm-news__copy">
                       <time dateTime={n.date}>{formatDay(n.date)}</time>
                       <p>{n.title}</p>
@@ -234,15 +234,15 @@ export default function Home() {
         <Wrap>
           <div className="v8-stack--lg">
             <div className="v8-head--row v8-head">
-              <h2 className="v8-h2">Latest from Vraelis</h2>
-              <TextLink to="/changelog" muted>All entries</TextLink>
+              <h2 className="v8-h2">Latest news</h2>
+              <TextLink to="/news" muted>All news</TextLink>
             </div>
             <div className="v8-news">
-              {NEWS.slice(0, 4).map((n) => (
-                <Link key={n.id} href={href(n.to ?? `/changelog#${n.id}`)} className="v8-card">
+              {ARTICLES.slice(0, 4).map((n) => (
+                <Link key={n.slug} href={href(`/news/${n.slug}`)} className="v8-card">
                   <div className="v8-card__media">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={n.image.src} alt={n.image.alt} width={n.image.w} height={n.image.h} loading="lazy" decoding="async" style={n.image.src.includes("/v8/contour/") ? { objectPosition: "left top" } : undefined} />
+                    <img src={coverSrc(n.cover.name, true)} alt={n.cover.alt} width={1200} height={750} loading="lazy" decoding="async" />
                   </div>
                   <div className="v8-card__meta"><span>{n.kind}</span><time dateTime={n.date}>{formatDay(n.date)}</time></div>
                   <h3>{n.title}</h3>

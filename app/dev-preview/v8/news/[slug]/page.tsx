@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SITE_ORIGIN } from "@/lib/docs-host";
 import { TextLink, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
 import { href } from "../../_kit/site";
-import { ARTICLES, articleBySlug } from "../../_content/articles";
+import { ARTICLES, articleBySlug, coverSrc, readingMinutes } from "../../_content/articles";
 import { formatDay } from "../../_content/news";
-import { ArticlePicture } from "../picture";
+import { CopyLink } from "../client";
+import { Cover } from "../picture";
 import "../news.css";
 
 export const dynamicParams = false;
@@ -22,45 +24,95 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return v8meta({ title: a.title, description: a.dek, path: `/news/${slug}`, tab: "News" });
 }
 
-/** One article: headline, date, picture, body, then where to go next and the other articles. */
+const anchor = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+/** One story: kicker, headline, byline row, cover, In short, the sections (with contents when there are several),
+ *  what it does not claim, where to go next, then the neighbouring and related stories. */
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const a = articleBySlug(slug);
   if (!a) notFound();
-  const more = ARTICLES.filter((x) => x.slug !== a.slug).slice(0, 3);
+  const i = ARTICLES.indexOf(a);
+  const newer = ARTICLES[i - 1], older = ARTICLES[i + 1];
+  const related = [...ARTICLES.filter((x) => x !== a && x.kind === a.kind), ...ARTICLES.filter((x) => x !== a && x.kind !== a.kind)].slice(0, 3);
+  const headed = a.sections.filter((s) => s.heading);
+  const ld = {
+    "@context": "https://schema.org", "@type": "NewsArticle", headline: a.title, description: a.dek,
+    datePublished: a.date, dateModified: a.date, image: [`${SITE_ORIGIN}${coverSrc(a.cover.name)}`],
+    author: { "@type": "Organization", name: "Vraelis", url: SITE_ORIGIN }, publisher: { "@type": "Organization", name: "Vraelis", url: SITE_ORIGIN },
+    mainEntityOfPage: `${SITE_ORIGIN}/news/${a.slug}`, articleSection: a.kind,
+  };
   return (
     <div className="nws">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       <article>
         <header className="v8-page-hero nws-article__head">
           <Wrap size="text">
-            <p className="nws-meta"><Link href={href("/news")}>News</Link><span>{a.kind}</span><time dateTime={a.date}>{formatDay(a.date)}</time></p>
+            <p className="nws-meta"><Link href={href("/news")}>News</Link><Link href={href(`/news?category=${a.kind}`)}>{a.kind}</Link></p>
             <h1 className="v8-h1 nws-article__title">{a.title}</h1>
             <p className="v8-lead">{a.dek}</p>
+            <div className="nws-byline">
+              <p className="nws-meta"><span>Vraelis</span><time dateTime={a.date}>{formatDay(a.date)}</time><span>{readingMinutes(a)} min read</span></p>
+              <CopyLink />
+            </div>
           </Wrap>
         </header>
         <Wrap>
-          <div className="nws-article__media"><ArticlePicture image={a.image} priority /></div>
+          <div className="nws-article__media"><Cover a={a} priority sizes="(max-width: 1280px) 100vw, 1280px" /></div>
         </Wrap>
-        <Wrap size="text">
-          <div className="nws-article__body">
-            {a.body.map((p) => <p key={p}>{p}</p>)}
-            {a.links?.length ? <div className="nws-article__links">{a.links.map((l) => <TextLink key={l.to} to={l.to}>{l.label}</TextLink>)}</div> : null}
+        <Wrap>
+          <div className={headed.length >= 3 ? "nws-article__layout" : "nws-article__layout nws-article__layout--single"}>
+            {headed.length >= 3 ? (
+              <nav className="nws-toc" aria-label="In this story">
+                <p>In this story</p>
+                <ol>{headed.map((s) => <li key={s.heading}><a href={`#${anchor(s.heading!)}`}>{s.heading}</a></li>)}</ol>
+              </nav>
+            ) : null}
+            <div className="nws-article__body">
+              <aside className="nws-box" aria-label="In short">
+                <p className="nws-box__title">In short</p>
+                <ul>{a.inShort.map((l) => <li key={l}>{l}</li>)}</ul>
+              </aside>
+              {a.sections.map((s, k) => (
+                <section key={s.heading ?? k} aria-labelledby={s.heading ? anchor(s.heading) : undefined}>
+                  {s.heading ? <h2 id={anchor(s.heading)} className="nws-h2">{s.heading}</h2> : null}
+                  {s.paras.map((p) => <p key={p}>{p}</p>)}
+                </section>
+              ))}
+              {a.notClaimed?.length ? (
+                <aside className="nws-box nws-box--quiet" aria-label="What this does not claim">
+                  <p className="nws-box__title">What this does not claim</p>
+                  <ul>{a.notClaimed.map((l) => <li key={l}>{l}</li>)}</ul>
+                </aside>
+              ) : null}
+              {a.links?.length ? <div className="nws-article__links">{a.links.map((l) => <TextLink key={l.to} to={l.to}>{l.label}</TextLink>)}</div> : null}
+            </div>
           </div>
         </Wrap>
       </article>
 
-      <section className="v8-section v8-rule" aria-label="More news">
+      <nav className="v8-rule" aria-label="Newer and older stories">
+        <Wrap>
+          <div className="nws-pager">
+            {newer ? <Link href={href(`/news/${newer.slug}`)} className="nws-pager__item"><span>Newer</span><b>{newer.title}</b></Link> : <span />}
+            {older ? <Link href={href(`/news/${older.slug}`)} className="nws-pager__item nws-pager__item--older"><span>Older</span><b>{older.title}</b></Link> : <span />}
+          </div>
+        </Wrap>
+      </nav>
+
+      <section className="v8-section v8-rule" aria-labelledby="nws-related">
         <Wrap>
           <div className="v8-head--row v8-head" style={{ marginBottom: 22 }}>
-            <h2 className="v8-h2">More news</h2>
+            <h2 id="nws-related" className="v8-h2">Related stories</h2>
             <TextLink to="/news" muted>All news</TextLink>
           </div>
           <div className="nws-grid">
-            {more.map((x) => (
+            {related.map((x) => (
               <Link key={x.slug} href={href(`/news/${x.slug}`)} className="nws-card">
-                <div className="nws-card__media"><ArticlePicture image={x.image} /></div>
+                <div className="nws-card__media"><Cover a={x} sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 420px" /></div>
                 <p className="nws-meta"><span>{x.kind}</span><time dateTime={x.date}>{formatDay(x.date)}</time></p>
                 <h3 className="nws-card__title">{x.title}</h3>
+                <p className="nws-card__min">{readingMinutes(x)} min read</p>
               </Link>
             ))}
           </div>
