@@ -1,7 +1,7 @@
-import { Head, PageHero, PhotoCard, Section, Terms, TextLink, Wrap, Button } from "../_kit/blocks";
+import { Head, PageHero, Section, Terms, TextLink, Wrap, Button } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { CONTOUR, RESEARCH, WORK_LINE } from "../_kit/site";
-import { ResearchBand } from "./parts";
+import { ArtCard, ResearchBand } from "./parts";
 
 export const metadata = v8meta({
   title: "Research",
@@ -31,7 +31,7 @@ export default function ResearchOverview() {
         <Wrap>
           <div className="rx-areas">
             {RESEARCH.map((r) => (
-              <PhotoCard key={r.slug} photoKey={r.photo} to={`/research/${r.slug}`} title={r.title} line={r.line} />
+              <ArtCard key={r.slug} slug={r.slug} title={r.title} line={r.line} />
             ))}
           </div>
         </Wrap>

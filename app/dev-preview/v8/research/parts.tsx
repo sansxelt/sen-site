@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { Band, Button, PhotoCard, Tag, TextLink, cx, photo } from "../_kit/blocks";
-import { RESEARCH, type Kind } from "../_kit/site";
+import Link from "next/link";
+import { Band, Button, Tag, TextLink, cx, photo } from "../_kit/blocks";
+import { RESEARCH, href, type Kind } from "../_kit/site";
 import type { Point, ResearchSlug } from "./content";
 import "./research.css";
 
@@ -18,6 +19,39 @@ export function FramedPhoto({ photoKey, caption = false, position }: { photoKey:
       </div>
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
+  );
+}
+
+/** Each research area's own illustration (scripts/research-art.mjs), used wherever the area appears. Original line art,
+ *  not a photograph and not product evidence (founder, 2026-10-18: imagery matters; after scale.com). */
+const ART_ALT: Record<ResearchSlug, string> = {
+  "model-integrity": "Illustration: two identical model stacks, the approved one and the running one, joined at the top.",
+  "adversarial-threats": "Illustration: a pipeline of three planes with one foreign piece dropping into the middle.",
+  "machine-trust": "Illustration: nested boundaries with a gate where one identity crosses inward.",
+  "security-evidence": "Illustration: records standing in order along a line, one gap kept as an outline.",
+};
+const artSrc = (slug: ResearchSlug, small = false) => `/site/art/${slug}${small ? "-1200" : ""}.webp`;
+
+/** A research area's illustration in the page-hero frame. */
+export function FramedArt({ slug }: { slug: ResearchSlug }) {
+  return (
+    <figure className="rx-photo">
+      <div className="rx-photo__frame">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={artSrc(slug)} srcSet={`${artSrc(slug, true)} 1200w, ${artSrc(slug)} 2400w`} sizes="(max-width: 1280px) 100vw, 1280px" alt={ART_ALT[slug]} width={2400} height={1500} fetchPriority="high" decoding="async" />
+      </div>
+    </figure>
+  );
+}
+
+/** A research area as a card: its illustration with the title (and line) over it. */
+export function ArtCard({ slug, title, line }: { slug: ResearchSlug; title: string; line?: string }) {
+  return (
+    <Link href={href(`/research/${slug}`)} className="v8-photo rx-art">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={artSrc(slug, true)} srcSet={`${artSrc(slug, true)} 1200w, ${artSrc(slug)} 2400w`} sizes="(max-width: 720px) 100vw, 640px" alt={ART_ALT[slug]} width={2400} height={1500} loading="lazy" decoding="async" />
+      <span className="v8-photo__label"><b>{title}</b>{line ? <span>{line}</span> : null}</span>
+    </Link>
   );
 }
 
@@ -108,7 +142,7 @@ export function RelatedResearch({ slugs, title = "Related research", links = [] 
         ) : null}
       </div>
       <div className="rx-related">
-        {areas.map((r) => <PhotoCard key={r.slug} photoKey={r.photo} to={`/research/${r.slug}`} title={r.title} />)}
+        {areas.map((r) => <ArtCard key={r.slug} slug={r.slug} title={r.title} />)}
       </div>
     </div>
   );

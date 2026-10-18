@@ -56,6 +56,7 @@ export default function ImageSources() {
             <li><a href="#product-captures">Product captures</a></li>
             <li><a href="#photographs">Photographs</a></li>
             <li><a href="#defense-photograph">Defense photograph</a></li>
+            <li><a href="#illustrations">Illustrations</a></li>
             <li><a href="#films">Systems film</a></li>
           </ul>
         </Wrap>
@@ -124,6 +125,16 @@ export default function ImageSources() {
             <p className="v8-body">The appearance of U.S. Department of Defense (DoD) visual information does not imply or constitute DoD endorsement.</p>
             <p className="v8-body">No relationship with the equipment manufacturer is implied. The photograph does not show Vraelis hardware, a customer or a Vraelis deployment.</p>
             <p className="v8-small imgs-after">Image files, source metadata and hashes: <Out to="/site/photography/defense-cbrn-source.json">source record</Out>.</p>
+          </div>
+        </Wrap>
+      </Section>
+
+      <Section rule id="illustrations" className="imgs-sec">
+        <Wrap>
+          <div className="v8-head imgs-head">
+            <span className="v8-eyebrow">Illustrations</span>
+            <h2 className="v8-h2">Original line art.</h2>
+            <p className="v8-body">The isometric illustrations for the four research areas are original Vraelis work, drawn in code (scripts/research-art.mjs). They are illustrations of ideas, not photographs, product captures or evidence.</p>
           </div>
         </Wrap>
       </Section>

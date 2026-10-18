@@ -1,7 +1,7 @@
 import { Button, Capture, CAPTURES, Head, PageHero, Section, TextLink, Wrap, cx } from "../_kit/blocks";
 import { RESEARCH } from "../_kit/site";
 import type { ResearchPage } from "./content";
-import { Flow, FramedPhoto, KindList, OpenGrid, Questions, RelatedResearch, ResearchBand, Split } from "./parts";
+import { Flow, FramedArt, KindList, OpenGrid, Questions, RelatedResearch, ResearchBand, Split } from "./parts";
 
 // One research area's page: hero with its photograph, what we study, what exists today, open questions, related
 // links, and the research band. The copy lives in content.ts.
@@ -17,7 +17,7 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to="/contact?topic=research" arrow>Research collaboration</Button><Button to="/research" kind="soft">All research areas</Button></>}
-        aside={<FramedPhoto photoKey={area.photo} />}
+        aside={<FramedArt slug={area.slug} />}
       />
 
       <Section rule id="study">
