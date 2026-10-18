@@ -25,6 +25,8 @@ export const CAPTURES = {
   "crop-conclusion-unavailable": { w: 2226, h: 262, alt: "cpu-2 is approved. Nothing reports what is loaded. Evidence unavailable." },
   "crop-approved-cpu2": { w: 1100, h: 538, alt: "Approved release cpu-2, generation 2, from the experiment's local release store, whose signatures the experiment checks." },
   "crop-loaded-cpu1": { w: 1100, h: 538, alt: "Reported loaded release cpu-1, generation 1, a worker self-report." },
+  "crop-approved-cpu2-head": { w: 330, h: 122, alt: "Approved release: cpu-2, generation 2." },
+  "crop-loaded-cpu1-head": { w: 330, h: 122, alt: "Reported loaded release: cpu-1, generation 1, a worker self-report." },
   "crop-loaded-unavailable": { w: 1100, h: 538, alt: "No loaded report is available for this observation." },
   "crop-pair-pending": { w: 2226, h: 538, alt: "Approved cpu-2 beside reported loaded cpu-1, with the differing fields marked." },
   "crop-pair-reloaded": { w: 2226, h: 538, alt: "Approved cpu-2 beside reported loaded cpu-2, every field the same." },
@@ -32,6 +34,7 @@ export const CAPTURES = {
   "crop-timeline-pending": { w: 2226, h: 172, alt: "The four recorded observations, with Update awaiting reload selected." },
   "crop-release-identity": { w: 1100, h: 530, alt: "Release identity for cpu-2: model, configuration, release and receipt digests; preprocessing not recorded." },
   "crop-release-approval": { w: 1100, h: 530, alt: "Approval for cpu-2: destination, policy, a 60 second age limit and the runtime." },
+  "crop-loaded-unavailable-head": { w: 580, h: 104, alt: "Reported loaded release: no loaded report is available for this observation." },
   "crop-source-json": { w: 1638, h: 768, alt: "The source JSON of a recorded observation." },
   // Exact-source crops of the captures above, pixels unchanged (website handoff 2026-10-12: readable at tile size).
   "crop-observations-list": { w: 467, h: 561, alt: "The four recorded observations in order, 07:41:29.606 to 07:41:29.723 UTC: Matched, Reload pending, Matched, Evidence unavailable." },

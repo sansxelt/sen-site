@@ -80,6 +80,15 @@ export function AppDetail({ page }: { page: AppPage }) {
                 <Capture name={page.capture} />
               </div>
             </div>
+            {page.phone ? (
+              // Phones: the capture above is unreadable there, so legible crops of the same screen and its values as text.
+              <div className="rx-phone">
+                {page.phone.shots.map((n) => <Capture key={n} name={n} caption={false} style={{ maxWidth: CAPTURES[n].w }} />)}
+                <dl className="rx-values">
+                  {page.phone.values.map((v) => <div key={v.term}><dt>{v.term}</dt><dd>{v.text}</dd></div>)}
+                </dl>
+              </div>
+            ) : null}
           </div>
         </Wrap>
       </Section>

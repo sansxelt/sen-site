@@ -28,6 +28,9 @@ export type AppPage = {
   capture: CaptureName;
   /** Sector-specific review questions, grounded in the recorded reference experiment. */
   review?: { title: string; lead: string; steps: Point[] };
+  /** Phones only: legible exact crops of the evidence, plus the same values as text, in place of a capture whose
+   *  values are too small to read at that width. Desktop keeps `capture`. */
+  phone?: { shots: CaptureName[]; values: { term: string; text: string }[] };
   /** Defense only: Vraelis's position. */
   stance?: { title: string; lead?: string; cards: Point[] };
   notClaimed: string[];
@@ -86,6 +89,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval: one site's approval does not cover another.", "", "", "Deployment evidence kept for the operator's change process."],
     capture: "crop-loaded-unavailable",
+    // Observation 04 of the recorded run, read from app-destination-unavailable.
+    phone: {
+      shots: ["crop-approved-cpu2-head", "crop-loaded-unavailable-head"],
+      values: [
+        { term: "Approved", text: "cpu-2, generation 2" },
+        { term: "Reported loaded", text: "no report" },
+        { term: "Reason code", text: "RUNTIME_UNAVAILABLE" },
+      ],
+    },
     review: {
       title: "A site needs its own release record.",
       lead: "A proposed operator workflow, illustrated by the recorded synthetic ONNX experiment. Control-system integration and customer deployments are not implemented.",
@@ -120,6 +132,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     hypothesis: "Robotics is one segment we study. Release and platform engineers at robotics suppliers and integrators meet this problem early.",
     steps: ["", "Destination-bound approval: one machine's approval does not cover another.", "", "A version mismatch shows as reload pending, not assumed.", ""],
     capture: "crop-pair-pending",
+    // Observation 02 of the recorded run, read from app-destination-pending.
+    phone: {
+      shots: ["crop-approved-cpu2-head", "crop-loaded-cpu1-head"],
+      values: [
+        { term: "Approved", text: "cpu-2, generation 2" },
+        { term: "Reported loaded", text: "cpu-1, generation 1, a worker self-report" },
+        { term: "State", text: "reload pending" },
+      ],
+    },
     review: {
       title: "The update arrived. Did the runtime load it?",
       lead: "A release-review scenario for machines in the field, illustrated by a synthetic ONNX CPU run. It is not a robot integration or evidence of physical safety.",

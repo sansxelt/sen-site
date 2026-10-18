@@ -1,6 +1,7 @@
 // Licensed editorial context, not product evidence. See public/site/photography/CREDITS.md.
 export const EDITORIAL_PHOTOGRAPHS = {
   robotAssembly: {"file": "editorial-robotAssembly", "w": 1280, "h": 853, "alt": "An orange industrial robot arm beside a conveyor rig in an engineering laboratory.", "author": "Diego Martinez", "id": "29320998"},
+  robotAssemblyArm: {"file": "editorial-robotAssembly-arm", "w": 2560, "h": 1440, "alt": "An orange industrial robot arm holding a fixture above a conveyor rig in an engineering laboratory.", "author": "Diego Martinez", "id": "29320998"},
   instrumentControls: {"file": "editorial-instrumentControls", "w": 1280, "h": 854, "alt": "An engineer adjusting laboratory equipment.", "author": "ThisIsEngineering", "id": "3862631"},
   developerDesk: {"file": "editorial-developerDesk", "w": 1280, "h": 854, "alt": "A software developer working at a computer.", "author": "ThisIsEngineering", "id": "3861972"},
   networkLinks: {"file": "editorial-networkLinks", "w": 1280, "h": 852, "alt": "Network cables connected to equipment.", "author": "Brett Sayles", "id": "2881233"},

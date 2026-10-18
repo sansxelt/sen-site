@@ -6,6 +6,18 @@
 
 /* Why it matters: three numbered boxes. */
 .v8 .v8-rx--apps .rx-why .v8-box { display: grid; gap: 12px; align-content: start; }
+/* Phones: a page with `phone` evidence swaps its unreadable capture for legible crops and the same values as text. */
+.v8 .v8-rx--apps .rx-phone { display: none; }
+.v8 .v8-rx--apps .rx-values { margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line-2); }
+.v8 .v8-rx--apps .rx-values > div { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line-2); font-size: 15px; line-height: 1.45; }
+.v8 .v8-rx--apps .rx-values dt { color: var(--ink-3); }
+.v8 .v8-rx--apps .rx-values dd { margin: 0; color: var(--ink); overflow-wrap: break-word; }
+/* Narrow phones: each label above its value, so long codes like RUNTIME_UNAVAILABLE never break mid-word. */
+@media (max-width: 400px) { .v8 .v8-rx--apps .rx-values > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } .v8 .v8-rx--apps .rx-values dt { font-size: 13px; } }
+@media (max-width: 720px) {
+  .v8 .v8-rx--apps .rx-phone { display: grid; gap: 12px; }
+  .v8 .v8-rx--apps .rx-apply:has(+ .rx-phone) .rx-apply__media { display: none; }
+}
 .v8 .v8-rx--apps .rx-hyp { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; padding: 16px 18px; border-radius: var(--r-md); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-2); font-size: 14.5px; line-height: 1.55; }
 .v8 .v8-rx--apps .rx-hyp > span:last-child { flex: 1 1 32ch; min-width: 0; }
 

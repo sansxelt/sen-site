@@ -187,7 +187,7 @@ export const APPLICATIONS = [
   { slug: "defense", title: "Defense", line: "AI in mission systems, where an unexpected model change can create security and operational risk.", photo: "communicationsDishes" },
   { slug: "critical-infrastructure", title: "Critical infrastructure", line: "AI in energy, water and communications, where releases cross operators.", photo: "substationNetwork", heroPhoto: "windOperations" },
   // Detail-page heroes use licensed setting photographs; overview crops keep their existing role.
-  { slug: "autonomous-systems", title: "Autonomous systems", line: "AI in robots and vehicles, where models ship to machines in the field.", photo: "robotMotion", heroPhoto: "robotAssembly" },
+  { slug: "autonomous-systems", title: "Autonomous systems", line: "AI in robots and vehicles, where models ship to machines in the field.", photo: "robotMotion", heroPhoto: "robotAssemblyArm" },
   { slug: "government", title: "Government and institutions", line: "Public bodies that need evidence a reviewer can read.", photo: "operationalCompute" },
   { slug: "integrators", title: "Suppliers and integrators", line: "The teams who ship model updates into systems they do not own.", photo: "integrationWorkshop" },
 ] as const;
