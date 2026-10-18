@@ -24,7 +24,7 @@ export const metadata = {
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
 /** The Recorded evidence tile: how the evidence is kept, one job per capture (website handoff 2026-10-12, item 2).
- *  The approved-versus-loaded comparison is the Contour tile's video, once; it is not repeated here. Each capture
+ *  The approved-versus-loaded comparison lives on /contour; the homepage's Contour video tile was removed. Each capture
  *  carries one sentence with its values, read from the captured run (item 3). */
 const EVIDENCE_TILE = ([
   ["crop-observations-list", "Every observation kept in order, 07:41:29.606 to 07:41:29.723 UTC.", "contain"],
@@ -134,15 +134,8 @@ export default function Home() {
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
           <div className="v8-bento">
-            <Link href={href("/contour")} className="v8-tile">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,106,43,.16), transparent 70%), #0C0C0E" }}>
-                <div className="v8-tile__inset">
-                  <AutoVideo src="/v8/contour/contour-compare-tile.mp4" poster="/v8/contour/contour-compare-tile-poster.webp" label="The Vraelis Contour app stepping through four recorded observations." rate={1.6} />
-                </div>
-              </div>
-              <div className="v8-tile__foot"><span>{CONTOUR.name}</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
-            </Link>
-            <Link href={href("/contour#observations")} className="v8-tile">
+            {/* The Contour video tile was removed (founder, 2026-10-17); the two remaining tiles of this row are wide. */}
+            <Link href={href("/contour#observations")} className="v8-tile v8-tile--wide">
               <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(90,180,255,.12), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
                   <CaptureCycle images={EVIDENCE_TILE} ms={4200} />
@@ -150,7 +143,7 @@ export default function Home() {
               </div>
               <div className="v8-tile__foot"><span>Recorded evidence</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
-            <Link href={href("/applications/autonomous-systems")} className="v8-tile">
+            <Link href={href("/applications/autonomous-systems")} className="v8-tile v8-tile--wide">
               <div className="v8-tile__media">
                 <AutoVideo src="/home/systems-film-civil.mp4" poster="/home/systems-poster-civil.jpg" label="Editorial footage of the systems where AI is deployed: factory robots, a power substation, a drone, a solar farm and software." />
               </div>
