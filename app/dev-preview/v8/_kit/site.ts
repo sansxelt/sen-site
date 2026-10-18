@@ -242,8 +242,8 @@ export const DRAWER_FEATURED = [
   { label: "Research", line: "Four areas of AI security.", to: "/research", img: "/site/photography/editorial-microscopeInspection.jpg", alt: "An engineer inspecting a circuit board under a microscope." },
   { label: "Applications", line: "Defense, critical infrastructure and autonomous systems.", to: "/applications", img: "/site/photography/editorial-robotProduction.jpg", alt: "Industrial robot arms on a factory floor." },
 ] as const;
-/** The phone menu's small links under the ways in. News lives on the changelog until the newsroom ships. */
-export const DRAWER_LINKS = [{ label: "News", to: "/changelog" }, { label: "Privacy", to: "/privacy" }, { label: "Terms", to: "/terms" }] as const;
+/** The phone menu's small links under the ways in. */
+export const DRAWER_LINKS = [{ label: "News", to: "/news" }, { label: "Privacy", to: "/privacy" }, { label: "Terms", to: "/terms" }] as const;
 
 /** Plain links under the footer logo, no heading (founder, 2026-10-13: "no company unless Palantir has it"; Palantir
  *  lists "About Palantir" among plain quick links). */
