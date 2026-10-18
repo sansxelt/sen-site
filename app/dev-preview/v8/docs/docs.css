@@ -84,7 +84,10 @@
 
 /* ── Shell: sidebar and content ─────────────────────────────────────────────────────────────────────── */
 .v8 .v8-docs-shell { display: grid; grid-template-columns: var(--dside) minmax(0, 1fr); align-items: start; }
-.v8 .v8-docs-side { position: sticky; top: var(--dh); height: calc(100vh - var(--dh)); height: calc(100dvh - var(--dh)); overflow-y: auto; padding: 28px 16px 48px clamp(10px, 1.2vw, 16px); scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+.v8 .v8-docs-side { position: sticky; top: var(--dh); height: calc(100vh - var(--dh)); height: calc(100dvh - var(--dh)); overflow-y: auto; overscroll-behavior: contain; padding: 28px 16px 48px clamp(10px, 1.2vw, 16px); scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 42%, transparent) color-mix(in srgb, var(--ink) 7%, transparent); }
+/* The sidebar scrolls on its own (founder, 2026-10-18): its scrollbar is visible on its track, and reaching either end
+   of it does not carry on into the page (overscroll-behavior above). */
+.v8 .v8-docs-side:hover { scrollbar-color: color-mix(in srgb, var(--ink) 62%, transparent) color-mix(in srgb, var(--ink) 9%, transparent); }
 .v8 .v8-docs-main { min-width: 0; padding-inline: clamp(20px, 3vw, 48px); outline: none; }
 
 .v8 .v8-dsb__group + .v8-dsb__group { margin-top: 24px; }
@@ -233,7 +236,7 @@
 .v8 .v8-docs-pager .is-next { text-align: right; }
 
 /* ── On this page ───────────────────────────────────────────────────────────────────────────────────── */
-.v8 .v8-docs-toc { position: sticky; top: var(--dh); max-height: calc(100vh - var(--dh)); max-height: calc(100dvh - var(--dh)); overflow-y: auto; padding: 38px 0 32px; scrollbar-width: none; }
+.v8 .v8-docs-toc { position: sticky; top: var(--dh); max-height: calc(100vh - var(--dh)); max-height: calc(100dvh - var(--dh)); overflow-y: auto; overscroll-behavior: contain; padding: 38px 0 32px; scrollbar-width: none; }
 .v8 .v8-docs-toc__h { margin-bottom: 10px; color: var(--ink); font: 500 13.5px/1.3 var(--sans); }
 .v8 .v8-docs-toc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
 .v8 .v8-docs-toc li a { display: block; padding: 4px 0; color: var(--ink-3); font-size: 13px; line-height: 1.45; transition: color .15s; }
