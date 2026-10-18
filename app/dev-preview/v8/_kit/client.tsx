@@ -142,29 +142,6 @@ export function EvidenceDeck({ items, ms = 3400 }: { items: EvidenceItem[]; ms?:
   );
 }
 
-/** A narrow homepage tile that shows one short entry at a time, large, over thin progress bars (News, Status).
- *  Each entry is a few words of metadata and one line. Reduced motion holds the first entry. */
-export function TextCycle({ items, ms = 3200 }: { items: { meta: string[]; title: string }[]; ms?: number }) {
-  const [i, setI] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  useTicker(ref, ms, () => setI((n) => (n + 1) % items.length));
-  return (
-    <div ref={ref} className="v8-tc" style={{ ["--ev-ms" as string]: `${ms}ms` }}>
-      <div className="v8-tc__stage">
-        {items.map((it, k) => (
-          <div key={it.title} className="v8-tc__item" data-on={k === i} aria-hidden={k !== i}>
-            <p className="v8-tc__meta">{it.meta.map((m) => <span key={m}>{m}</span>)}</p>
-            <p className="v8-tc__title">{it.title}</p>
-          </div>
-        ))}
-      </div>
-      <div className="v8-tc__bars" aria-hidden="true">
-        {items.map((it, k) => <span key={it.title}>{k === i ? <span key={`bar-${i}`} className="v8-ev__bar" /> : null}</span>)}
-      </div>
-    </div>
-  );
-}
-
 /** The research tile: the four areas light in turn, each with its one line and its own photograph. */
 export function ResearchCycle({ items, ms = 2200 }: { items: { title: string; line: string; img?: string; alt?: string }[]; ms?: number }) {
   const [i, setI] = useState(0);

@@ -311,17 +311,21 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-tile--wide { grid-column: span 3; }
 /* The homepage montage tile: four of six columns, beside a narrow tile (founder, 2026-10-17: five tiles, after x.ai). */
 .v8-tile--film { grid-column: span 4; min-height: 340px; }
-/* TextCycle (client.tsx): one short entry at a time, large, over thin progress bars. Used by News and Status. */
-.v8-tc { display: grid; grid-template-rows: 1fr auto; gap: 18px; padding: 24px 22px 6px; flex: 1; }
-.v8-tc__stage { display: grid; align-items: center; }
-.v8-tc__item { grid-area: 1 / 1; display: grid; gap: 10px; opacity: 0; transform: translateY(6px); transition: opacity .45s var(--ease), transform .45s var(--ease); }
-.v8-tc__item[data-on="true"] { opacity: 1; transform: none; }
-.v8-tc__meta { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--ink-3); font-size: 12.5px; line-height: 1.3; }
-.v8-tc__title { margin: 0; color: var(--ink); font: 500 clamp(19px, 1.6vw, 23px)/1.25 var(--display); letter-spacing: -.012em; }
-.v8-tc__bars { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
-.v8-tc__bars > span { position: relative; display: block; height: 2px; border-radius: 2px; background: var(--line-2); overflow: hidden; }
+/* News tile: one post's photograph with its date and headline over it (editorial). Status tile: exact crops of the
+   recorded comparison, approved cpu-2 then reported cpu-1, and the state in words, with a quiet context line. */
+.hm-news > img { object-position: 50% 30%; }
+.hm-news::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(8,8,9,.88) 100%); pointer-events: none; }
+.hm-news__copy { position: absolute; z-index: 1; left: 22px; right: 22px; bottom: 44px; display: grid; gap: 6px; color: #F4F4F5; }
+.hm-news__copy time { font-size: 12.5px; color: rgba(244,244,245,.75); }
+.hm-news__copy p { margin: 0; font: 500 clamp(19px, 1.6vw, 23px)/1.22 var(--display); letter-spacing: -.012em; text-wrap: balance; }
+.hm-cmp { display: grid; align-content: center; gap: 14px; padding: 24px 22px 8px; flex: 1; }
+.hm-cmp__pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; position: relative; }
+.hm-cmp__pair::after { content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; border-top: 1.5px solid var(--ink-3); border-right: 1.5px solid var(--ink-3); transform: translate(-75%, -50%) rotate(45deg); }
+.hm-cmp__card { display: block; overflow: hidden; border-radius: 10px; box-shadow: 0 0 0 1px var(--line-2); background: #141416; }
+.hm-cmp__card img { display: block; width: 100%; height: auto; }
+.hm-cmp__state { margin: 0; justify-self: start; padding: 5px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-3); color: var(--ink); font-size: 13px; line-height: 1.3; }
+.hm-cmp__note { margin: 0; color: var(--ink-3); font-size: 12.5px; line-height: 1.4; }
 .v8-rtile[data-plain="true"] { grid-template-columns: minmax(0, 1fr); }
-@media (prefers-reduced-motion: reduce) { .v8-tc__item { transition: none; transform: none; } }
 .v8-tile:hover { box-shadow: inset 0 0 0 1px var(--line-3); }
 .v8-tile__media { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 .v8-tile__media > img, .v8-tile__media > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .7s var(--ease); }

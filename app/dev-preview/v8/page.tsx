@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { AutoVideo, CodeTabs, ResearchCycle, RiseWords, TextCycle, TypeLoop } from "./_kit/client";
+import { AutoVideo, CodeTabs, ResearchCycle, RiseWords, TypeLoop } from "./_kit/client";
 import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
-import { Button, Ledger, Section, TextLink, Wrap } from "./_kit/blocks";
+import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
-import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, STATUS, TAGLINE, WORK_LINE, href } from "./_kit/site";
+import { CONTOUR, FACTS, HERO_KEYWORDS, OBSERVATIONS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { NEWS, formatDay } from "./_content/news";
 import { PARTNERS, showsLogo } from "./_content/partners";
@@ -23,15 +23,12 @@ export const metadata = {
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
-/** The bento's two text tiles (founder, 2026-10-17: five tiles, after x.ai). News: the newest entries, as published.
- *  Status: where the work stands, one line from each part of the status list. */
-const NEWS_TILE = NEWS.slice(0, 3).map((n) => ({ meta: [n.kind, formatDay(n.date)], title: n.title }));
-const STATUS_TILE = [
-  { meta: ["Working"], title: STATUS.working[0] },
-  { meta: ["Working"], title: STATUS.working[2] },
-  { meta: ["Planned next"], title: STATUS.building[0] },
-  { meta: ["Not claimed"], title: STATUS.notClaimed[0] },
-];
+/** The bento's News tile is editorial: the newest published post that has a photograph, its headline and its date.
+ *  The Status tile is product UI: the recorded comparison, approved cpu-2 against reported cpu-1, reload pending, in
+ *  exact crops of the app. Details stay on the linked pages (founder, 2026-10-18). */
+const NEWS_FEATURE = NEWS.find((n) => n.image.src.startsWith("/site/photography/")) ?? NEWS[0];
+const STATUS_PAIR: CaptureName[] = ["crop-approved-cpu2-head", "crop-loaded-cpu1-head"];
+const PENDING = OBSERVATIONS.find((o) => o.n === "02")!;
 
 /** The docs tile's queries, each with its best real section from the docs search index: a title match first, then
  *  the section that uses the phrase most. A few are typed with a slip, as people do; those show the section for what
@@ -133,7 +130,14 @@ export default function Home() {
               <div className="v8-tile__foot"><span>Applications</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/changelog")} className="v8-tile">
-              <TextCycle items={NEWS_TILE} />
+              <div className="v8-tile__media hm-news">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={NEWS_FEATURE.image.src} alt={NEWS_FEATURE.image.alt} width={NEWS_FEATURE.image.w} height={NEWS_FEATURE.image.h} loading="lazy" decoding="async" />
+                <div className="hm-news__copy">
+                  <time dateTime={NEWS_FEATURE.date}>{formatDay(NEWS_FEATURE.date)}</time>
+                  <p>{NEWS_FEATURE.title}</p>
+                </div>
+              </div>
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>News</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/research")} className="v8-tile">
@@ -148,7 +152,18 @@ export default function Home() {
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Documentation</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/contour/status")} className="v8-tile">
-              <TextCycle items={STATUS_TILE} ms={3000} />
+              <div className="hm-cmp">
+                <div className="hm-cmp__pair">
+                  {STATUS_PAIR.map((n, k) => (
+                    <span key={n} className="hm-cmp__card" data-k={k}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={captureSrc(n)} alt={CAPTURES[n].alt} width={CAPTURES[n].w} height={CAPTURES[n].h} loading="lazy" decoding="async" />
+                    </span>
+                  ))}
+                </div>
+                <p className="hm-cmp__state">{PENDING.state}</p>
+                <p className="hm-cmp__note">{CONTOUR.name}, private development</p>
+              </div>
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Status</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
           </div>
