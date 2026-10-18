@@ -1,6 +1,6 @@
 /* WHO OPERATES VRAELIS (founder, 2026-10-11).
  *
- * Foremake, Inc, Vraelis and Overlym are unincorporated brands. "Foremake, Inc" is the brand name exactly as written;
+ * Foremake, Inc and Vraelis are unincorporated brands. "Foremake, Inc" is the brand name exactly as written;
  * the policies must not call it a registered corporation, and no legal entity may be invented for them. The person or
  * body that actually operates the site goes in OPERATOR below, with the notice address and the governing law, as the
  * founder states them. Nothing here is filled in by default, and neither a parent or guardian nor counsel is

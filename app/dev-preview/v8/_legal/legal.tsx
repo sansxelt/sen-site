@@ -79,7 +79,7 @@ export function OperatorSection({ controller = false }: { controller?: boolean }
   return (
     <>
       <H>Who operates Vraelis</H>
-      <P>Vraelis, Foremake, Inc and Overlym are brands. None of them is incorporated: &ldquo;Inc&rdquo; is part of the Foremake, Inc brand name and does not mean that a corporation has been formed. Foremake, Inc is the umbrella brand behind Vraelis and Overlym. Vraelis develops AI cybersecurity software, and Vraelis Contour, its first product, is in private development. Overlym is a separate fintech venture in development.</P>
+      <P>Vraelis and Foremake, Inc are brands. Neither has been incorporated: &ldquo;Inc&rdquo; is part of the Foremake, Inc brand name and does not mean that a corporation has been formed. Foremake, Inc is the umbrella brand behind Vraelis. Vraelis develops AI cybersecurity software, and Vraelis Contour, its first product, is in private development.</P>
       <P>This site and the services described on these pages are operated by {OPERATOR.name ?? TBC}, which is responsible for them. On these pages, &ldquo;Vraelis&rdquo;, &ldquo;we&rdquo; and &ldquo;us&rdquo; mean {OPERATOR.name ?? TBC}.{controller ? ` ${OPERATOR.name ?? TBC} is the controller of the personal data this policy describes.` : ""}</P>
       {OPERATOR.noticeAddress
         ? <P>Legal notices and privacy requests: {OPERATOR.noticeAddress}, or by email to <A href="mailto:privacy@vraelis.com">privacy@vraelis.com</A>.</P>

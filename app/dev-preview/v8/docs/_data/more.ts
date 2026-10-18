@@ -50,7 +50,7 @@ const COMPANY: Page = {
       ["First product", `${CONTOUR.name}, in private development`],
     ] },
     { t: "h2", text: "Who operates the site" },
-    { t: "p", text: "The site and the services described on it are operated by Foremake, Inc. Foremake, Inc, Vraelis and Overlym are brands, and none of them is incorporated: \"Inc\" is part of the Foremake, Inc brand name. The [Terms](/terms) say this in full." },
+    { t: "p", text: "The site and the services described on it are operated by Foremake, Inc. Foremake, Inc and Vraelis are brands, and neither has been incorporated: \"Inc\" is part of the Foremake, Inc brand name. The [Terms](/terms) say this in full." },
     { t: "cards", items: [
       { to: "/company", title: "About", line: "Why Vraelis exists, what is built and where it stops." },
       { to: "/docs/partner-scope", title: "Partnerships", line: "The official partnerships and what they cover." },

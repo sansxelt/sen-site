@@ -1,4 +1,4 @@
-// The policies' operator details (founder, 2026-10-11): Foremake, Inc, Vraelis and Overlym are unincorporated brands,
+// The policies' operator details (founder, 2026-10-11): Foremake, Inc and Vraelis are unincorporated brands,
 // and the site names whoever actually operates it. This checks that a placeholder can never reach vraelis.com, and
 // that no v8 copy calls a brand a corporation, a holding company or a parent company.
 // `--ready` additionally fails while any operator detail is missing: run it right before the promotion.
