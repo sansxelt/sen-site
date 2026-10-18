@@ -140,4 +140,3 @@ export function AppDetail({ page }: { page: AppPage }) {
     </div>
   );
 }
-
