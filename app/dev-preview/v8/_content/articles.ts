@@ -89,8 +89,8 @@ export const ARTICLES: Article[] = [
       { heading: "4. The right release in the wrong place", paras: [
         "An approval meant for one environment is used in another. Destination-bound approval names the environment and resource an approval applies to. Scripted fault tests for wrong destinations and changed components are specified but have not been run.",
       ] },
-      { heading: "5. Nobody is reporting", paras: [
-        "The runtime stops reporting at all. The tempting answer is to show the last known state as if it were current. The honest answer is to record that evidence is unavailable, which is what the recorded run does in its fourth observation.",
+      { heading: "5. No usable report arrives", paras: [
+        "No usable runtime report is available: the runtime stopped, is unreachable, or sent nothing that can be read. The tempting answer is to show the last known state as if it were current. The honest answer is to record that evidence is unavailable, which is what the recorded run does in its fourth observation, where the worker had stopped.",
       ] },
     ],
     notClaimed: ["Protection against every failure listed here", "Results from the specified fault tests, which have not run", "Use outside the controlled experiment"],
@@ -135,7 +135,7 @@ export const ARTICLES: Article[] = [
     inShort: [
       "When a runtime stops reporting, showing its last known state as current is a guess.",
       "Contour records the gap instead, with a reason code.",
-      "Missing evidence does not mean a different release is running. It means nothing is reporting.",
+      "Missing evidence does not establish that another release is running. No usable runtime report was available for that observation.",
     ],
     sections: [
       { heading: "The easy mistake", paras: [
@@ -148,7 +148,7 @@ export const ARTICLES: Article[] = [
         "A reviewer reading the record later can see exactly when certainty ended. That is more useful than a clean timeline that hides it, and it keeps the record honest about its own limits.",
       ] },
       { heading: "Missing is not different", paras: [
-        "The app says it directly: missing evidence does not show that a different release is running. It shows that nothing is reporting. The two call for different responses, so the record keeps them apart.",
+        "Missing evidence does not establish that another release is running. No usable runtime report was available for that observation. The two call for different responses, so the record keeps them apart.",
       ] },
     ],
     notClaimed: ["Automatic recovery when reports stop", "Freshness detection, which is planned"],

@@ -1,5 +1,7 @@
 import { PAGES, getPage } from "../../_data/pages";
 import { indexMarkdown, pageMarkdown } from "../../_data/text";
+import { SITE_FORWARDS } from "../../_data/forwards";
+import { SITE_ORIGIN } from "@/lib/docs-host";
 
 // THE MARKDOWN TWINS. /docs/md/<slug>.md serves a page as text/markdown (what "View as Markdown" opens and
 // "Copy for LLM" copies), and /docs/md/index.md lists every page. Built at build time from the same page list
@@ -8,7 +10,7 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return [{ file: "index.md" }, ...PAGES.map((p) => ({ file: `${p.slug}.md` }))];
+  return [{ file: "index.md" }, ...PAGES.map((p) => ({ file: `${p.slug}.md` })), ...Object.keys(SITE_FORWARDS).map((s) => ({ file: `${s}.md` }))];
 }
 
 const v8Public = process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
@@ -20,6 +22,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
     "x-robots-tag": v8Public && index && !process.env.VRAELIS_REVIEW_LABEL ? "all" : "noindex",
   });
   if (file === "index.md") return new Response(indexMarkdown(), { headers: headers(true) });
+  // A page that moved to the site (forwards.ts): its old twin redirects permanently to the site page, with a one-line
+  // Markdown body for consumers that do not follow redirects (Codex review N02, 2026-10-18).
+  const moved = file.endsWith(".md") ? SITE_FORWARDS[file.slice(0, -3)] : undefined;
+  if (moved) {
+    const to = `${SITE_ORIGIN}${moved}`;
+    return new Response(`# Moved
+
+This page now lives on vraelis.com: ${to}
+`, { status: 308, headers: { location: to, "content-type": "text/markdown; charset=utf-8", "x-robots-tag": "noindex" } });
+  }
   const page = file.endsWith(".md") ? getPage(file.slice(0, -3)) : null;
   if (!page) return new Response("Not found\n", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   return new Response(pageMarkdown(page), { headers: headers(page.tab !== "earlier") });
