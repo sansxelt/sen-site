@@ -282,7 +282,9 @@ export default function Home() {
                   <li>Compare findings with existing tools</li>
                   <li>Review what the evidence shows and does not show</li>
                 </ul>
-                <Button to="/contact?topic=research" kind="ghost">Contact research</Button>
+                {/* One contact action per section (founder, 2026-10-17: "shouldnt be 2 contacts for the same place"):
+                    Join us goes to the contact page, where research is one of the topics; this card leads to the research. */}
+                <Button to="/research" kind="ghost">Explore research</Button>
               </div>
             </div>
           </div>
