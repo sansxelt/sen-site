@@ -230,13 +230,13 @@ export const MENUS: Menu[] = [
   },
   {
     id: "company", label: "Company", kind: "list",
-    links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/changelog" }],
+    links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/news" }],
   },
 ];
 
 /** Plain links under the footer logo, no heading (founder, 2026-10-13: "no company unless Palantir has it"; Palantir
  *  lists "About Palantir" among plain quick links). */
-export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }] as const;
+export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/news" }] as const;
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
   { title: "Vraelis Contour", links: [{ label: "Overview", to: "/contour" }, { label: "How it works", to: "/contour#how" }, { label: "Development status", to: "/contour/status" }, { label: "Documentation", to: "/docs" }] },

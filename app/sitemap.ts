@@ -38,6 +38,7 @@ const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/research": { p: 0.7, f: "weekly" },
   "/integrations": { p: 0.6, f: "monthly" },
   "/changelog": { p: 0.6, f: "weekly" },
+  "/news": { p: 0.6, f: "weekly" },
   "/company": { p: 0.6, f: "monthly" },
   "/security": { p: 0.6, f: "monthly" },
   "/contact": { p: 0.5, f: "monthly" },
