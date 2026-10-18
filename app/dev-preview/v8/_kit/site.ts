@@ -177,11 +177,13 @@ export const TAB_NAMES: Record<string, string> = {
 /** The browser-tab title for a page: "<name> | Vraelis". */
 export const tabTitle = (key: string, fallback: string) => `${TAB_NAMES[key] ?? fallback} | Vraelis`;
 
+/** Each research area has a card photo (index and related cards) and a different hero photo on its own page, so no
+ *  research picture repeats from one page to the next (founder, 2026-10-18: diversify the images, do not create them). */
 export const RESEARCH = [
-  { slug: "model-integrity", title: "Model integrity", line: "Whether the model that runs is the model that was approved.", photo: "embeddedBoard" },
-  { slug: "adversarial-threats", title: "Adversarial threats", line: "Inputs, updates and supply paths built to change what a model does.", photo: "boardInspection" },
-  { slug: "machine-trust", title: "Machine trust", line: "Explicit identity, limited permissions and checks at execution boundaries.", photo: "networkSwitch" },
-  { slug: "security-evidence", title: "Security evidence", line: "Records a person can read, kept in order, including what could not be confirmed.", photo: "laboratoryRoom" },
+  { slug: "model-integrity", title: "Model integrity", line: "Whether the model that runs is the model that was approved.", photo: "embeddedBoard", heroPhoto: "computeCabinets" },
+  { slug: "adversarial-threats", title: "Adversarial threats", line: "Inputs, updates and supply paths built to change what a model does.", photo: "boardInspection", heroPhoto: "hardwareReview" },
+  { slug: "machine-trust", title: "Machine trust", line: "Explicit identity, limited permissions and checks at execution boundaries.", photo: "networkSwitch", heroPhoto: "networkPorts" },
+  { slug: "security-evidence", title: "Security evidence", line: "Records a person can read, kept in order, including what could not be confirmed.", photo: "laboratoryRoom", heroPhoto: "electronicsResearch" },
 ] as const;
 
 export const APPLICATIONS = [

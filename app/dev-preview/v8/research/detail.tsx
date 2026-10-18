@@ -17,7 +17,7 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to="/contact?topic=research" arrow>Research collaboration</Button><Button to="/research" kind="soft">All research areas</Button></>}
-        aside={<FramedPhoto photoKey={area.photo} />}
+        aside={<FramedPhoto photoKey={area.heroPhoto} />}
       />
 
       <Section rule id="study">
