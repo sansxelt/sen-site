@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, INTRO_SKIP, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
-import { DRAWER_FEATURED, DRAWER_LINKS, FOOTER, FOOTER_QUICK, JOIN, MENUS, href, localHref, type Menu } from "./site";
+import { DRAWER_FEATURED, DRAWER_LINKS, FOOTER, FOOTER_QUICK, MENUS, href, localHref, type Menu } from "./site";
 
 /** The docs draw their own header and footer (docs/layout.tsx), on this host as on docs.vraelis.com, so the site's
  *  step aside there. Decided from the path, so it also holds after a client-side navigation into or out of the docs. */
@@ -156,7 +156,7 @@ export function V8Header() {
           <div className="v8-header__end">
             {/* One way in, as on scale.com where Contact and Get Started are the same form (founder, 2026-10-11). */}
             {/* The nav items' height, 36px, so it sits on their line (founder, 2026-10-12: the hero size was "way too big"). */}
-            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href("/contact")}>Talk to us</Link>
+            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href("/contact")}>Join us</Link>
             <button type="button" className="v8-burger" aria-label={drawer ? "Close menu" : "Open menu"} aria-expanded={drawer} aria-controls="v8-drawer"
               onClick={() => setDrawer((d) => !d)}><span aria-hidden="true" /></button>
           </div>
@@ -171,8 +171,8 @@ export function V8Header() {
           </details>
         ))}
         <Link href={href("/docs")} onClick={() => setDrawer(false)}>Docs</Link>
-        {/* The drawer uses its whole height (founder, 2026-10-18): featured cards with their own pictures, then every
-            way in instead of a single button, then the small links. */}
+        {/* The drawer uses its whole height (founder, 2026-10-18): featured cards with their own pictures, then one
+            button (founder: one contact, worded Join us), then the small links. */}
         <section className="v8-drawer__feature" aria-label="Featured">
           <p className="v8-drawer__label">Featured</p>
           <div className="v8-drawer__cards">
@@ -189,16 +189,7 @@ export function V8Header() {
           </div>
         </section>
         <div className="v8-drawer__ctas">
-          <section aria-label="Talk to us">
-            <p className="v8-drawer__label">Talk to us</p>
-            <div className="v8-drawer__ways">
-              {JOIN.map((j) => (
-                <Link key={j.to} href={href(j.to)} onClick={() => setDrawer(false)}>
-                  <b>{j.label}</b><span>{j.hint}</span><span className="v8-arrow" aria-hidden="true" />
-                </Link>
-              ))}
-            </div>
-          </section>
+          <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href("/contact")} onClick={() => setDrawer(false)}>Join us</Link>
           <nav className="v8-drawer__links" aria-label="More">
             {DRAWER_LINKS.map((l) => <Link key={l.to} href={href(l.to)} onClick={() => setDrawer(false)}>{l.label}</Link>)}
           </nav>

@@ -35,7 +35,7 @@ const WHO: Page = {
       "No verdict on model behaviour. A signature endorses bytes, not behaviour.",
       "No permission to change a customer's system. That stays the customer's decision.",
     ] },
-    { t: "h2", text: "Talk to us" },
+    { t: "h2", text: "Join us" },
     { t: "p", text: "Describe the models you release, the systems that run them, how a release is approved today and which evidence you would need. [Join us](/contact)" },
   ],
 };

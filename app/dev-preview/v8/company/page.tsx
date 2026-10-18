@@ -20,7 +20,7 @@ export default function About() {
         eyebrow="About"
         title={<RiseWords text="Security for AI in the physical world." />}
         lead={<>{COMPANY_LINE} {WORK_LINE}</>}
-        actions={<><Button to="/contact" arrow>Talk to us</Button><Button to="/contour/status" kind="soft">Development status</Button></>}
+        actions={<><Button to="/contact" arrow>Join us</Button><Button to="/contour/status" kind="soft">Development status</Button></>}
       />
 
       <Section rule id="company">
