@@ -1,9 +1,9 @@
 import { Button, Capture, CAPTURES, Head, PageHero, Section, TextLink, Wrap, cx } from "../_kit/blocks";
 import { RESEARCH } from "../_kit/site";
 import type { ResearchPage } from "./content";
-import { Flow, FramedPhoto, KindList, OpenGrid, Questions, RelatedResearch, ResearchBand, Split } from "./parts";
+import { AreaVisual, KindList, OpenGrid, Questions, RelatedResearch, ResearchBand, Split } from "./parts";
 
-// One research area's page: hero with its photograph, what we study, what exists today, open questions, related
+// One research area's page: hero with its own explanatory visual (AreaVisual), what we study, what exists today, open questions, related
 // links, and the research band. The copy lives in content.ts.
 export function ResearchDetail({ page }: { page: ResearchPage }) {
   const area = RESEARCH.find((r) => r.slug === page.slug)!;
@@ -17,23 +17,19 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to="/contact?topic=research" arrow>Research collaboration</Button><Button to="/research" kind="soft">All research areas</Button></>}
-        aside={<FramedPhoto photoKey={area.heroPhoto} />}
+        aside={<AreaVisual slug={page.slug} studyTitle={page.studyTitle} study={page.study} caption={page.studyCaption} />}
       />
 
-      <Section rule id="study">
-        <Wrap>
-          {page.studyAs === "flow" ? (
-            <div className="v8-stack--lg">
-              <Head eyebrow="What we study" title={page.studyTitle} />
-              <Flow items={page.study} caption={page.studyCaption} />
-            </div>
-          ) : (
+      {/* Machine trust's boundary diagram is its hero visual, so its study section is not repeated below. */}
+      {page.studyAs === "flow" ? null : (
+        <Section rule id="study">
+          <Wrap>
             <Split head={<Head eyebrow="What we study" title={page.studyTitle} />}>
               <Questions items={page.study} />
             </Split>
-          )}
-        </Wrap>
-      </Section>
+          </Wrap>
+        </Section>
+      )}
 
       <Section rule id="today">
         <Wrap>

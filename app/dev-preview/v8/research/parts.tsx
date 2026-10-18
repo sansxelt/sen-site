@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Band, Button, PhotoCard, Tag, TextLink, cx, photo } from "../_kit/blocks";
+import { Band, Button, CAPTURES, PhotoCard, Tag, TextLink, captureSrc, cx, photo, type CaptureName } from "../_kit/blocks";
 import { RESEARCH, type Kind } from "../_kit/site";
 import type { Point, ResearchSlug } from "./content";
 import "./research.css";
@@ -17,6 +17,72 @@ export function FramedPhoto({ photoKey, caption = false, position }: { photoKey:
         <img src={`/site/photography/${p.file}.jpg`} alt={p.alt} width={p.w} height={p.h} fetchPriority="high" decoding="async" style={position ? { objectPosition: position } : undefined} />
       </div>
       {caption ? <figcaption>{caption}</figcaption> : null}
+    </figure>
+  );
+}
+
+/** A real capture for the research visuals, at its intrinsic size. */
+function Shot({ name, className }: { name: CaptureName; className?: string }) {
+  const c = CAPTURES[name];
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={className} src={captureSrc(name)} alt={c.alt} width={c.w} height={c.h} loading="eager" decoding="async" />;
+}
+
+/** Each research page's own explanatory visual, in the hero (Codex visual brief items 6 to 9, 2026-10-17): real captures
+ *  and labelled diagrams that show the research point, instead of a decorative photograph. Nothing here is a measured
+ *  result beyond the recorded run; the attack-path diagram marks where evidence exists and where it does not. */
+export function AreaVisual({ slug, studyTitle, study, caption }: { slug: ResearchSlug; studyTitle: string; study: Point[]; caption?: ReactNode }) {
+  if (slug === "model-integrity") return (
+    <figure className="rx-vis rx-vis--identity" aria-label="Approved identity beside reported identity">
+      <div className="rx-vis__pair rx-vis__wide">
+        <Shot name="crop-approved-cpu2" />
+        <Shot name="crop-loaded-cpu1" />
+      </div>
+      <div className="rx-vis__pair rx-vis__narrow">
+        <Shot name="crop-cmp-approved-pending" />
+        <Shot name="crop-cmp-loaded-pending" />
+      </div>
+      <ul className="rx-vis__states">
+        <li><b>Matched</b><span>Every field of the reported identity equals the approved one.</span></li>
+        <li><b>Differs</b><span>Another release is loaded. In the recorded run: reload pending.</span></li>
+        <li><b>Unavailable</b><span>No usable runtime report. Kept as its own result.</span></li>
+      </ul>
+    </figure>
+  );
+  if (slug === "adversarial-threats") {
+    const paths: { path: string; change: string; kind: Kind; evidence: string }[] = [
+      { path: "Inputs at runtime", change: "Manipulated sensor or user input", kind: "not", evidence: "No input checks or detector." },
+      { path: "Training data", change: "Poisoned data before training", kind: "not", evidence: "No data provenance or poisoning tests." },
+      { path: "Model update", change: "An unauthorized or changed release", kind: "impl", evidence: "Release identity and approval checks in the experiment. They show a release changed, not where its bytes came from." },
+      { path: "Supply path", change: "A wrong destination or changed components", kind: "prop", evidence: "Scripted fault tests specified, not run." },
+    ];
+    return (
+      <figure className="rx-vis rx-vis--paths" aria-label="Paths that can change what a model does, and the evidence that exists for each">
+        <p className="rx-vis__title">Four paths into a model&apos;s behaviour, and what Vraelis has on each today.</p>
+        <ol className="rx-paths">
+          {paths.map((p) => (
+            <li key={p.path} data-kind={p.kind}>
+              <span className="rx-paths__path">{p.path}</span>
+              <span className="rx-paths__change">{p.change}</span>
+              <span className="rx-paths__arrow" aria-hidden="true" />
+              <span className="rx-paths__evidence"><Tag kind={p.kind} /><span>{p.evidence}</span></span>
+            </li>
+          ))}
+        </ol>
+        <p className="rx-paths__target">Model behaviour at runtime</p>
+      </figure>
+    );
+  }
+  if (slug === "machine-trust") return (
+    <div className="rx-vis rx-vis--flow">
+      <p className="rx-vis__title">{studyTitle}</p>
+      <Flow items={study} caption={caption} />
+    </div>
+  );
+  return (
+    <figure className="rx-vis rx-vis--record" aria-label="The four recorded observations in order, and the fields of the unavailable one">
+      <Shot name="crop-observations-list" className="rx-vis__list" />
+      <Shot name="crop-observation-unavailable" className="rx-vis__detail" />
     </figure>
   );
 }
