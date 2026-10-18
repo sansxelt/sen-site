@@ -1,0 +1,28 @@
+{
+  "source_page": "https://www.dvidshub.net/image/8736415/chappie-innovative-advancement-cbrn-defense",
+  "photo_id": 8736415,
+  "virin": "240722-X-OP274-1041",
+  "taken": "2024-07-22",
+  "posted": "2024-11-04",
+  "author": "Tech. Sgt. Jordan Thompson",
+  "service": "U.S. Space Force",
+  "rights": "Source labels public domain, subject to DVIDS use restrictions. This is not blanket legal clearance.",
+  "rights_url": "https://www.dvidshub.net/about/copyright",
+  "non_endorsement": "The appearance of U.S. Department of Defense (DoD) visual information does not imply or constitute DoD endorsement.",
+  "use": "Contextual still on Defense hero and Applications overview; no caption or Vraelis hardware/deployment claim. No image editing; downloaded derivatives retained byte-for-byte.",
+  "retrieved_utc": "2026-10-18T02:03:37.772600+00:00",
+  "files": [
+    {
+      "file": "defense-cbrn-robot.jpg",
+      "source_url": "https://d1ldvf68ux039x.cloudfront.net/thumbs/photos/2411/8736415/2000w_q95.jpg",
+      "bytes": 732033,
+      "sha256": "743963eb43f6798d23153e37986f211bb72b46ced69272add9eb05d9b37c2830"
+    },
+    {
+      "file": "defense-cbrn-robot-1000.jpg",
+      "source_url": "https://d1ldvf68ux039x.cloudfront.net/thumbs/photos/2411/8736415/1000w_q95.jpg",
+      "bytes": 237864,
+      "sha256": "25db7e2334311a00b71860e6576d2c9d433ca279533ae55f3e6899a32d9dee58"
+    }
+  ]
+}
