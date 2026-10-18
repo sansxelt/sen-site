@@ -17,6 +17,9 @@ import { REVEAL_STYLE_ID } from "./scripts";
 const SKIP = ".v8-hero, .v8-fade, .v8-bento, .v8-chapters, [data-no-reveal]";
 const LEAF = "figure, img, video, picture, pre, table, canvas, svg, form, details, .v8-tabs, .v8-chapters, .v8-code, .v8-codeframe";
 const STEP = 70, MAX = 8;
+/** On a page with the homepage hero, blocks already in view on load wait for the hero's own entrances (the partner
+ *  band starts at .9s), so nothing below the hero lands before it (founder, 2026-10-17). */
+const AFTER_HERO = 1000;
 
 function layers(root: Element, depth: number, out: Element[]) {
   for (const child of Array.from(root.children)) {
@@ -58,8 +61,8 @@ export function RevealOnRoute() {
     let n = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
     // Once a layer has landed, its classes come off so its own hover transitions and transforms apply again.
-    const show = (el: Element, i: number) => {
-      const d = Math.min(i, MAX) * STEP;
+    const show = (el: Element, i: number, base = 0) => {
+      const d = base + Math.min(i, MAX) * STEP;
       (el as HTMLElement).style.setProperty("--rv-d", `${d}ms`);
       el.classList.add("v8-rv--in");
       timers.push(setTimeout(() => { el.classList.remove("v8-rv", "v8-rv--in"); (el as HTMLElement).style.removeProperty("--rv-d"); }, d + 900));
@@ -67,9 +70,10 @@ export function RevealOnRoute() {
     const below: Element[] = [];
     let io: IntersectionObserver | undefined;
     requestAnimationFrame(() => {
+      const base = main.querySelector(".v8-hero") ? AFTER_HERO : 0;
       for (const el of els) {
         const r = el.getBoundingClientRect();
-        if (r.top < vh * .92) show(el, n++); else below.push(el);
+        if (r.top < vh * .92) show(el, n++, base); else below.push(el);
       }
       if (!below.length) return;
       io = new IntersectionObserver((entries) => {
