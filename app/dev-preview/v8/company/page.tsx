@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Capture, PageHero, Section, Tag, Wrap } from "../_kit/blocks";
+import { Button, Capture, HeroArt, PageHero, Section, Tag, Wrap } from "../_kit/blocks";
 import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
 import { COMPANY_LINE, WORK_LINE, CONTOUR, FACTS, RESEARCH, STATUS, FOREMAKE, href, TAB_NAMES } from "../_kit/site";
@@ -22,6 +22,7 @@ export default function About() {
         lead={<>{COMPANY_LINE} {WORK_LINE}</>}
         actions={<><Button to="/contact" arrow>Talk to us</Button><Button to="/contour/status" kind="soft">Development status</Button></>}
       />
+      <section aria-label="Where Vraelis works" className="cmp-art"><Wrap><HeroArt name="physical-world" alt="Illustration: a lattice tower, a wind turbine, solar panels, server racks, a robot arm and a drone on one terrain, joined by a dashed path." /></Wrap></section>
 
       <Section rule id="company">
         <Wrap><div className="v8-stack--lg">

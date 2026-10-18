@@ -169,6 +169,17 @@ export function Stage({ screen, lifted = [], caption = CAPTURE_CAPTION, video }:
   );
 }
 
+/** A wide original illustration under a page hero (scripts/page-art.mjs), stacked below the text. Line art of ideas,
+ *  never a photograph of Vraelis facilities or product evidence (founder, 2026-10-18: imagery matters). */
+export function HeroArt({ name, alt }: { name: string; alt: string }) {
+  return (
+    <figure className="v8-hero-art">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/site/art/${name}-1200.webp`} srcSet={`/site/art/${name}-1200.webp 1200w, /site/art/${name}.webp 2400w`} sizes="(max-width: 1280px) 100vw, 1280px" alt={alt} width={2400} height={1000} fetchPriority="high" decoding="async" />
+    </figure>
+  );
+}
+
 /** A photograph with a label, linking somewhere. Licensed editorial context, never product evidence. */
 export function PhotoCard({ photoKey, to, title, line, style }: { photoKey: string; to: string; title: string; line?: string; style?: CSSProperties }) {
   const p = photo(photoKey);

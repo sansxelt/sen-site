@@ -1,4 +1,4 @@
-import { Head, Section, TextLink, Wrap } from "../_kit/blocks";
+import { Head, Section, TextLink, Wrap, HeroArt } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { COMPANY_LINE, href } from "../_kit/site";
 import "./security.css";
@@ -74,6 +74,7 @@ export default function V8SecurityPage() {
               <a className="v8-btn v8-btn--soft v8-btn--lg" href="/.well-known/security.txt">security.txt</a>
             </div>
           </div>
+          <HeroArt name="disclosure" alt="Illustration: a sealed inner boundary with one reporting channel running in from outside." />
         </Wrap>
       </section>
 
