@@ -1,8 +1,10 @@
 // Vraelis News, newest first (founder, 2026-10-18: "news should be its own with its own fresh articles", built out as
 // a full newsroom). Facts come only from what Vraelis already publishes (site.ts STATUS, STATUS_SOURCES, TERMS,
 // OBSERVATIONS, CONTOUR and the captured app); the new material is analysis and explanation, never a new count,
-// capability, customer or deployment. Each article has its own original cover in /site/news (scripts/news-covers.mjs),
-// so no picture is shared with another page.
+// capability, customer or deployment. Each story has its own picture from the licensed library or a real Contour
+// capture, none shown anywhere else on the site (founder, 2026-10-18: diversify the images, do not create them).
+import { EDITORIAL_PHOTOGRAPHS } from "../../v6/_content/editorial-photography";
+
 export type ArticleKind = "Product" | "Research" | "Perspective" | "Company";
 export const ARTICLE_KINDS: ArticleKind[] = ["Product", "Research", "Perspective", "Company"];
 
@@ -12,7 +14,7 @@ export type Article = {
   kind: ArticleKind;
   title: string;
   dek: string;
-  cover: { name: string; alt: string };
+  cover: Cover;
   /** Three short lines a reader can stop after. */
   inShort: string[];
   sections: { heading?: string; paras: string[] }[];
@@ -21,10 +23,14 @@ export type Article = {
   links?: { label: string; to: string }[];
 };
 
-export const coverSrc = (name: string, small = false) => `/site/news/${name}${small ? "-1200" : ""}.webp`;
-export const coverOg = (name: string) => `/site/news/${name}-og.jpg`;
-export const coverSet = (name: string) => `${coverSrc(name, true)} 1200w, ${coverSrc(name)} 2400w`;
-export const COVER = { w: 2400, h: 1500 } as const;
+export type Cover = { src: string; alt: string; w: number; h: number; capture?: boolean };
+/** A licensed library photograph (credited on Image sources). */
+const pic = (key: keyof typeof EDITORIAL_PHOTOGRAPHS): Cover => {
+  const p = EDITORIAL_PHOTOGRAPHS[key];
+  return { src: `/site/photography/${p.file}.jpg`, alt: p.alt, w: p.w, h: p.h };
+};
+/** A real capture of the read-only Contour app (1200 version). */
+const shot = (name: "app-traces"): Cover => ({ src: `/v8/contour/${name}-1200.webp`, alt: "The traces screen of the Vraelis Contour app.", w: 1200, h: 750, capture: true });
 
 export const ARTICLES: Article[] = [
   {
@@ -33,7 +39,7 @@ export const ARTICLES: Article[] = [
     kind: "Product",
     title: "Vraelis Contour status: a private Kubernetes collector prototype",
     dek: "What changed on the status page this week, what has been checked, and what has not.",
-    cover: { name: "collector", alt: "Isometric illustration: a cluster of boxes on a grid with one control box linked up to a plane above." },
+    cover: pic("dataCenterAisle"),
     inShort: [
       "The Kubernetes collector described in specification v1.3 now exists as a private prototype.",
       "Its host checks have run. Live-cluster validation of the current revision has not.",
@@ -63,7 +69,7 @@ export const ARTICLES: Article[] = [
     kind: "Perspective",
     title: "Five ways a model update goes wrong after approval",
     dek: "Approval is a decision about a release. Each of these failures happens after it.",
-    cover: { name: "five-ways", alt: "Isometric illustration: two planes joined by five links, one of which bends away and drops." },
+    cover: pic("circuitLayers"),
     inShort: [
       "An approval names one release for one destination. It says nothing about what happens next.",
       "Five things can go wrong between approval and runtime, and each needs its own evidence.",
@@ -96,7 +102,7 @@ export const ARTICLES: Article[] = [
     kind: "Research",
     title: "A self-report is evidence, not proof",
     dek: "What a runtime's own report can establish about a model release, and where it stops.",
-    cover: { name: "self-report", alt: "Isometric illustration: a box sending a report up to a plane, with a faint offset copy of the plane beside it." },
+    cover: pic("instrumentControls"),
     inShort: [
       "A self-report is the runtime saying which release it loaded and under which policy.",
       "It is good at exposing mismatches and keeping a history. It cannot prove its own honesty.",
@@ -125,7 +131,7 @@ export const ARTICLES: Article[] = [
     kind: "Perspective",
     title: "Evidence unavailable is a result",
     dek: "Why a security record should keep the observations that confirm nothing.",
-    cover: { name: "unavailable", alt: "Isometric illustration: a field of tiles with one tile missing, left as a dashed outline." },
+    cover: pic("serverAisle"),
     inShort: [
       "When a runtime stops reporting, showing its last known state as current is a guess.",
       "Contour records the gap instead, with a reason code.",
@@ -154,7 +160,7 @@ export const ARTICLES: Article[] = [
     kind: "Research",
     title: "Release integrity for machines in the field",
     dek: "Robots and vehicles receive model updates far from the people who approved them. What evidence would help.",
-    cover: { name: "field", alt: "Isometric illustration: terrain lines with a small machine on a path and a plane above it." },
+    cover: pic("robotGripper"),
     inShort: [
       "Machines in the field get updates from suppliers and are run by operators.",
       "The useful questions are the same as anywhere: which release was approved, and what is the machine running.",
@@ -183,7 +189,7 @@ export const ARTICLES: Article[] = [
     kind: "Product",
     title: "A read-only evidence app for Vraelis Contour",
     dek: "Six screens over the recorded trace, with every finding from internal automated review addressed.",
-    cover: { name: "evidence-app", alt: "Isometric illustration: translucent panes stacked in depth, the front one ruled with rows." },
+    cover: shot("app-traces"),
     inShort: [
       "Six screens: Overview, Releases, Destination, Observations, Policy and Traces.",
       "Read-only, with no deploy, approval, reload or fleet controls.",
@@ -202,7 +208,7 @@ export const ARTICLES: Article[] = [
     kind: "Product",
     title: "Vraelis Contour, our first product direction",
     dek: "Model release security, from approval to reported runtime state.",
-    cover: { name: "contour", alt: "Isometric illustration: contour lines rising around a single peak." },
+    cover: pic("engineeringTeam"),
     inShort: [
       "For release, platform and security engineers at suppliers and system integrators.",
       "It compares the approved model release with what the receiving runtime reports running.",
@@ -221,7 +227,7 @@ export const ARTICLES: Article[] = [
     kind: "Company",
     title: "Vraelis focuses on AI security",
     dek: "Cybersecurity software for AI in defense, critical infrastructure and autonomous systems.",
-    cover: { name: "ai-security", alt: "Isometric illustration: three lattice planes stacked and linked at the corners." },
+    cover: pic("gridEquipment"),
     inShort: [
       "Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems.",
       "Four research areas: model integrity, adversarial threats, machine trust and security evidence.",

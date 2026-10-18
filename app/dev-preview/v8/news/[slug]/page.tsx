@@ -5,7 +5,7 @@ import { SITE_ORIGIN } from "@/lib/docs-host";
 import { TextLink, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
 import { href } from "../../_kit/site";
-import { ARTICLES, articleBySlug, coverOg, coverSrc, readingMinutes } from "../../_content/articles";
+import { ARTICLES, articleBySlug, readingMinutes } from "../../_content/articles";
 import { formatDay } from "../../_content/news";
 import { CopyLink } from "../client";
 import { Cover } from "../picture";
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!a) return { title: { absolute: "Error | Vraelis" }, robots: { index: false, follow: false } };
   const meta = v8meta({ title: a.title, description: a.dek, path: `/news/${slug}`, tab: "News" });
   // A shared story shows its own cover and dates, not the generic site card.
-  const image = { url: `${SITE_ORIGIN}${coverOg(a.cover.name)}`, width: 1200, height: 750, alt: a.cover.alt };
+  const image = { url: `${SITE_ORIGIN}${a.cover.src}`, width: a.cover.w, height: a.cover.h, alt: a.cover.alt };
   return {
     ...meta,
     openGraph: { ...meta.openGraph, type: "article", publishedTime: a.date, section: a.kind, images: [image] },
@@ -45,7 +45,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const headed = a.sections.filter((s) => s.heading);
   const ld = {
     "@context": "https://schema.org", "@type": "NewsArticle", headline: a.title, description: a.dek,
-    datePublished: a.date, dateModified: a.date, image: [`${SITE_ORIGIN}${coverSrc(a.cover.name)}`],
+    datePublished: a.date, dateModified: a.date, image: [`${SITE_ORIGIN}${a.cover.src}`],
     author: { "@type": "Organization", name: "Vraelis", url: SITE_ORIGIN }, publisher: { "@type": "Organization", name: "Vraelis", url: SITE_ORIGIN },
     mainEntityOfPage: `${SITE_ORIGIN}/news/${a.slug}`, articleSection: a.kind,
   };

@@ -1,10 +1,10 @@
-import { COVER, coverSet, coverSrc, type Article } from "../_content/articles";
+import type { Article } from "../_content/articles";
 
-/** An article's own cover (2400 x 1500, with a 1200 version). */
+/** A story's picture: a licensed library photograph or a real Contour capture, unique to the story. */
 export function Cover({ a, priority, sizes = "(max-width: 900px) 100vw, 640px" }: { a: Article; priority?: boolean; sizes?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={coverSrc(a.cover.name, true)} srcSet={coverSet(a.cover.name)} sizes={sizes} alt={a.cover.alt} width={COVER.w} height={COVER.h}
+    <img src={a.cover.src} sizes={sizes} alt={a.cover.alt} width={a.cover.w} height={a.cover.h} data-capture={a.cover.capture || undefined}
       loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async" />
   );
 }

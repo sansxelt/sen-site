@@ -1,6 +1,7 @@
 /* Vraelis News (/news and /news/<slug>): an editorial newsroom after x.ai/news. Covers are original art
    (scripts/news-covers.mjs); everything else is the site's own type and greys. */
 .nws img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.nws img[data-capture] { object-position: left top; background: #0C0C0E; }
 .nws-meta { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink-3); font-size: 13px; line-height: 1.4; }
 .nws-meta > :first-child { color: var(--ink-2); }
 .nws-meta a { color: var(--ink-2); text-decoration: none; }

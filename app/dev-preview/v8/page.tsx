@@ -8,7 +8,7 @@ import { v8meta } from "./_kit/meta";
 import { CONTOUR, FACTS, HERO_KEYWORDS, OBSERVATIONS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { formatDay } from "./_content/news";
-import { ARTICLES, coverSet, coverSrc } from "./_content/articles";
+import { ARTICLES } from "./_content/articles";
 import { PARTNERS, showsLogo } from "./_content/partners";
 import { LogoCard } from "./partners/logo-card";
 import "./partners/partners.css";
@@ -139,7 +139,7 @@ export default function Home() {
                 <Rotate className="hm-news" ms={4200} slides={NEWS_FEATURES.map((n) => (
                   <Fragment key={n.slug}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={coverSrc(n.cover.name, true)} srcSet={coverSet(n.cover.name)} sizes="(max-width: 720px) 100vw, 420px" alt={n.cover.alt} width={2400} height={1500} loading="lazy" decoding="async" />
+                    <img src={n.cover.src} alt={n.cover.alt} width={n.cover.w} height={n.cover.h} loading="lazy" decoding="async" />
                     <div className="hm-news__copy">
                       <time dateTime={n.date}>{formatDay(n.date)}</time>
                       <p>{n.title}</p>
@@ -242,7 +242,7 @@ export default function Home() {
                 <Link key={n.slug} href={href(`/news/${n.slug}`)} className="v8-card">
                   <div className="v8-card__media">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={coverSrc(n.cover.name, true)} alt={n.cover.alt} width={1200} height={750} loading="lazy" decoding="async" />
+                    <img src={n.cover.src} alt={n.cover.alt} width={n.cover.w} height={n.cover.h} loading="lazy" decoding="async" style={n.cover.capture ? { objectPosition: "left top" } : undefined} />
                   </div>
                   <div className="v8-card__meta"><span>{n.kind}</span><time dateTime={n.date}>{formatDay(n.date)}</time></div>
                   <h3>{n.title}</h3>
