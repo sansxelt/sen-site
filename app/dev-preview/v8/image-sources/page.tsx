@@ -123,7 +123,7 @@ export default function ImageSources() {
             <p className="v8-body"><Out to="https://www.dvidshub.net/image/8736415/chappie-innovative-advancement-cbrn-defense">DVIDS 8736415</Out> · VIRIN 240722-X-OP274-1041. The source labels this work public domain, subject to the <Out to="https://www.dvidshub.net/about/copyright">DVIDS use restrictions</Out>. The local 1000px and 2000px files preserve the downloaded image bytes; page framing crops their display.</p>
             <p className="v8-body">The appearance of U.S. Department of Defense (DoD) visual information does not imply or constitute DoD endorsement.</p>
             <p className="v8-body">No relationship with the equipment manufacturer is implied. The photograph does not show Vraelis hardware, a customer or a Vraelis deployment.</p>
-            <p className="v8-small imgs-after"><code>/site/photography/defense-cbrn-robot.jpg</code> and <code>/site/photography/defense-cbrn-robot-1000.jpg</code>. Source metadata and file hashes: <Out to="/site/photography/defense-cbrn-source.json">source record</Out>.</p>
+            <p className="v8-small imgs-after">Image files, source metadata and hashes: <Out to="/site/photography/defense-cbrn-source.json">source record</Out>.</p>
           </div>
         </Wrap>
       </Section>
