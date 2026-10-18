@@ -230,7 +230,7 @@ export const MENUS: Menu[] = [
   },
   {
     id: "company", label: "Company", kind: "list",
-    links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }],
+    links: [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/changelog" }],
   },
 ];
 

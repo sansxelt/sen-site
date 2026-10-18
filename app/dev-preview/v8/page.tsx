@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AutoVideo, CodeTabs, ResearchCycle, RiseWords, TypeLoop } from "./_kit/client";
+import { Fragment } from "react";
+import { AutoVideo, CodeTabs, ResearchCycle, RiseWords, Rotate, TypeLoop } from "./_kit/client";
 import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
 import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
@@ -26,9 +27,12 @@ export const metadata = {
 /** The bento's News tile is editorial: the newest published post that has a photograph, its headline and its date.
  *  The Status tile is product UI: the recorded comparison, approved cpu-2 against reported cpu-1, reload pending, in
  *  exact crops of the app. Details stay on the linked pages (founder, 2026-10-18). */
-const NEWS_FEATURE = NEWS.find((n) => n.image.src.startsWith("/site/photography/")) ?? NEWS[0];
-const STATUS_PAIR: CaptureName[] = ["crop-approved-cpu2-head", "crop-loaded-cpu1-head"];
-const PENDING = OBSERVATIONS.find((o) => o.n === "02")!;
+const NEWS_FEATURES = NEWS.filter((n) => n.image.src.startsWith("/site/photography/"));
+/** Status cycles the recorded states after the approval of cpu-2: reload pending, reloaded, report unavailable. */
+const STATUS_STATES = (["02", "03", "04"] as const).map((n) => {
+  const k = { "02": "pending", "03": "reloaded", "04": "unavailable" }[n];
+  return { state: OBSERVATIONS.find((o) => o.n === n)!.state, pair: [`crop-cmp-approved-${k}`, `crop-cmp-loaded-${k}`] as CaptureName[] };
+});
 
 /** The docs tile's queries, each with its best real section from the docs search index: a title match first, then
  *  the section that uses the phrase most. A few are typed with a slip, as people do; those show the section for what
@@ -130,13 +134,17 @@ export default function Home() {
               <div className="v8-tile__foot"><span>Applications</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
             <Link href={href("/changelog")} className="v8-tile">
-              <div className="v8-tile__media hm-news">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={NEWS_FEATURE.image.src} alt={NEWS_FEATURE.image.alt} width={NEWS_FEATURE.image.w} height={NEWS_FEATURE.image.h} loading="lazy" decoding="async" />
-                <div className="hm-news__copy">
-                  <time dateTime={NEWS_FEATURE.date}>{formatDay(NEWS_FEATURE.date)}</time>
-                  <p>{NEWS_FEATURE.title}</p>
-                </div>
+              <div className="v8-tile__media">
+                <Rotate className="hm-news" ms={4200} slides={NEWS_FEATURES.map((n) => (
+                  <Fragment key={n.id}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={n.image.src} alt={n.image.alt} width={n.image.w} height={n.image.h} loading="lazy" decoding="async" />
+                    <div className="hm-news__copy">
+                      <time dateTime={n.date}>{formatDay(n.date)}</time>
+                      <p>{n.title}</p>
+                    </div>
+                  </Fragment>
+                ))} />
               </div>
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>News</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
@@ -153,15 +161,19 @@ export default function Home() {
             </Link>
             <Link href={href("/contour/status")} className="v8-tile">
               <div className="hm-cmp">
-                <div className="hm-cmp__pair">
-                  {STATUS_PAIR.map((n, k) => (
-                    <span key={n} className="hm-cmp__card" data-k={k}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={captureSrc(n)} alt={CAPTURES[n].alt} width={CAPTURES[n].w} height={CAPTURES[n].h} loading="lazy" decoding="async" />
-                    </span>
-                  ))}
-                </div>
-                <p className="hm-cmp__state">{PENDING.state}</p>
+                <Rotate className="hm-cmp__rot" ms={3200} slides={STATUS_STATES.map((s) => (
+                  <Fragment key={s.state}>
+                    <div className="hm-cmp__pair">
+                      {s.pair.map((n) => (
+                        <span key={n} className="hm-cmp__card">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={captureSrc(n)} alt={CAPTURES[n].alt} width={CAPTURES[n].w} height={CAPTURES[n].h} loading="lazy" decoding="async" />
+                        </span>
+                      ))}
+                    </div>
+                    <p className="hm-cmp__state">{s.state}</p>
+                  </Fragment>
+                ))} />
                 <p className="hm-cmp__note">{CONTOUR.name}, private development</p>
               </div>
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Status</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>

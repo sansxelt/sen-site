@@ -45,6 +45,13 @@ export const CAPTURES = {
   "crop-unavailable-panel": { w: 1376, h: 446, alt: "Observation 04 in Vraelis Contour: runtime report unavailable. cpu-2, generation 2 is approved; no loaded report, no session, reason code RUNTIME_UNAVAILABLE. A self-report, not independent attestation." },
   "crop-unavailable-fields": { w: 576, h: 148, alt: "Observation 04 fields: reported loaded, no report; session, none; reason code RUNTIME_UNAVAILABLE." },
   "crop-where-cpu2": { w: 1879, h: 549, alt: "Where cpu-2 appears: not involved, approved not loaded, approved and loaded, approved with loaded state unknown." },
+  // Exact-source crops of the two release cards' heads on three destination screens (homepage Status tile), 330 x 112.
+  "crop-cmp-approved-pending": { w: 330, h: 112, alt: "Approved release: cpu-2, generation 2." },
+  "crop-cmp-loaded-pending": { w: 330, h: 112, alt: "Reported loaded release: cpu-1, generation 1." },
+  "crop-cmp-approved-reloaded": { w: 330, h: 112, alt: "Approved release: cpu-2, generation 2." },
+  "crop-cmp-loaded-reloaded": { w: 330, h: 112, alt: "Reported loaded release: cpu-2, generation 2." },
+  "crop-cmp-approved-unavailable": { w: 330, h: 112, alt: "Approved release: cpu-2, generation 2." },
+  "crop-cmp-loaded-unavailable": { w: 330, h: 112, alt: "Reported loaded release: no loaded report is available." },
   // Exact-source crops of the four destination screens (conclusion and both release cards), each with a 954w version.
   "crop-dest-loaded": { w: 1908, h: 730, alt: "Vraelis Contour: cpu-1 is approved and cpu-1 is loaded; every identity field matches." },
   "crop-dest-pending": { w: 1908, h: 730, alt: "Vraelis Contour: cpu-2 is approved, cpu-1 is still loaded; model, release and receipt differ. Reload pending." },

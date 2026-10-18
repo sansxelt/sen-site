@@ -142,6 +142,19 @@ export function EvidenceDeck({ items, ms = 3400 }: { items: EvidenceItem[]; ms?:
   );
 }
 
+/** Crossfades between server-rendered slides, one at a time, for homepage tiles that would otherwise stand still
+ *  (founder, 2026-10-18: "none of them can be static"). Hidden slides are aria-hidden. Reduced motion holds the first. */
+export function Rotate({ slides, ms = 3600, className }: { slides: ReactNode[]; ms?: number; className?: string }) {
+  const [i, setI] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  useTicker(ref, ms, () => setI((n) => (n + 1) % slides.length));
+  return (
+    <div ref={ref} className={className ? `v8-rot ${className}` : "v8-rot"}>
+      {slides.map((s, k) => <div key={k} className="v8-rot__slide" data-on={k === i} aria-hidden={k !== i}>{s}</div>)}
+    </div>
+  );
+}
+
 /** The research tile: the four areas light in turn, each with its one line and its own photograph. */
 export function ResearchCycle({ items, ms = 2200 }: { items: { title: string; line: string; img?: string; alt?: string }[]; ms?: number }) {
   const [i, setI] = useState(0);

@@ -313,8 +313,17 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-tile--film { grid-column: span 4; min-height: 340px; }
 /* News tile: one post's photograph with its date and headline over it (editorial). Status tile: exact crops of the
    recorded comparison, approved cpu-2 then reported cpu-1, and the state in words, with a quiet context line. */
-.hm-news > img { object-position: 50% 30%; }
-.hm-news::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(8,8,9,.88) 100%); pointer-events: none; }
+/* Rotate (client.tsx): slides stacked in one cell, crossfading. */
+.v8-rot { display: grid; }
+.v8-rot__slide { grid-area: 1 / 1; opacity: 0; transition: opacity .6s var(--ease); }
+.v8-rot__slide[data-on="true"] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .v8-rot__slide { transition: none; } }
+.hm-news { position: absolute; inset: 0; }
+.hm-news .v8-rot__slide { position: relative; overflow: hidden; }
+.hm-news img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transition: transform .7s var(--ease); }
+.v8-tile:hover .hm-news img { transform: scale(1.03); }
+.hm-news .v8-rot__slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 22%, rgba(8,8,9,.6) 55%, rgba(8,8,9,.94) 100%); pointer-events: none; }
+.hm-cmp__rot .v8-rot__slide { display: grid; gap: 14px; align-content: start; }
 .hm-news__copy { position: absolute; z-index: 1; left: 22px; right: 22px; bottom: 44px; display: grid; gap: 6px; color: #F4F4F5; }
 .hm-news__copy time { font-size: 12.5px; color: rgba(244,244,245,.75); }
 .hm-news__copy p { margin: 0; font: 500 clamp(19px, 1.6vw, 23px)/1.22 var(--display); letter-spacing: -.012em; text-wrap: balance; }
