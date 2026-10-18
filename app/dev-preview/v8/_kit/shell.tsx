@@ -6,7 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { PrivacyChoicesButton } from "@/app/_components/privacy-choices-button";
 import { Brand, INTRO_SKIP, Mark, Wordmark, glideToTop } from "./logo";
 import { ThemeToggle } from "./theme";
-import { FOOTER, FOOTER_QUICK, MENUS, href, localHref, type Menu } from "./site";
+import { DRAWER_FEATURED, DRAWER_LINKS, FOOTER, FOOTER_QUICK, JOIN, MENUS, href, localHref, type Menu } from "./site";
 
 /** The docs draw their own header and footer (docs/layout.tsx), on this host as on docs.vraelis.com, so the site's
  *  step aside there. Decided from the path, so it also holds after a client-side navigation into or out of the docs. */
@@ -171,13 +171,36 @@ export function V8Header() {
           </details>
         ))}
         <Link href={href("/docs")} onClick={() => setDrawer(false)}>Docs</Link>
-        {/* x.ai's phone menu: the one button at the foot, the small links under it. */}
-        <div className="v8-drawer__ctas">
-          <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href("/contact")} onClick={() => setDrawer(false)}>Talk to us</Link>
-          <nav className="v8-drawer__links" aria-label="More">
-            {[["/contact", "Contact"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([to, label], i) => (
-              <span key={to}>{i ? <i aria-hidden="true">·</i> : null}<Link href={href(to)} onClick={() => setDrawer(false)}>{label}</Link></span>
+        {/* The drawer uses its whole height (founder, 2026-10-18): featured cards with their own pictures, then every
+            way in instead of a single button, then the small links. */}
+        <section className="v8-drawer__feature" aria-label="Featured">
+          <p className="v8-drawer__label">Featured</p>
+          <div className="v8-drawer__cards">
+            {DRAWER_FEATURED.map((f) => (
+              <Link key={f.to} href={href(f.to)} className="v8-drawer__card" onClick={() => setDrawer(false)}>
+                <span className="v8-drawer__pic" data-capture={"capture" in f || undefined}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.img} alt={f.alt} loading="lazy" decoding="async" />
+                </span>
+                <b>{f.label}</b>
+                <span>{f.line}</span>
+              </Link>
             ))}
+          </div>
+        </section>
+        <div className="v8-drawer__ctas">
+          <section aria-label="Talk to us">
+            <p className="v8-drawer__label">Talk to us</p>
+            <div className="v8-drawer__ways">
+              {JOIN.map((j) => (
+                <Link key={j.to} href={href(j.to)} onClick={() => setDrawer(false)}>
+                  <b>{j.label}</b><span>{j.hint}</span><span className="v8-arrow" aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
+          </section>
+          <nav className="v8-drawer__links" aria-label="More">
+            {DRAWER_LINKS.map((l) => <Link key={l.to} href={href(l.to)} onClick={() => setDrawer(false)}>{l.label}</Link>)}
           </nav>
         </div>
       </div>

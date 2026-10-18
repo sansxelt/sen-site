@@ -234,6 +234,17 @@ export const MENUS: Menu[] = [
   },
 ];
 
+/** The phone menu's featured cards (founder, 2026-10-18: the drawer should use its whole height, with more than one
+ *  button). Each has its own picture, none shown elsewhere on the site: a real Contour capture and two licensed
+ *  photographs from the editorial registry (credited on Image sources). */
+export const DRAWER_FEATURED = [
+  { label: "Vraelis Contour", line: "Model release security, from approval to reported runtime state.", to: "/contour", img: "/v8/contour/app-overview-1200.webp", alt: "The Vraelis Contour app overview screen.", capture: true },
+  { label: "Research", line: "Four areas of AI security.", to: "/research", img: "/site/photography/editorial-microscopeInspection.jpg", alt: "An engineer inspecting a circuit board under a microscope." },
+  { label: "Applications", line: "Defense, critical infrastructure and autonomous systems.", to: "/applications", img: "/site/photography/editorial-robotProduction.jpg", alt: "Industrial robot arms on a factory floor." },
+] as const;
+/** The phone menu's small links under the ways in. News lives on the changelog until the newsroom ships. */
+export const DRAWER_LINKS = [{ label: "News", to: "/changelog" }, { label: "Privacy", to: "/privacy" }, { label: "Terms", to: "/terms" }] as const;
+
 /** Plain links under the footer logo, no heading (founder, 2026-10-13: "no company unless Palantir has it"; Palantir
  *  lists "About Palantir" among plain quick links). */
 export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/news" }] as const;
