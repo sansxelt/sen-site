@@ -15,6 +15,18 @@
       "sha256": "430620749f32e627231ffe116233b8b003d0d3d17545ac6aa6bee50387e0b488"
     },
     {
+      "file": "editorial-robotAssembly-arm",
+      "id": "29320998",
+      "author": "Diego Martinez",
+      "source": "https://www.pexels.com/photo/advanced-robotic-arm-in-mexico-city-laboratory-29320998/",
+      "original": "https://images.pexels.com/photos/29320998/pexels-photo-29320998.jpeg",
+      "license": "https://www.pexels.com/license/",
+      "w": 2560,
+      "h": 1440,
+      "crop": "Retrieved 2026-10-17; original 6000x4000; crop x1320-5480 y760-3100 resized to 2560x1440; university name and laboratory sign outside the frame",
+      "sha256": "e2c69d114f2ce503e82657d6d534c2bbaea677679b7dd21221142a331eaa4108"
+    },
+    {
       "file": "editorial-instrumentControls",
       "id": "3862631",
       "author": "ThisIsEngineering",

@@ -90,7 +90,7 @@ export const STATUS = {
     "A read-only evidence app over the recorded trace",
   ],
   building: [
-    "A Kubernetes collector (proposed in specification v1.3)",
+    "Private collector prototype; host-checked",
     "Heartbeat freshness for runtime reports",
     "Live fault runs",
     "A latency study",
@@ -115,9 +115,9 @@ export const FACTS = {
 export const WORKFLOW = [
   { n: "01", title: "Identify the release", body: "Artifact integrity and configuration integrity: the model and its configuration are named by digest. Preprocessing identity is proposed.", kinds: [["impl", "Model and configuration digests"], ["prop", "Preprocessing identity"]] as [Kind, string][], shot: "crop-release-identity" },
   { n: "02", title: "Bind approval to the release and destination", body: "Release authorization with destination-bound approval: one exact release, one named environment, an age limit.", kinds: [["impl", "Signed bindings in the experiment"]] as [Kind, string][], shot: "crop-release-approval" },
-  { n: "03", title: "Integrate with a supported runtime", body: "The receiving runtime checks its runtime policy before it serves. Today that is ONNX Runtime 1.23.2 on CPU.", kinds: [["impl", "ONNX Runtime 1.23.2, CPU"], ["prop", "Customer runtime adapters"]] as [Kind, string][], shot: "app-policy" },
-  { n: "04", title: "Compare approved and reported", body: "Runtime identity beside the approved release, field by field, so a version mismatch is visible.", kinds: [["impl", "Evidence app"]] as [Kind, string][], shot: "crop-pair-pending" },
-  { n: "05", title: "Preserve discrepancies, missing evidence and recovery", body: "Deployment evidence and recovery verification: every observation kept, including the ones that confirm nothing.", kinds: [["impl", "Recorded observations"], ["prop", "Investigation workflow"]] as [Kind, string][], shot: "app-observations-unavailable" },
+  { n: "03", title: "Integrate with a supported runtime", body: "The receiving runtime checks its runtime policy before it serves. Today that is ONNX Runtime 1.23.2 on CPU.", kinds: [["impl", "ONNX Runtime 1.23.2, CPU"], ["prop", "Customer runtime adapters"]] as [Kind, string][], shot: "app-policy", narrow: ["crop-policy-requirements"] },
+  { n: "04", title: "Compare approved and reported", body: "Runtime identity beside the approved release, field by field, so a version mismatch is visible.", kinds: [["impl", "Evidence app"]] as [Kind, string][], shot: "crop-pair-pending", narrow: ["crop-approved-cpu2", "crop-loaded-cpu1"] },
+  { n: "05", title: "Preserve discrepancies, missing evidence and recovery", body: "Deployment evidence and recovery verification: every observation kept, including the ones that confirm nothing.", kinds: [["impl", "Recorded observations"], ["prop", "Investigation workflow"]] as [Kind, string][], shot: "app-observations-unavailable", narrow: ["crop-observations-list"] },
 ] as const;
 
 /** The four recorded observations, as the app shows them. Times are UTC from the trace. */
@@ -143,7 +143,8 @@ export const STATUS_SOURCES = {
   qaTests: { label: "Internal automated testing, runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on a separate pinned Docker build. Runtime policy enforcement checked." },
   qaRejection: { label: "Internal automated testing, October 10, 2026 (runtime rejection-diagnostics revision)", line: "133 of 133 at source revision contour-runtime-status-rejection-v1, run with networking disabled (NetworkMode none before and after, exit 0). The retained test log was checked against its SHA-256 (441d44b4…08c5)." },
   qaApp: { label: "Internal automated review of the evidence app", line: "Evidence app review: five findings, each addressed in the current version." },
-  spec: { label: "Specification v1.3", line: "Internal proposal, including the Kubernetes collector. Not applied, not frozen." },
+  spec: { label: "Specification v1.3", line: "Internal proposal that describes the Kubernetes collector. Not frozen." },
+  collector: { label: "Private engineering record, October 17, 2026", line: "Host checks of the private Kubernetes collector prototype. Live-cluster validation of the current revision has not been run. The record is not public." },
 } as const;
 
 /** Short names for the browser tab (founder, 2026-10-12: "ensure all tabs actually fit"). A tab shows about 24
@@ -187,7 +188,7 @@ export const APPLICATIONS = [
   { slug: "defense", title: "Defense", line: "AI in mission systems, where an unexpected model change can create security and operational risk.", photo: "communicationsDishes" },
   { slug: "critical-infrastructure", title: "Critical infrastructure", line: "AI in energy, water and communications, where releases cross operators.", photo: "substationNetwork", heroPhoto: "windOperations" },
   // Detail-page heroes use licensed setting photographs; overview crops keep their existing role.
-  { slug: "autonomous-systems", title: "Autonomous systems", line: "AI in robots and vehicles, where models ship to machines in the field.", photo: "robotMotion", heroPhoto: "robotAssembly" },
+  { slug: "autonomous-systems", title: "Autonomous systems", line: "AI in robots and vehicles, where models ship to machines in the field.", photo: "robotMotion", heroPhoto: "robotAssemblyArm" },
   { slug: "government", title: "Government and institutions", line: "Public bodies that need evidence a reviewer can read.", photo: "operationalCompute" },
   { slug: "integrators", title: "Suppliers and integrators", line: "The teams who ship model updates into systems they do not own.", photo: "integrationWorkshop" },
 ] as const;

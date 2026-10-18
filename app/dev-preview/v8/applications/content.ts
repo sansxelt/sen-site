@@ -26,8 +26,15 @@ export type AppPage = {
   /** The area's own line under each workflow step, or "" for none. */
   steps: [string, string, string, string, string];
   capture: CaptureName;
+  /** Real evidence in place of the hero photograph: a wide crop, and a legible crop of it for narrow viewports. */
+  heroCapture?: { wide: CaptureName; narrow: CaptureName };
   /** Sector-specific review questions, grounded in the recorded reference experiment. */
   review?: { title: string; lead: string; steps: Point[] };
+  /** A handoff between parties, shown directly under a text-only hero in place of the workflow steps. */
+  handoff?: { title: string; lead: string; steps: { title: string; body: string; term: string; text: string; shots: CaptureName[] }[] };
+  /** Phones only: legible exact crops of the evidence, plus the same values as text, in place of a capture whose
+   *  values are too small to read at that width. Desktop keeps `capture`. */
+  phone?: { shots: CaptureName[]; values: { term: string; text: string }[] };
   /** Defense only: Vraelis's position. */
   stance?: { title: string; lead?: string; cards: Point[] };
   notClaimed: string[];
@@ -53,6 +60,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval: test approval cannot carry into operations.", "", "", ""],
     capture: "crop-release-approval",
+    review: {
+      title: "An approval a reviewer can check against what runs.",
+      lead: "A proposed release-review workflow for defense programs, illustrated by the recorded synthetic ONNX experiment. It involves no defense system, network or authorization process.",
+      steps: [
+        { title: "Name where the update may run", body: "Approval for a test environment should not carry into operations. In the recorded experiment, the approval names one destination, non-actuating-lab / onnx-cpu, under one policy, cpu-lab version 1." },
+        { title: "Bound it in time and runtime", body: "The recorded approval carries a 60 second age limit and names the runtime it requires: ONNX Runtime 1.23.2 with CPUExecutionProvider." },
+        { title: "Compare what runs with the approval", body: "The runtime reports which release it loaded, and the record shows matched, reload pending or evidence unavailable. Each report is the worker's own, not hardware attestation." },
+      ],
+    },
     stance: {
       title: "The builder should not be the only judge.",
       cards: [
@@ -87,6 +103,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     ],
     steps: ["", "Destination-bound approval: one site's approval does not cover another.", "", "", "Deployment evidence kept for the operator's change process."],
     capture: "crop-loaded-unavailable",
+    // Observation 04 of the recorded run, read from app-destination-unavailable.
+    phone: {
+      shots: ["crop-approved-cpu2-head", "crop-loaded-unavailable-head"],
+      values: [
+        { term: "Approved", text: "cpu-2, generation 2" },
+        { term: "Reported loaded", text: "no report" },
+        { term: "Reason code", text: "RUNTIME_UNAVAILABLE" },
+      ],
+    },
     review: {
       title: "A site needs its own release record.",
       lead: "A proposed operator workflow, illustrated by the recorded synthetic ONNX experiment. Control-system integration and customer deployments are not implemented.",
@@ -121,6 +146,15 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     hypothesis: "Robotics is one segment we study. Release and platform engineers at robotics suppliers and integrators meet this problem early.",
     steps: ["", "Destination-bound approval: one machine's approval does not cover another.", "", "A version mismatch shows as reload pending, not assumed.", ""],
     capture: "crop-pair-pending",
+    // Observation 02 of the recorded run, read from app-destination-pending.
+    phone: {
+      shots: ["crop-approved-cpu2-head", "crop-loaded-cpu1-head"],
+      values: [
+        { term: "Approved", text: "cpu-2, generation 2" },
+        { term: "Reported loaded", text: "cpu-1, generation 1, a worker self-report" },
+        { term: "State", text: "reload pending" },
+      ],
+    },
     review: {
       title: "The update arrived. Did the runtime load it?",
       lead: "A release-review scenario for machines in the field, illustrated by a synthetic ONNX CPU run. It is not a robot integration or evidence of physical safety.",
@@ -153,7 +187,17 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
       { title: "Readable by someone outside engineering", body: "Including what could not be confirmed." },
     ],
     steps: ["", "Destination-bound approval covers that system and no more.", "", "Version mismatch shown as reload pending, in a view a reviewer can follow.", ""],
-    capture: "crop-pair-pending",
+    capture: "crop-observations-list",
+    heroCapture: { wide: "crop-unavailable-panel", narrow: "crop-unavailable-fields" },
+    review: {
+      title: "What a reviewer can confirm, and what they cannot.",
+      lead: "A proposed review workflow for a public body, illustrated by the recorded synthetic ONNX experiment. No agency review, procurement or authorization process is implemented.",
+      steps: [
+        { title: "Start from the approval on record", body: "A supplier's release notes describe a model; a reviewer needs what was approved, and for which system. In the experiment, approval binds release cpu-2 to one destination, and its identity comes from a local release store whose signatures the experiment checks." },
+        { title: "Read the observations in order", body: "The recorded run keeps four observations with their times: matched, reload pending, matched, then evidence unavailable. A later observation does not replace an earlier one, so the record shows how the state changed." },
+        { title: "Treat \"unconfirmed\" as a finding", body: "When the worker stopped reporting, the record says evidence unavailable, with reason code RUNTIME_UNAVAILABLE, instead of assuming the approved release is still loaded. Each report is the worker's own, not independent attestation." },
+      ],
+    },
     notClaimed: [
       "No government deployments, contracts or customers.",
       "No procurement status, and no authorization to operate.",
@@ -184,6 +228,17 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     hypothesis: "These teams meet this problem first. We are testing it.",
     steps: ["", "Release authorization may need two approvals: the supplier's and the operator's.", "", "", "Both sides start from the same deployment evidence."],
     capture: "app-release-cpu2",
+    // Founder, 2026-10-17: option A, no workshop photo, and the third step is a review either side can do, not a
+    // third party. Every image is an exact crop of one recorded run.
+    handoff: {
+      title: "Who decides what, and what each side can check.",
+      lead: "Illustrated by the recorded experiment, where these roles ran in one controlled setup. Vraelis Contour does not connect two organizations or enforce this handoff today.",
+      steps: [
+        { title: "Supplier approval", body: "In this recorded run, the supplier approves cpu-2 for non-actuating-lab / onnx-cpu.", term: "Supplier decides", text: "which release, and where it may run.", shots: ["crop-approved-cpu2-head", "crop-approval-destination"] },
+        { title: "Operator observation", body: "The operator's worker reports which release it loaded. The report is a worker self-report.", term: "Operator decides", text: "whether and when to reload.", shots: ["crop-loaded-cpu1-head"] },
+        { title: "Review", body: "Either side compares approved cpu-2 with reported loaded cpu-1. The review changes neither system.", term: "Here", text: "the records differ, so the comparison stays at reload pending.", shots: ["crop-conclusion-pending-head"] },
+      ],
+    },
     notClaimed: [
       "No customers or deployments, and no partner endorsement of Vraelis Contour.",
       "No pricing or general availability. Not for public use.",

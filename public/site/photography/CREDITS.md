@@ -72,6 +72,7 @@ Pexels license: https://www.pexels.com/license/ . Downloaded locally at 1280 px 
 | File | Photographer | Original photo | Local dimensions |
 |---|---|---|---|
 | editorial-robotAssembly.jpg | Diego Martinez | [29320998](https://www.pexels.com/photo/advanced-robotic-arm-in-mexico-city-laboratory-29320998/) | 1280 × 853 |
+| editorial-robotAssembly-arm.jpg | Diego Martinez | [29320998](https://www.pexels.com/photo/advanced-robotic-arm-in-mexico-city-laboratory-29320998/) | 2560 × 1440 (October 17, 2026: crop of the 6000 × 4000 original, x 1320–5480, y 760–3100, so the university name and laboratory sign are outside the frame; used by the Autonomous systems page hero) |
 | editorial-instrumentControls.jpg | ThisIsEngineering | [3862631](https://www.pexels.com/photo/female-engineer-with-equipment-3862631/) | 1280 × 854 |
 | editorial-developerDesk.jpg | ThisIsEngineering | [3861972](https://www.pexels.com/photo/female-software-engineer-coding-on-computer-3861972/) | 1280 × 854 |
 | editorial-networkLinks.jpg | Brett Sayles | [2881233](https://www.pexels.com/photo/close-up-photo-of-cables-plugged-into-the-server-2881233/) | 1280 × 852 |

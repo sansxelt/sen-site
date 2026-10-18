@@ -197,6 +197,7 @@ export function DocsHeader({ nav, slugTab }: { nav: NavTab[]; slugTab: Record<st
   const { pathname, tab } = useDocsPlace(slugTab);
   const [sheet, setSheet] = useState(false);
   const bar = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const home = main ? main + localHref("/") : localHref("/");
   const current = nav.find((t) => t.id === tab) ?? nav[0];
 
@@ -210,12 +211,13 @@ export function DocsHeader({ nav, slugTab }: { nav: NavTab[]; slugTab: Record<st
     on(); window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
-  // The open sheet holds the page still and closes on Escape or when the screen grows past it.
+  // The open sheet holds the page still and closes on Escape (focus back to the menu button, as the dropdowns do, rather
+  // than to the page body once the focused link inside the sheet is hidden) or when the screen grows past it.
   useEffect(() => {
     if (!sheet) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSheet(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setSheet(false); menuButton.current?.focus(); } };
     const mq = matchMedia("(min-width: 901px)");
     const onWide = () => { if (mq.matches) setSheet(false); };
     document.addEventListener("keydown", onKey);
@@ -240,7 +242,7 @@ export function DocsHeader({ nav, slugTab }: { nav: NavTab[]; slugTab: Record<st
             <SearchPill />
             <AskButton />
             <span className="v8-dhd__joinwrap"><JoinMenu /></span>
-            <button type="button" className="v8-dhd__menu" aria-label={sheet ? "Close the docs menu" : "Open the docs menu"} aria-expanded={sheet} aria-controls="v8-dhd-sheet"
+            <button ref={menuButton} type="button" className="v8-dhd__menu" aria-label={sheet ? "Close the docs menu" : "Open the docs menu"} aria-expanded={sheet} aria-controls="v8-dhd-sheet"
               onClick={() => setSheet((s) => !s)}><MenuIcon open={sheet} /></button>
           </div>
         </div>
