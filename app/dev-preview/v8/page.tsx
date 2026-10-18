@@ -291,10 +291,16 @@ export default function Home() {
               </div>
               <div className="v8-box">
                 <h3 className="v8-h3" style={{ fontSize: 24 }}>Research collaboration</h3>
+                {/* What working together involves, not the four area names again: the hero line and the Research
+                    tile already list them (founder, 2026-10-17: "dont have two of the same"). */}
                 <ul className="v8-checks">
-                  {RESEARCH.map((r) => <li key={r.slug}>{r.title}</li>)}
+                  <li>Pick up an open question from a research area</li>
+                  <li>Compare findings with existing tools</li>
+                  <li>Review what the evidence shows and does not show</li>
                 </ul>
-                <Button to="/contact?topic=research" kind="ghost">Contact research</Button>
+                {/* One contact action per section (founder, 2026-10-17: "shouldnt be 2 contacts for the same place"):
+                    Join us goes to the contact page, where research is one of the topics; this card leads to the research. */}
+                <Button to="/research" kind="ghost">Explore research</Button>
               </div>
             </div>
           </div>
