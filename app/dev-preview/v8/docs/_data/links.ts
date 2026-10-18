@@ -1,4 +1,5 @@
 import { href, localHref } from "../../_kit/site";
+import { siteForward } from "./forwards";
 
 // DOCS LINKS ON TWO HOSTS. The docs render at /dev-preview/v8/docs on the main host and at the root of
 // docs.vraelis.com (lib/docs-host.ts). Every link a docs page draws goes through docsLink(), given `main`: the main
@@ -11,6 +12,9 @@ import { href, localHref } from "../../_kit/site";
 
 export function docsLink(to: string, main: string | null): string {
   if (!to.startsWith("/")) return to;
+  // A docs page that now lives on the site: link to the site page itself, not through the redirect.
+  const fwd = siteForward(to);
+  if (fwd) return docsLink(fwd + (to.match(/[?#].*$/)?.[0] ?? ""), main);
   if (!main) return href(to);
   const cut = to.search(/[?#]/);
   const path = cut < 0 ? to : to.slice(0, cut);

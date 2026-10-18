@@ -4,6 +4,7 @@ import { OBSERVATION_PAGES, VRAELIS_MORE } from "./more";
 import { HELPFUL } from "./helpful";
 import { RESEARCH_PAGES } from "./research";
 import { PRODUCTS_OVERVIEW, VRAELIS_PAGES } from "./vraelis";
+import { SITE_FORWARDS } from "./forwards";
 import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from "./types";
 
 // THE ONE LIST OF DOCS PAGES. The sidebar, the header tabs, the search index, the pager, "On this page", the
@@ -14,9 +15,9 @@ import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from
 // the one product, under its own heading), then Research, then the earlier references.
 
 export const TABS: Tab[] = [
-  { id: "vraelis", label: "Vraelis", to: "/docs", line: "What Vraelis is, how to read these docs, development status, release notes and a glossary." },
+  { id: "vraelis", label: "Vraelis", to: "/docs", line: "What Vraelis is, how to read these docs, key concepts, a glossary and answers to common questions." },
   { id: "products", label: "Products", to: "/docs/products", line: "Vraelis Contour, the one product direction: how it works today, what the experiment records, and where it stops." },
-  { id: "research", label: "Research", to: "/docs/research", line: "The four research areas and the guides on model releases, operating constraints and AI security evaluation." },
+  { id: "research", label: "Research", to: "/docs/research", line: "The guides on model releases, operating constraints and AI security evaluation." },
   { id: "earlier", label: "Earlier references", to: "/docs/getting-started", line: "The earlier browser-testing product, kept as history. Not current." },
 ];
 
@@ -32,7 +33,8 @@ const VRAELIS_ORDERED: Page[] = [
 ];
 const scopeAt = CONTOUR_PAGES.findIndex((p) => p.group === "Scope");
 const CONTOUR_ORDERED: Page[] = [...CONTOUR_PAGES.slice(0, scopeAt), ...OBSERVATION_PAGES, HELPFUL.architecture, ...HELPFUL.guides, ...HELPFUL.reference, ...CONTOUR_PAGES.slice(scopeAt)];
-export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES, ...EARLIER_PAGES];
+export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES, ...EARLIER_PAGES]
+  .filter((p) => !(p.slug in SITE_FORWARDS));
 
 /** Slugs that moved. They redirect permanently (308) to the page that now holds their content.
  *  overview: the Vraelis Contour overview moved to /contour when the docs became Vraelis-first (2026-10-10).
@@ -68,7 +70,7 @@ export function tabGroups(id: TabId) {
    exactly once, and the build fails if one is missing or repeated. */
 type TreeItem = string | { label: string; slugs: string[] };
 const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
-  { title: "Get started", items: ["@home", "introduction", "key-concepts", "reading-the-docs", "who-its-for", "company-and-brands"] },
+  { title: "Get started", items: ["@home", "introduction", "key-concepts", "reading-the-docs", "who-its-for"] },
   { title: "Products", items: [
     "products", "contour", "architecture",
     { label: "Guides", slugs: ["walkthrough", "review-an-observation", "evaluate-contour"] },
@@ -78,26 +80,22 @@ const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
     { label: "Reference", slugs: ["observation-record", "states-and-codes"] },
     "limits",
   ] },
-  { title: "Research", items: [
-    "research",
-    { label: "Research areas", slugs: ["model-integrity", "adversarial-threats", "machine-trust", "security-evidence"] },
-    { label: "Guides", slugs: ["model-release-security", "operating-constraints", "ai-security-evaluation"] },
-  ] },
-  { title: "Applications", items: [
-    "application-areas",
-    { label: "Areas", slugs: ["defense", "critical-infrastructure", "autonomous-systems", "government", "integrators"] },
-  ] },
-  { title: "Trust", items: ["security-and-disclosure", "privacy-and-data", "where-vraelis-is-offered", "partner-scope"] },
-  { title: "Status and updates", items: ["status", "sources", "release-notes", "@changelog"] },
+  { title: "Research", items: ["research", { label: "Guides", slugs: ["model-release-security", "operating-constraints", "ai-security-evaluation"] }] },
   { title: "Reference", items: ["glossary", "faq"] },
+  // The pages these docs used to repeat, linked where they live (forwards.ts). "@site:<path>|<label>" is a site page.
+  { title: "On vraelis.com", items: [
+    "@site:/applications|Applications", "@site:/research|Research areas", "@site:/contour/status|Development status", "@changelog",
+    "@site:/company|About", "@site:/partners|Partnerships", "@site:/security|Security and disclosure", "@site:/privacy|Privacy",
+  ] },
 ];
 /** Shorter labels in the tree where the page's own label repeats its topic. */
-const TREE_LABEL: Record<string, string> = { products: "Overview", contour: "Vraelis Contour", research: "Overview", "application-areas": "Overview" };
+const TREE_LABEL: Record<string, string> = { products: "Overview", contour: "Vraelis Contour", research: "Overview" };
 
 function leaf(slug: string): NavLeaf {
   if (slug === "@home") return { to: HOME.to, label: HOME.label };
   // The site's changelog, listed with the docs' status pages (founder, 2026-10-13); its URL stays vraelis.com/changelog.
   if (slug === "@changelog") return { to: "/changelog", label: "Changelog" };
+  if (slug.startsWith("@site:")) { const [to, label] = slug.slice(6).split("|"); return { to, label }; }
   const p = getPage(slug);
   if (!p) throw new Error(`docs sidebar: no page "${slug}"`);
   return { to: `/docs/${p.slug}`, label: TREE_LABEL[slug] ?? navLabel(p), badge: p.badge };

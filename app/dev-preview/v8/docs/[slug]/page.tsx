@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { v8meta } from "../../_kit/meta";
 import { DOCS_ORIGIN, SITE_ORIGIN } from "@/lib/docs-host";
 import { ALIASES, PAGES, getPage, navLabel } from "../_data/pages";
+import { SITE_FORWARDS } from "../_data/forwards";
 import { dl, loadDocsHost } from "../_data/host";
 import { Article } from "../_ui/article";
 import { robotsMeta } from "@/lib/stealth";
@@ -12,7 +13,7 @@ import { docsTabTitle } from "../../_kit/docs-tab-titles";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return [...PAGES.map((p) => ({ slug: p.slug })), ...Object.keys(ALIASES).map((slug) => ({ slug }))];
+  return [...PAGES.map((p) => ({ slug: p.slug })), ...Object.keys(ALIASES).map((slug) => ({ slug })), ...Object.keys(SITE_FORWARDS).map((slug) => ({ slug }))];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -29,6 +30,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const { slug } = await params;
   await loadDocsHost();
   if (ALIASES[slug]) permanentRedirect(dl(`/docs/${ALIASES[slug]}`));
+  // A page that repeated the site now forwards to it (on docs.vraelis.com, to vraelis.com).
+  if (SITE_FORWARDS[slug]) permanentRedirect(dl(SITE_FORWARDS[slug]));
   const page = getPage(slug);
   if (!page) notFound();
   const url = `${DOCS_ORIGIN}/${page.slug}`;

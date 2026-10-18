@@ -62,15 +62,11 @@ function areaPage(slug: ResearchSlug): Page {
 const OVERVIEW: Page = {
   tab: "research", group: "Research", slug: "research",
   title: "Research", nav: "Overview",
-  description: `${WORK_LINE} Four research workstreams, not products, and how they connect to ${CONTOUR.name}.`,
+  description: `${WORK_LINE} The research guides, and where the four research areas are described.`,
   lead: `${WORK_LINE} These are workstreams, not products.`,
   updated: UPDATED,
   blocks: [
-    { t: "h2", text: "Four research areas" },
-    { t: "table", label: "The four research areas", head: ["Area", "What it studies", `With ${CONTOUR.name}`], rows: RESEARCH.map((r) => [
-      `[${r.title}](/docs/${r.slug})`, r.line, `${CONNECTS[r.slug].rel}. ${CONNECTS[r.slug].text}.`,
-    ]) },
-    { t: "p", text: `${CONTOUR.name} is the first product direction, and it draws on model integrity and security evidence directly. The research areas are not products and have no product claims of their own.` },
+    { t: "p", text: `The four research areas, model integrity, adversarial threats, machine trust and security evidence, are on vraelis.com, with how each connects to ${CONTOUR.name}. [Research on vraelis.com](/research)` },
     { t: "h2", text: "Guides" },
     { t: "p", text: "Three guides describe how we think about model releases, operating constraints and AI security evaluation. They are research guidance, not product capability." },
     { t: "cards", items: [
