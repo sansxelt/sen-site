@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { AutoVideo, CodeTabs, EvidenceDeck, ResearchCycle, RiseWords, TypeLoop, type EvidenceItem } from "./_kit/client";
+import { AutoVideo, CodeTabs, ResearchCycle, RiseWords, TextCycle, TypeLoop } from "./_kit/client";
 import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
-import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
+import { Button, Ledger, Section, TextLink, Wrap } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
-import { CONTOUR, FACTS, HERO_KEYWORDS, OBSERVATIONS, OBSERVATION_TIMES, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
+import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, STATUS, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { NEWS, formatDay } from "./_content/news";
 import { PARTNERS, showsLogo } from "./_content/partners";
@@ -23,26 +23,15 @@ export const metadata = {
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
-/** The Recorded evidence tile: all four recorded observations of the captured run. Each shows an exact-source crop of
- *  its own destination screen above a timeline of the real times and states (OBSERVATIONS, OBSERVATION_TIMES). None of
- *  these screens is used by the Research tile, so the two stay separate (founder, 2026-10-17). */
-const EVIDENCE_DECK: EvidenceItem[] = OBSERVATIONS.map((o) => {
-  const shot = o.shot.replace("app-destination-", "crop-dest-") as CaptureName;
-  const c = CAPTURES[shot];
-  const src = captureSrc(shot);
-  return {
-    n: o.n, time: OBSERVATION_TIMES[o.n].time, title: o.title, state: o.state,
-    img: { src, srcSet: `${src.replace(".webp", "-954.webp")} 954w, ${src} 1908w`, alt: c.alt, w: c.w, h: c.h },
-  };
-});
-
-/** The research tile: each area beside a real capture of the evidence it is about (x.ai shows its product, not stock photos). */
-const RESEARCH_SHOT: Record<string, CaptureName> = {
-  "model-integrity": "crop-release-identity",
-  "adversarial-threats": "crop-where-cpu2",
-  "machine-trust": "crop-release-approval",
-  "security-evidence": "crop-source-json",
-};
+/** The bento's two text tiles (founder, 2026-10-17: five tiles, after x.ai). News: the newest entries, as published.
+ *  Status: where the work stands, one line from each part of the status list. */
+const NEWS_TILE = NEWS.slice(0, 3).map((n) => ({ meta: [n.kind, formatDay(n.date)], title: n.title }));
+const STATUS_TILE = [
+  { meta: ["Working"], title: STATUS.working[0] },
+  { meta: ["Working"], title: STATUS.working[2] },
+  { meta: ["Planned next"], title: STATUS.building[0] },
+  { meta: ["Not claimed"], title: STATUS.notClaimed[0] },
+];
 
 /** The docs tile's queries, each with its best real section from the docs search index: a title match first, then
  *  the section that uses the phrase most. A few are typed with a slip, as people do; those show the section for what
@@ -136,29 +125,31 @@ export default function Home() {
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
           <div className="v8-bento">
-            {/* The Contour video tile was removed (founder, 2026-10-17); the two remaining tiles of this row are wide. */}
-            <Link href={href("/contour#observations")} className="v8-tile v8-tile--wide">
-              <div className="v8-tile__media hm-ev-media">
-                <EvidenceDeck items={EVIDENCE_DECK} />
-              </div>
-              <div className="v8-tile__foot"><span>Recorded evidence</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
-            </Link>
-            <Link href={href("/applications/autonomous-systems")} className="v8-tile v8-tile--wide">
+            {/* Five tiles after x.ai (founder, 2026-10-17): the systems montage large, news beside it, then three. */}
+            <Link href={href("/applications")} className="v8-tile v8-tile--film">
               <div className="v8-tile__media">
                 <AutoVideo src="/home/systems-film-civil.mp4" poster="/home/systems-poster-civil.jpg" label="Editorial footage of the systems where AI is deployed: factory robots, a power substation, a drone, a solar farm and software." />
               </div>
               <div className="v8-tile__foot"><span>Applications</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
-            <Link href={href("/research")} className="v8-tile v8-tile--wide">
-              <ResearchCycle items={RESEARCH.map((r) => ({ title: r.title, line: r.line, img: captureSrc(RESEARCH_SHOT[r.slug]), alt: CAPTURES[RESEARCH_SHOT[r.slug]].alt }))} />
+            <Link href={href("/changelog")} className="v8-tile">
+              <TextCycle items={NEWS_TILE} />
+              <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>News</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
+            </Link>
+            <Link href={href("/research")} className="v8-tile">
+              <ResearchCycle items={RESEARCH.map((r) => ({ title: r.title, line: r.line }))} />
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Research</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
-            <Link href={href("/docs")} className="v8-tile v8-tile--wide">
+            <Link href={href("/docs")} className="v8-tile">
               <div style={{ padding: "26px 22px 0", display: "grid", gap: 10 }}>
                 <p className="v8-h3" style={{ color: "var(--ink)" }}>Every check, explained.</p>
               </div>
               <TypeLoop idle="Search the documentation" queries={DOCS_QUERIES} />
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Documentation</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
+            </Link>
+            <Link href={href("/contour/status")} className="v8-tile">
+              <TextCycle items={STATUS_TILE} ms={3000} />
+              <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Status</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
           </div>
         </Wrap>
