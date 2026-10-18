@@ -550,7 +550,7 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-footer li button:hover { color: var(--ink); }
 
 /* The homepage arrives in layers: hero, then the whole bento together (founder: one section loads as one). Visible at rest without script; off under reduced motion like every animation here. */
-.v8-hero + section .v8-bento > .v8-tile { animation: v8-tile-in .6s var(--ease) both; animation-delay: .4s; }
+/* Hero and cards now use RevealOnRoute together; no independent early card entrance. */
 @keyframes v8-tile-in { from { opacity: 0; transform: translateY(28px) scale(.985); } to { opacity: 1; transform: none; } }
 
 /* Controls are not text: no selection highlight when they are clicked or dragged across. */
@@ -608,3 +608,10 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
   .v8-btn::before, .v8-split > a::before, .v8-split > button::before,
   .v8 .v8-dhd__join::before, .v8 .v8-dhd__joinmore::before, .v8 .v8-docs-askbtn::before { transition: none; }
 }
+
+
+/* A managed block has one entrance; nested hero word/fade effects must not race it. */
+.v8 [data-v8-entrance]:not(.v8-rv--in),
+.v8 [data-v8-entrance] .v8-fade,
+.v8 [data-v8-entrance] .v8-rise > span { animation: none; }
+ .v8 [data-v8-entrance].v8-rv--in { animation: v8-rv .8s var(--ease) var(--rv-d, 0ms) both; }
