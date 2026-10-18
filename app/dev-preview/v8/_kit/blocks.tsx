@@ -37,6 +37,11 @@ export const CAPTURES = {
   "crop-observations-list": { w: 467, h: 561, alt: "The four recorded observations in order, 07:41:29.606 to 07:41:29.723 UTC: Matched, Reload pending, Matched, Evidence unavailable." },
   "crop-observation-unavailable": { w: 1046, h: 429, alt: "Observation 04: cpu-2 approved, no loaded report, no session, reason code RUNTIME_UNAVAILABLE." },
   "crop-where-cpu2": { w: 1879, h: 549, alt: "Where cpu-2 appears: not involved, approved not loaded, approved and loaded, approved with loaded state unknown." },
+  // Exact-source crops of the four destination screens (conclusion and both release cards), each with a 954w version.
+  "crop-dest-loaded": { w: 1908, h: 730, alt: "Vraelis Contour: cpu-1 is approved and cpu-1 is loaded; every identity field matches." },
+  "crop-dest-pending": { w: 1908, h: 730, alt: "Vraelis Contour: cpu-2 is approved, cpu-1 is still loaded; model, release and receipt differ. Reload pending." },
+  "crop-dest-reloaded": { w: 1908, h: 730, alt: "Vraelis Contour after an explicit reload: cpu-2 is approved and cpu-2 is loaded; every field matches." },
+  "crop-dest-unavailable": { w: 1908, h: 730, alt: "Vraelis Contour: cpu-2 is approved; nothing reports what is loaded. Evidence unavailable." },
 } as const;
 export type CaptureName = keyof typeof CAPTURES;
 /** Path for a capture. Full screens have a 2400 master and a 1200 version. */

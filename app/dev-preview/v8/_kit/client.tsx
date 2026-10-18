@@ -111,36 +111,33 @@ export function CaptureCycle({ images, ms = 1900 }: { images: { src: string; alt
   );
 }
 
-/** The Recorded evidence tile (founder, 2026-10-17: "add more recorded evidence", kept apart from research): the four
- *  recorded observations as a rail of their real values, beside each one's own recorded app screen. One lights at a
- *  time in its state colour, with a progress line and a sheen over the screen as it changes. Reduced motion holds the
- *  first observation still. Nothing here is a control; the whole tile links to the observations. */
-export type EvidenceItem = { n: string; time: string; title: string; state: string; tone: "go" | "wait" | "stop"; line: string; img: { src: string; srcSet?: string; alt: string; w: number; h: number } };
+/** The Recorded evidence tile (founder, 2026-10-17: "add more recorded evidence", kept apart from research): each of
+ *  the four recorded observations as an exact crop of its own destination screen, over a timeline of their real times
+ *  and states. One lights at a time in its state colour, with a progress line and a sheen as the screen changes.
+ *  Reduced motion holds the first observation still. Nothing here is a control; the whole tile links to the observations. */
+export type EvidenceItem = { n: string; time: string; title: string; state: string; tone: "go" | "wait" | "stop"; img: { src: string; srcSet?: string; alt: string; w: number; h: number } };
 export function EvidenceDeck({ items, ms = 3400 }: { items: EvidenceItem[]; ms?: number }) {
   const [i, setI] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   useTicker(ref, ms, () => setI((n) => (n + 1) % items.length));
-  const on = items[i];
   return (
-    <div ref={ref} className="v8-ev" data-tone={on.tone} style={{ ["--ev-ms" as string]: `${ms}ms` }}>
-      <ol className="v8-ev__rail">
-        {items.map((it, k) => (
-          <li key={it.n} data-on={k === i} data-tone={it.tone}>
-            <span className="v8-ev__time">{it.n} · {it.time} UTC</span>
-            <span className="v8-ev__title">{it.title}</span>
-            <span className="v8-ev__state">{it.state}</span>
-            {k === i ? <span key={`bar-${i}`} className="v8-ev__bar" aria-hidden="true" /> : null}
-          </li>
-        ))}
-      </ol>
+    <div ref={ref} className="v8-ev" data-tone={items[i].tone} style={{ ["--ev-ms" as string]: `${ms}ms` }}>
       <div className="v8-ev__screen">
         {items.map((it, k) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={it.img.src} src={it.img.src} srcSet={it.img.srcSet} sizes="(max-width: 720px) 220vw, 930px" alt={k === i ? it.img.alt : ""} aria-hidden={k !== i} data-on={k === i} width={it.img.w} height={it.img.h} loading="lazy" decoding="async" />
+          <img key={it.img.src} src={it.img.src} srcSet={it.img.srcSet} sizes="(max-width: 720px) 170vw, 640px" alt={k === i ? it.img.alt : ""} aria-hidden={k !== i} data-on={k === i} width={it.img.w} height={it.img.h} loading="lazy" decoding="async" />
         ))}
         <span key={`sheen-${i}`} className="v8-ev__sheen" aria-hidden="true" />
       </div>
-      <p className="v8-ev__line">{on.line}</p>
+      <ol className="v8-ev__line">
+        {items.map((it, k) => (
+          <li key={it.n} data-on={k === i} data-tone={it.tone} aria-current={k === i ? "step" : undefined}>
+            {k === i ? <span key={`bar-${i}`} className="v8-ev__bar" aria-hidden="true" /> : <span className="v8-ev__track" aria-hidden="true" />}
+            <span className="v8-ev__time">{it.n} · {it.time}</span>
+            <span className="v8-ev__state"><span className="v8-sr">{it.title}: </span>{it.state}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

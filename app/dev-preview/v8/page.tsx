@@ -23,14 +23,16 @@ export const metadata = {
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
-/** The Recorded evidence tile: all four recorded observations of the captured run, each with its real time, state and
- *  line (OBSERVATIONS, OBSERVATION_TIMES) beside its own recorded app screen. None of these screens is used by the
- *  Research tile, so the two stay separate (founder, 2026-10-17). */
+/** The Recorded evidence tile: all four recorded observations of the captured run. Each shows an exact-source crop of
+ *  its own destination screen above a timeline of the real times and states (OBSERVATIONS, OBSERVATION_TIMES). None of
+ *  these screens is used by the Research tile, so the two stay separate (founder, 2026-10-17). */
 const EVIDENCE_DECK: EvidenceItem[] = OBSERVATIONS.map((o) => {
-  const c = CAPTURES[o.shot];
+  const shot = o.shot.replace("app-destination-", "crop-dest-") as CaptureName;
+  const c = CAPTURES[shot];
+  const src = captureSrc(shot);
   return {
-    n: o.n, time: OBSERVATION_TIMES[o.n].time, title: o.title, state: o.state, tone: o.tone, line: o.line,
-    img: { src: captureSrc(o.shot, true), srcSet: `${captureSrc(o.shot, true)} 1200w, ${captureSrc(o.shot)} 2400w`, alt: c.alt, w: c.w, h: c.h },
+    n: o.n, time: OBSERVATION_TIMES[o.n].time, title: o.title, state: o.state, tone: o.tone,
+    img: { src, srcSet: `${src.replace(".webp", "-954.webp")} 954w, ${src} 1908w`, alt: c.alt, w: c.w, h: c.h },
   };
 });
 
