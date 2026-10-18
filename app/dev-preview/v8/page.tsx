@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { AutoVideo, CaptureCycle, CodeTabs, ResearchCycle, RiseWords, TypeLoop } from "./_kit/client";
+import { AutoVideo, CodeTabs, EvidenceDeck, ResearchCycle, RiseWords, TypeLoop, type EvidenceItem } from "./_kit/client";
 import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
 import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
-import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
+import { CONTOUR, FACTS, HERO_KEYWORDS, OBSERVATIONS, OBSERVATION_TIMES, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { NEWS, formatDay } from "./_content/news";
 import { PARTNERS, showsLogo } from "./_content/partners";
@@ -23,16 +23,16 @@ export const metadata = {
 
 // The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
-/** The Recorded evidence tile: how the evidence is kept, one job per capture (website handoff 2026-10-12, item 2).
- *  The approved-versus-loaded comparison lives on /contour; the homepage's Contour video tile was removed. Each capture
- *  carries one sentence with its values, read from the captured run (item 3). */
-const EVIDENCE_TILE = ([
-  ["crop-observations-list", "Every observation kept in order, 07:41:29.606 to 07:41:29.723 UTC.", "contain"],
-  ["crop-observation-unavailable", "Observation 04: the worker stopped. cpu-2 stays approved; reason code RUNTIME_UNAVAILABLE.", undefined],
-  ["crop-pair-reloaded", "Observation 03: after an explicit reload, cpu-2 is loaded and every field matches.", undefined],
-] as const).map(([n, caption, fit]) => ({
-  src: captureSrc(n), alt: CAPTURES[n].alt, w: CAPTURES[n].w, h: CAPTURES[n].h, caption, fit,
-}));
+/** The Recorded evidence tile: all four recorded observations of the captured run, each with its real time, state and
+ *  line (OBSERVATIONS, OBSERVATION_TIMES) beside its own recorded app screen. None of these screens is used by the
+ *  Research tile, so the two stay separate (founder, 2026-10-17). */
+const EVIDENCE_DECK: EvidenceItem[] = OBSERVATIONS.map((o) => {
+  const c = CAPTURES[o.shot];
+  return {
+    n: o.n, time: OBSERVATION_TIMES[o.n].time, title: o.title, state: o.state, tone: o.tone, line: o.line,
+    img: { src: captureSrc(o.shot, true), srcSet: `${captureSrc(o.shot, true)} 1200w, ${captureSrc(o.shot)} 2400w`, alt: c.alt, w: c.w, h: c.h },
+  };
+});
 
 /** The research tile: each area beside a real capture of the evidence it is about (x.ai shows its product, not stock photos). */
 const RESEARCH_SHOT: Record<string, CaptureName> = {
@@ -136,10 +136,8 @@ export default function Home() {
           <div className="v8-bento">
             {/* The Contour video tile was removed (founder, 2026-10-17); the two remaining tiles of this row are wide. */}
             <Link href={href("/contour#observations")} className="v8-tile v8-tile--wide">
-              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(90,180,255,.12), transparent 70%), #0C0C0E" }}>
-                <div className="v8-tile__inset">
-                  <CaptureCycle images={EVIDENCE_TILE} ms={4200} />
-                </div>
+              <div className="v8-tile__media hm-ev-media">
+                <EvidenceDeck items={EVIDENCE_DECK} />
               </div>
               <div className="v8-tile__foot"><span>Recorded evidence</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
