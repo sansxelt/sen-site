@@ -5,7 +5,7 @@ import { SITE_ORIGIN } from "@/lib/docs-host";
 import { TextLink, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
 import { href } from "../../_kit/site";
-import { ARTICLES, articleBySlug, coverSrc, readingMinutes } from "../../_content/articles";
+import { ARTICLES, articleBySlug, coverOg, coverSrc, readingMinutes } from "../../_content/articles";
 import { formatDay } from "../../_content/news";
 import { CopyLink } from "../client";
 import { Cover } from "../picture";
@@ -21,7 +21,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const a = articleBySlug(slug);
   if (!a) return { title: { absolute: "Error | Vraelis" }, robots: { index: false, follow: false } };
-  return v8meta({ title: a.title, description: a.dek, path: `/news/${slug}`, tab: "News" });
+  const meta = v8meta({ title: a.title, description: a.dek, path: `/news/${slug}`, tab: "News" });
+  // A shared story shows its own cover and dates, not the generic site card.
+  const image = { url: `${SITE_ORIGIN}${coverOg(a.cover.name)}`, width: 1200, height: 750, alt: a.cover.alt };
+  return {
+    ...meta,
+    openGraph: { ...meta.openGraph, type: "article", publishedTime: a.date, section: a.kind, images: [image] },
+    twitter: { ...meta.twitter, card: "summary_large_image", images: [image.url] },
+  };
 }
 
 const anchor = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
