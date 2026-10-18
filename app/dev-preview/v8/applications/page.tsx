@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { AutoVideo } from "../_kit/client";
 import { Button, Head, JoinBand, PageHero, PhotoCard, Section, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { APPLICATIONS, COMPANY_LINE, CONTOUR, href } from "../_kit/site";
+import { APPLICATIONS, COMPANY_LINE, CONTOUR } from "../_kit/site";
+import { DefenseCard } from "./defense-media";
 import "../research/research.css";
 import "./applications.css";
 
@@ -44,11 +44,7 @@ export default function ApplicationsOverview() {
         <Wrap>
           <div className="v8-areas-grid">
             {MAIN.map((a) => a.slug === "defense" ? (
-              <Link key={a.slug} href={href(`/applications/${a.slug}`)} className="v8-box rx-area-text">
-                <b className="v8-h3">{a.title}</b>
-                <span className="v8-body">{a.line}</span>
-                <span className="v8-under">Explore defense →</span>
-              </Link>
+              <DefenseCard key={a.slug} title={a.title} line={a.line} />
             ) : <PhotoCard key={a.slug} photoKey={a.photo} to={`/applications/${a.slug}`} title={a.title} line={a.line} />)}
           </div>
         </Wrap>

@@ -2,6 +2,7 @@ import { Band, Button, Capture, CAPTURES, Head, JoinBand, PageHero, Section, Tag
 import { APPLICATIONS, CONTOUR, KIND_LABEL, WORKFLOW, type Kind } from "../_kit/site";
 import { FramedPhoto, NotList, RelatedResearch, Split } from "../research/parts";
 import type { AppPage } from "./content";
+import { DefensePhoto } from "./defense-media";
 import "./applications.css";
 
 // One application area's page: a concise hero, optional contextual photograph, why release integrity
@@ -27,7 +28,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         title={page.title}
         lead={page.lead}
         actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
-        aside={page.slug === "defense" ? undefined : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
+        aside={page.slug === "defense" ? <DefensePhoto /> : <FramedPhoto photoKey={"heroPhoto" in area ? area.heroPhoto : area.photo} />}
       />
 
       <Section rule id="why">

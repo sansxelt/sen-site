@@ -15,7 +15,8 @@ export const metadata = v8meta({
 // Credits for every picture the v8 site can show. Photographs come from EDITORIAL_PHOTOGRAPHS (the registry the kit's
 // photo helpers read), with authors and Pexels ids as recorded in public/site/photography/CREDITS.md. Film shots are
 // the seven Pexels clips in the homepage film (/home/systems-film-civil.mp4), as listed in
-// public/home/systems-film-sources.txt and scripts/field-film/SOURCES.md. The v8 site shows no military footage.
+// public/home/systems-film-sources.txt and scripts/field-film/SOURCES.md. The systems film remains civilian;
+// the separate Defense still is credited below under defense-photograph.
 // Product pictures come from CAPTURES in the kit: real captures, never rebuilt windows.
 const PEXELS_LICENSE = "https://www.pexels.com/license/";
 
@@ -54,6 +55,7 @@ export default function ImageSources() {
           <ul>
             <li><a href="#product-captures">Product captures</a></li>
             <li><a href="#photographs">Photographs</a></li>
+            <li><a href="#defense-photograph">Defense photograph</a></li>
             <li><a href="#films">Systems film</a></li>
           </ul>
         </Wrap>
@@ -108,6 +110,20 @@ export default function ImageSources() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </Wrap>
+      </Section>
+
+      <Section rule id="defense-photograph" className="imgs-sec">
+        <Wrap>
+          <div className="v8-head imgs-head">
+            <span className="v8-eyebrow">Defense photograph</span>
+            <h2 className="v8-h2">CBRN sensing robot.</h2>
+            <p className="v8-body">U.S. Space Force photo by Tech. Sgt. Jordan Thompson, July 22, 2024, at Buckley Space Force Base, Colorado. The photograph shows sensing equipment on CHAPPIE, a quadruped unmanned ground vehicle. It is used as application context on the Defense page and Applications overview.</p>
+            <p className="v8-body"><Out to="https://www.dvidshub.net/image/8736415/chappie-innovative-advancement-cbrn-defense">DVIDS 8736415</Out> · VIRIN 240722-X-OP274-1041. The source labels this work public domain, subject to the <Out to="https://www.dvidshub.net/about/copyright">DVIDS use restrictions</Out>. The local 1000px and 2000px files preserve the downloaded image bytes; page framing crops their display.</p>
+            <p className="v8-body">The appearance of U.S. Department of Defense (DoD) visual information does not imply or constitute DoD endorsement.</p>
+            <p className="v8-body">No relationship with the equipment manufacturer is implied. The photograph does not show Vraelis hardware, a customer or a Vraelis deployment.</p>
+            <p className="v8-small imgs-after">Image files, source metadata and hashes: <Out to="/site/photography/defense-cbrn-source.json">source record</Out>.</p>
           </div>
         </Wrap>
       </Section>

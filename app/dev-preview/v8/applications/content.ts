@@ -64,6 +64,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
     notClaimed: [
       "No deployments in defense systems, and no customers.",
       "No contracts, security clearances or government authorizations.",
+      "Defense photograph: U.S. Space Force (DVIDS). Its use does not imply DoD endorsement.",
       "No access to classified or restricted environments.",
       "No certification, and no claim of fitness for operational use.",
       "No protection against adversarial inputs or perception attacks.",
