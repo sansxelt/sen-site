@@ -570,15 +570,6 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 /* Tight (founder, 2026-10-12: "too much space to the partnerships"): close under the actions, close above the tiles. */
 /* Hero buttons: centered under the headline; on a phone one row, the second labelled short. */
 .hm-hero__lead { margin: 6px auto 0; max-width: 40ch; text-align: center; color: var(--ink-2); }
-/* Product proof: the real evidence app on one task, above the bento. Wide screen on desktop, identity crops on phones. */
-.hm-proof { display: grid; gap: clamp(20px, 3vw, 32px); padding-block: clamp(8px, 2vw, 24px) clamp(48px, 6vw, 88px); }
-.hm-proof__head { display: grid; gap: 12px; max-width: 760px; }
-.hm-proof__label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; font-size: 13px; color: var(--ink-3); }
-.hm-proof__label b { color: var(--ink); font-weight: 600; }
-.hm-proof__label span::before { content: ""; display: inline-block; width: 3px; height: 3px; margin-right: 10px; border-radius: 50%; background: currentColor; vertical-align: middle; }
-.hm-proof__narrow { display: none; gap: 12px; }
-.hm-proof__links { display: flex; flex-wrap: wrap; gap: 10px 24px; }
-@media (max-width: 720px) { .hm-proof__wide { display: none; } .hm-proof__narrow { display: grid; } }
 .hm-hero__actions { justify-content: center; margin-top: 30px; }
 .hm-narrow { display: none; }
 @media (max-width: 560px) {

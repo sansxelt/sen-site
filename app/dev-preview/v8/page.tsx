@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AutoVideo, CaptureCycle, CodeTabs, ResearchCycle, RiseWords, TypeLoop } from "./_kit/client";
 import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
-import { Button, CAPTURES, Capture, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
+import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
 import { CONTOUR, FACTS, HERO_KEYWORDS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
@@ -21,10 +21,10 @@ export const metadata = {
   title: { absolute: "Vraelis | Home" },
 };
 
-// The homepage follows x.ai's order: pill, hero, product proof and bento, the developer split, a numbers band (here the
+// The homepage follows x.ai's order: pill, hero, product bento, the developer split, a numbers band (here the
 // status ledger, because we have no usage numbers and will not invent any), latest news, two ways in.
 /** The Recorded evidence tile: how the evidence is kept, one job per capture (website handoff 2026-10-12, item 2).
- *  The approved-versus-loaded comparison is the product-proof band above the bento, once; it is not repeated here. Each capture
+ *  The approved-versus-loaded comparison is the Contour tile's video, once; it is not repeated here. Each capture
  *  carries one sentence with its values, read from the captured run (item 3). */
 const EVIDENCE_TILE = ([
   ["crop-observations-list", "Every observation kept in order, 07:41:29.606 to 07:41:29.723 UTC.", "contain"],
@@ -103,9 +103,6 @@ function PartnerBand() {
   );
 }
 
-/** A release name never breaks at its hyphen ("cpu-" / "1" on a phone). */
-const Rel = ({ children }: { children: string }) => <span style={{ whiteSpace: "nowrap" }}>{children}</span>;
-
 export default function Home() {
   return (
     <>
@@ -136,29 +133,16 @@ export default function Home() {
 
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
-          {/* PRODUCT PROOF (founder, 2026-10-17): the real evidence app on one task, full width in place of the first
-              bento tile, which showed the same comparison as a small looping video. Desktop shows the whole recorded
-              screen; a phone shows the two release identities cropped from it, since the full screen is unreadable
-              there. The label is context beside the claim, not a warning strip; no caption under the screen. The
-              date is observation 02's receivedAt, 2026-10-10T07:41:29.613Z (_content/evidence.ts). */}
-          <div className="hm-proof" role="group" aria-labelledby="hm-proof-title">
-            <div className="hm-proof__head">
-              <p className="hm-proof__label"><b>{CONTOUR.name}</b><span>Private development</span><span>Recorded run, 10 Oct 2026</span></p>
-              <h2 id="hm-proof-title" className="v8-h2"><Rel>cpu-2</Rel> is approved. The runtime still reports <Rel>cpu-1</Rel>.</h2>
-              <p className="v8-lead">{CONTOUR.name} compares the approved release with the worker&apos;s reported loaded release. Here, <Rel>cpu-2</Rel> is approved while the worker reports <Rel>cpu-1</Rel>; the comparison remains pending until an explicit reload.</p>
-            </div>
-            <div className="hm-proof__wide"><Capture name="app-destination-pending" caption={false} /></div>
-            <div className="hm-proof__narrow">
-              <Capture name="crop-approved-cpu2-head" caption={false} style={{ maxWidth: CAPTURES["crop-approved-cpu2-head"].w }} />
-              <Capture name="crop-loaded-cpu1-head" caption={false} style={{ maxWidth: CAPTURES["crop-loaded-cpu1-head"].w }} />
-            </div>
-            <div className="hm-proof__links">
-              <TextLink to="/contour">How {CONTOUR.name} works</TextLink>
-              <TextLink to="/contour/status">Development status</TextLink>
-            </div>
-          </div>
           <div className="v8-bento">
-            <Link href={href("/contour#observations")} className="v8-tile v8-tile--wide">
+            <Link href={href("/contour")} className="v8-tile">
+              <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 90% 0%, rgba(255,106,43,.16), transparent 70%), #0C0C0E" }}>
+                <div className="v8-tile__inset">
+                  <AutoVideo src="/v8/contour/contour-compare-tile.mp4" poster="/v8/contour/contour-compare-tile-poster.webp" label="The Vraelis Contour app stepping through four recorded observations." rate={1.6} />
+                </div>
+              </div>
+              <div className="v8-tile__foot"><span>{CONTOUR.name}</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
+            </Link>
+            <Link href={href("/contour#observations")} className="v8-tile">
               <div className="v8-tile__media" style={{ background: "radial-gradient(70% 80% at 10% 0%, rgba(90,180,255,.12), transparent 70%), #0C0C0E" }}>
                 <div className="v8-tile__inset">
                   <CaptureCycle images={EVIDENCE_TILE} ms={4200} />
@@ -166,7 +150,7 @@ export default function Home() {
               </div>
               <div className="v8-tile__foot"><span>Recorded evidence</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
-            <Link href={href("/applications/autonomous-systems")} className="v8-tile v8-tile--wide">
+            <Link href={href("/applications/autonomous-systems")} className="v8-tile">
               <div className="v8-tile__media">
                 <AutoVideo src="/home/systems-film-civil.mp4" poster="/home/systems-poster-civil.jpg" label="Editorial footage of the systems where AI is deployed: factory robots, a power substation, a drone, a solar farm and software." />
               </div>
