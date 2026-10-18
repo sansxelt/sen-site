@@ -23,14 +23,14 @@ export type Article = {
   links?: { label: string; to: string }[];
 };
 
-export type Cover = { src: string; alt: string; w: number; h: number; capture?: boolean };
+export type Cover = { src: string; srcSet?: string; alt: string; w: number; h: number; capture?: boolean };
 /** A licensed library photograph (credited on Image sources). */
 const pic = (key: keyof typeof EDITORIAL_PHOTOGRAPHS): Cover => {
   const p = EDITORIAL_PHOTOGRAPHS[key];
   return { src: `/site/photography/${p.file}.jpg`, alt: p.alt, w: p.w, h: p.h };
 };
 /** A real capture of the read-only Contour app (1200 version). */
-const shot = (name: "app-traces"): Cover => ({ src: `/v8/contour/${name}-1200.webp`, alt: "The traces screen of the Vraelis Contour app.", w: 1200, h: 750, capture: true });
+const shot = (name: "app-traces"): Cover => ({ src: `/v8/contour/${name}-1200.webp`, srcSet: `/v8/contour/${name}-1200.webp 1200w, /v8/contour/${name}.webp 2400w`, alt: "The traces screen of the Vraelis Contour app.", w: 1200, h: 750, capture: true });
 
 export const ARTICLES: Article[] = [
   {
