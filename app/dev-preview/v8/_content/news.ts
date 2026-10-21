@@ -12,6 +12,15 @@ export type NewsItem = {
 
 export const NEWS: NewsItem[] = [
   {
+    id: "2026-10-20-vraelis-cli",
+    date: "2026-10-20",
+    kind: "Product",
+    title: "vraelis 0.1.0, an open-source offline lockfile for AI model folders and agent add-ons (alpha)",
+    summary: "Free, Apache-2.0, offline. It reports Unchanged, Changed or Can't verify. It is separate from Vraelis Contour.",
+    image: { src: "/site/photography/editorial-codeMonitor.jpg", alt: "A software developer working at a computer.", w: 1280, h: 854 },
+    to: "/news/vraelis-cli-0-1-0",
+  },
+  {
     id: "2026-10-10-evidence-app",
     date: "2026-10-10",
     kind: "Product",
