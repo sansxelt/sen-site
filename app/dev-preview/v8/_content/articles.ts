@@ -61,9 +61,14 @@ export const ARTICLES: Article[] = [
       { heading: "When to use something else", paras: [
         "Several good tools overlap with this one. Use OpenSSF model_signing if you want signed releases, and hf cache verify for models straight from the Hugging Face Hub. knowyourai and heldfast cover lockfile pinning, and kova and AgentGate cover agent add-ons. Claude Code's own managed settings and ConfigChange hook can enforce changes rather than just report them. The project README lists when each fits better. We have not yet run a head-to-head comparison.",
       ] },
+      { heading: "Update, October 21: version 0.1.1", paras: [
+        "An independent AI review of 0.1.0 found three issues. No real credential exposure was shown.",
+        "In vraelis agents, two cases could record values that should have been structure only. One was a config key that happened to be named like the tool's own fields. The other was a gitignored .mcp.json. In vraelis models, a file checked for presence only was listed only in JSON output.",
+        "Version 0.1.1 fixes all three. Each fix has tests that fail on 0.1.0. Visibility now follows the project's own ignore rules, read without running git.",
+      ] },
     ],
     notClaimed: ["That a model, add-on or server is safe", "Which model a device or server actually loads", "That every secret in an agent lockfile is redacted (redaction is best effort)", "Outside users or adoption", "Better results than the tools named above"],
-    links: [{ label: "vraelis on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Release 0.1.0", to: "https://github.com/sansxelt/vraelis-cli/releases/tag/v0.1.0" }],
+    links: [{ label: "vraelis on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Latest release", to: "https://github.com/sansxelt/vraelis-cli/releases/latest" }],
   },
   {
     slug: "kubernetes-collector-prototype",
