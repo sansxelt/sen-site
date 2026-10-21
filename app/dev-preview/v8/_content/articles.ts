@@ -65,6 +65,7 @@ export const ARTICLES: Article[] = [
         "An independent AI review of 0.1.0 found three issues. No real credential exposure was shown.",
         "In vraelis agents, two cases could record values that should have been structure only. One was a config key that happened to be named like the tool's own fields. The other was a gitignored .mcp.json. In vraelis models, a file checked for presence only was listed only in JSON output.",
         "Version 0.1.1 fixes all three. Each fix has tests that fail on 0.1.0. Visibility now follows the project's own ignore rules, read without running git.",
+        "A second review then found that 0.1.1 missed some ignore patterns git honours, such as character classes like [[:punct:]]. Version 0.1.2 follows git's matching rules, including case-insensitive repositories. Every CI run now checks it against git itself on Linux, Windows and macOS.",
       ] },
     ],
     notClaimed: ["That a model, add-on or server is safe", "Which model a device or server actually loads", "That every secret in an agent lockfile is redacted (redaction is best effort)", "Outside users or adoption", "Better results than the tools named above"],
