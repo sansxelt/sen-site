@@ -20,8 +20,10 @@ const DOCS_PUBLIC_ORIGIN = (DOCS_ENV === "local" ? "" : DOCS_ENV ?? (
 )).replace(/\/$/, "");
 const isDocsPath = (path: string) => path === "/docs" || /^\/docs[/?#]/.test(path);
 
-/** A site path as a link. /docs paths go to the docs' public address when there is one (see above). */
+/** A site path as a link. /docs paths go to the docs' public address when there is one (see above). An absolute
+ *  https address (the public vraelis CLI on GitHub) passes through unchanged. */
 export const href = (path: string) => {
+  if (path.startsWith("https://")) return path;
   if (DOCS_PUBLIC_ORIGIN && isDocsPath(path)) {
     const rest = path.slice("/docs".length);
     return DOCS_PUBLIC_ORIGIN + (rest.startsWith("/") ? rest : `/${rest}`);

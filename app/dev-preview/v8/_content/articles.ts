@@ -34,6 +34,38 @@ const shot = (name: "app-traces"): Cover => ({ src: `/v8/contour/${name}-1200.we
 
 export const ARTICLES: Article[] = [
   {
+    slug: "vraelis-cli-0-1-0",
+    date: "2026-10-20",
+    kind: "Product",
+    title: "vraelis 0.1.0: an open-source, offline lockfile for AI model folders and coding-agent add-ons",
+    dek: "Our first public tool is an alpha. Here is what it checks, what it does not, and when another tool fits better.",
+    cover: pic("codeMonitor"),
+    inShort: [
+      "vraelis is a free, open-source command-line tool under the Apache-2.0 licence. It records exactly what you approved, then reports Unchanged, Changed or Can't verify.",
+      "vraelis models covers local AI model folders. vraelis agents, a preview, covers a coding agent's MCP servers, settings, skills and launched scripts.",
+      "It is an alpha that no outside user has run yet. It is separate from Vraelis Contour, which stays in private development.",
+    ],
+    sections: [
+      { heading: "What it does", paras: [
+        "You run lock once, on files you have approved, and then verify whenever you need to check them, for example in CI. The tool runs offline with only the Python standard library. It never loads a model and never launches a server.",
+        "vraelis models records the exact bytes of every file in a model folder. It also checks the structure: truncated weights, bad GGUF headers, shard indexes that name missing shards, Git LFS pointers left in place of weights, and invalid JSON. An optional step checks a publisher's Sigstore signature against a signer you name.",
+        "vraelis agents records MCP server launch commands, package pins, and environment-variable and header names (never their values unless you pin them). It also records Claude Code hooks and permissions as separate entries, and the bytes of skills and of the local scripts those configurations launch.",
+      ] },
+      { heading: "How it relates to Vraelis Contour", paras: [
+        "Vraelis Contour, our enterprise product, compares an approved release with what a running worker reports. A vraelis lockfile is a small, public form of the approved half: a precise record of what was approved. Vraelis Contour itself is not part of this release.",
+      ] },
+      { heading: "How it was tested", paras: [
+        "We ran all of this testing ourselves; none of it is independent. For the model checks, a separate agent collected sets of real broken public releases without seeing the tool, and we committed predictions before each run. On the latest set, the checks found 5 of 22 runnable defects with no false alarms on 15 healthy models. That makes it a narrow structural gate, not a general broken-release detector.",
+        "For agent add-ons, four blind sets of real configuration changes came from 61 public repositories. On the latest set, it detected 19 of 22 changes with no false alarms. Adversarial reviews by separate AI agents found defects, and every one was fixed before release. CI runs the suite on Linux, Windows and macOS.",
+      ] },
+      { heading: "When to use something else", paras: [
+        "Several good tools overlap with this one. Use OpenSSF model_signing if you want signed releases, and hf cache verify for models straight from the Hugging Face Hub. knowyourai and heldfast cover lockfile pinning, and kova and AgentGate cover agent add-ons. Claude Code's own managed settings and ConfigChange hook can enforce changes rather than just report them. The project README lists when each fits better. We have not yet run a head-to-head comparison.",
+      ] },
+    ],
+    notClaimed: ["That a model, add-on or server is safe", "Which model a device or server actually loads", "That every secret in an agent lockfile is redacted (redaction is best effort)", "Outside users or adoption", "Better results than the tools named above"],
+    links: [{ label: "vraelis on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Release 0.1.0", to: "https://github.com/sansxelt/vraelis-cli/releases/tag/v0.1.0" }],
+  },
+  {
     slug: "kubernetes-collector-prototype",
     date: "2026-10-18",
     kind: "Product",
