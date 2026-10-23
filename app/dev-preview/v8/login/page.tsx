@@ -47,7 +47,9 @@ function Secured({ open }: { open: boolean }) {
       <svg aria-hidden="true" viewBox="0 0 16 16" width="13" height="13"><path fill="currentColor" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm-2 5V4.5a2 2 0 1 1 4 0V6H6Z"/></svg>
       <span>{open ? "Secured by" : "Soon to be secured by"}</span>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="lgn-auth0" src="/v8/partners/auth0-logo-white.svg" alt="Auth0" width={2235} height={720} />
+      <img className="lgn-auth0 v8-logo--dark" src="/v8/partners/auth0-logo-white.svg" alt="Auth0" width={2235} height={720} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="lgn-auth0 v8-logo--light" src="/v8/partners/auth0-logo.svg" alt="" width={2235} height={720} />
     </p>
   );
 }
@@ -107,7 +109,9 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                   {PARTNERS.filter(showsLogo).map((p) => (
                     <li key={p.slug}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className={`lgn-partners__logo lgn-partners__logo--${p.slug}`} src={p.logo.src} alt={p.logo.alt} width={p.logo.w} height={p.logo.h} loading="lazy" decoding="async" />
+                      <img className={`lgn-partners__logo lgn-partners__logo--${p.slug}${p.logoLight ? " v8-logo--dark" : ""}${p.logoMono ? " v8-logo--mono" : ""}`} src={p.logo.src} alt={p.logo.alt} width={p.logo.w} height={p.logo.h} loading="lazy" decoding="async" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {p.logoLight ? <img className={`lgn-partners__logo lgn-partners__logo--${p.slug} v8-logo--light`} src={p.logoLight} alt="" width={p.logo.w} height={p.logo.h} loading="lazy" decoding="async" /> : null}
                     </li>
                   ))}
                 </ul>

@@ -16,9 +16,9 @@ export const metadata = v8meta({
 // Auth0); Vanta's is its own site's logo (vanta.com header), recoloured white for the dark site and otherwise unchanged.
 // The United Nations stays a text name: its emblem may not be used without the Secretary-General's written
 // authorization (UN General Assembly resolution 92(I)), whatever the framing.
-const IN_PROGRESS: { name: string; logo?: { src: string; w: number; h: number } }[] = [
-  { name: "Auth0", logo: { src: "/v8/partners/auth0-logo-white.svg", w: 2235, h: 720 } },
-  { name: "Vanta", logo: { src: "/v8/partners/vanta-logo-white.svg", w: 159, h: 39 } },
+const IN_PROGRESS: { name: string; logo?: { src: string; light: string; w: number; h: number } }[] = [
+  { name: "Auth0", logo: { src: "/v8/partners/auth0-logo-white.svg", light: "/v8/partners/auth0-logo.svg", w: 2235, h: 720 } },
+  { name: "Vanta", logo: { src: "/v8/partners/vanta-logo-white.svg", light: "/v8/partners/vanta-logo.svg", w: 159, h: 39 } },
   { name: "United Nations" },
 ];
 
@@ -76,8 +76,12 @@ export default function PartnersPage() {
             <ul className="pt-progress__row">
               {IN_PROGRESS.map((o) => (
                 <li key={o.name}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {o.logo ? <img className={`pt-progress__logo pt-progress__logo--${o.name.toLowerCase()}`} src={o.logo.src} alt={o.name} width={o.logo.w} height={o.logo.h} loading="lazy" decoding="async" />
+                  {o.logo ? <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className={`pt-progress__logo pt-progress__logo--${o.name.toLowerCase()} v8-logo--dark`} src={o.logo.src} alt={o.name} width={o.logo.w} height={o.logo.h} loading="lazy" decoding="async" />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className={`pt-progress__logo pt-progress__logo--${o.name.toLowerCase()} v8-logo--light`} src={o.logo.light} alt="" width={o.logo.w} height={o.logo.h} loading="lazy" decoding="async" />
+                    </>
                     : <span className="pt-progress__name">{o.name}</span>}
                 </li>
               ))}
