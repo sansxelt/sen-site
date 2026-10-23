@@ -222,6 +222,8 @@ export const MENUS: Menu[] = [
     links: [
       // One entry per product (founder, 2026-10-13: "dont have 2 for 1"). Contour status is reached from /contour.
       { label: "Vraelis Contour", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
+      // 2026-10-23 (founder: "ensure it's updated"): the public open-source CLI, released 20 Oct (github.com/sansxelt/vraelis-cli).
+      { label: "vraelis CLI", to: "/news/vraelis-cli-0-1-0", line: "Open source: offline lockfiles for AI model folders and coding-agent add-ons.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
     ],
   },
   {

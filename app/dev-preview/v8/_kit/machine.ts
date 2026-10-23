@@ -53,7 +53,7 @@ export function llmsTxt(): string {
   return [
     "# Vraelis", "",
     `> ${TAGLINE}`, "",
-    `${COMPANY_LINE} Vraelis Contour, model release security from approval to reported runtime state, is its first product direction. It has private access and is built for release, platform and security engineers at suppliers and system integrators. Additional public products are being researched; no additional public product or name has been adopted. What exists today is a controlled synthetic ONNX CPU reference experiment and a read-only evidence app over the trace it recorded.`, "",
+    `${COMPANY_LINE} Vraelis Contour, model release security from approval to reported runtime state, is its first product direction. It has private access and is built for release, platform and security engineers at suppliers and system integrators. Vraelis also publishes the open-source vraelis CLI (alpha, Apache-2.0, https://github.com/sansxelt/vraelis-cli): offline lockfiles for AI model folders and AI coding-agent add-ons. What exists today is a controlled synthetic ONNX CPU reference experiment and a read-only evidence app over the trace it recorded.`, "",
     "## Site", "",
     ...sitePages().map((p) => `- [${p.label}](${SITE_ORIGIN}${p.path === "/" ? "/" : p.path})`), "",
     partnershipMarkdown(),

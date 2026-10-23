@@ -159,12 +159,12 @@ export const VRAELIS_PAGES: Page[] = [
   },
 ];
 
-/** Products: the current private product and public-product research. Vraelis Contour's own pages follow it in the tab (contour.ts). */
+/** Products: the private product (Contour) and the public open-source CLI (released 2026-10-20). Vraelis Contour's own pages follow it in the tab (contour.ts). */
 export const PRODUCTS_OVERVIEW: Page = {
   tab: "products", group: "Products", slug: "products",
   title: "Products", nav: "Overview",
-  description: `${CONTOUR.name} is in private development. Additional public products are under research, with no new product or name adopted.`,
-  lead: `${CONTOUR.name} is our first product, in private development. Additional public products are being researched; none is available or named yet.`,
+  description: `${CONTOUR.name} is in private development. The vraelis CLI is a public, open-source alpha.`,
+  lead: `${CONTOUR.name} is our first product, in private development. The vraelis CLI is our public, open-source tool.`,
   updated: UPDATED,
   blocks: [
     { t: "h2", text: CONTOUR.name },
@@ -180,10 +180,15 @@ export const PRODUCTS_OVERVIEW: Page = {
       { to: "/docs/contour", title: `${CONTOUR.name} overview`, line: "The five-step workflow and where it stands." },
       { to: "/docs/limits", title: "Limits and what is not built", line: `Where ${CONTOUR.name} stops today.` },
     ] },
+    { t: "h2", text: "vraelis CLI" },
+    { t: "p", text: "An open-source command-line tool (alpha, Apache-2.0). It keeps a lockfile of exactly what you approved and later reports Unchanged, Changed or Can't verify, offline, for AI model folders (vraelis models) and AI coding-agent add-ons (vraelis agents, preview). It is not a security assessment. [vraelis on GitHub](https://github.com/sansxelt/vraelis-cli)" },
+    { t: "cards", items: [
+      { to: "/news/vraelis-cli-0-1-0", title: "vraelis CLI announcement", line: "What it checks, what it does not, and how it was tested." },
+    ] },
     { t: "h2", text: "What is not a product" },
     { t: "p", text: "The four research areas, model integrity, adversarial threats, machine trust and security evidence, are workstreams, not products. [Research](/docs/research)" },
     { t: "p", text: "The earlier browser-testing product is retired, and its documentation has been removed from these docs." },
     { t: "h2", text: "Access" },
-    { t: "p", text: `${CONTOUR.name} is not for public use. There is no public API, command line tool, console or account. To talk about it, use Join us. [Join Us](/contact?topic=contour)` },
+    { t: "p", text: `${CONTOUR.name} is not for public use. It has no public API, console or account. To talk about it, use Join Us. [Join Us](/contact?topic=contour)` },
   ],
 };
