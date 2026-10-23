@@ -9,9 +9,6 @@
 .v8 .lgn-head { display: grid; gap: 14px; }
 .v8 .lgn-h { margin: 0; }
 .v8 .lgn-lead { margin: 0; max-width: 44ch; color: var(--ink-2); }
-.v8 .lgn-pill { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
-  background: var(--s2); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--ink-2); font-size: 12.5px; font-weight: 500; }
-.v8 .lgn-pill i { width: 6px; height: 6px; border-radius: 50%; background: #f5a524; box-shadow: 0 0 0 3px rgba(245,165,36,.18); }
 .v8 .lgn-form { display: grid; gap: 22px; margin: 0; }
 .v8 .lgn-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
 .v8 .lgn-span { grid-column: 1 / -1; }
@@ -28,7 +25,8 @@
   padding: 0 7px 0 20px; border: 0; border-radius: var(--r-md); background: var(--ink); color: var(--ground); font: 600 15.5px/1 var(--sans); cursor: pointer; }
 .v8 .lgn-submit__arrow { display: grid; place-items: center; width: 38px; height: 38px; border-radius: calc(var(--r-md) - 2px);
   background: var(--ground); color: var(--ink); font-size: 20px; line-height: 1; }
-.v8 .lgn-main button:disabled, .v8 .lgn-input:disabled { opacity: .5; cursor: not-allowed; }
+.v8 .lgn-main button:disabled { opacity: .55; cursor: not-allowed; }
+.v8 .lgn-input:disabled { opacity: .6; cursor: not-allowed; }
 .v8 .lgn-error { margin: 0; padding: 12px 14px; border-radius: var(--r-md); color: var(--ink); font-size: 14px; line-height: 1.5;
   box-shadow: inset 0 0 0 1px rgba(255,122,85,.7); }
 .v8 .lgn-foot { display: grid; gap: 14px; padding-top: 22px; border-top: 1px solid var(--line); }
@@ -40,9 +38,7 @@
 
 /* Right: one statement, then the partners. */
 .v8 .lgn-panel { display: flex; flex-direction: column; justify-content: space-between; gap: 48px; padding: clamp(32px, 4vw, 56px);
-  border-radius: var(--r-xl); background: radial-gradient(80% 60% at 100% 0%, rgba(255,255,255,.055), transparent 70%),
-  radial-gradient(60% 50% at 0% 100%, rgba(255,255,255,.025), transparent 70%), var(--s1);
-  box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 color-mix(in srgb, var(--ink) 3.5%, transparent); }
+  border-radius: var(--r-xl); background: var(--s1); box-shadow: inset 0 0 0 1px var(--line); }
 .v8 .lgn-panel__body { display: grid; gap: 18px; }
 .v8 .lgn-panel__lead { margin: 0; color: var(--ink); font: 400 clamp(26px, 2.5vw, 36px)/1.22 var(--display, var(--sans)); letter-spacing: -.015em; max-width: 20ch; }
 .v8 .lgn-panel__text { margin: 0; color: var(--ink-3); font-size: 15px; line-height: 1.6; max-width: 46ch; }

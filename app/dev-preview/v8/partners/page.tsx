@@ -12,6 +12,8 @@ export const metadata = v8meta({
   path: "/partners",
 });
 
+const IN_PROGRESS = ["Auth0", "Vanta", "United Nations"];
+
 export default function PartnersPage() {
   const structuredData = {
     "@context": "https://schema.org",
@@ -56,6 +58,16 @@ export default function PartnersPage() {
               </Link>
             ))}
           </div>
+          {/* IN PROGRESS (founder, 2026-10-23: "we arent with them yet dont list them as partners ... we are in the
+              PROGRESS, so we not legally claiming anything"; founder chose to name all three after being advised that
+              naming the United Nations carries the most risk). Names only, as plain text: no logos, no emblem, no
+              partner card or page, and an explicit statement that nothing is signed and none endorses Vraelis.
+              Remove a name if talks end; move it to PARTNERS only with a signed agreement. */}
+          <section className="pt-progress" aria-labelledby="pt-progress-h">
+            <h2 id="pt-progress-h" className="pt-progress__h">In progress</h2>
+            <p className="pt-progress__names">{IN_PROGRESS.join(" · ")}</p>
+            <p className="v8-small pt-progress__note">Conversations with these organizations are under way. They are not partners: no agreement has been signed, and none of them endorses Vraelis.</p>
+          </section>
         </div>
       </Wrap>
     </Section>

@@ -14,8 +14,8 @@ export const dynamic = "force-dynamic";
 
 // /login (founder, 2026-10-22 and 2026-10-23). Two balanced columns after scale.com/demo. Accounts are issued by Vraelis
 // to an organization, a team or a person: no sign-up, no Google or other third-party sign-in.
-// 2026-10-23 ("spread more evenly, use logos, better text, and not so clumpy"): labelled fields with room, a status pill
-// instead of a boxed notice, "Secured by" with Auth0's logo ("Will be secured by" while sign-in is closed), and the
+// 2026-10-23 ("spread more evenly, use logos, better text, and not so clumpy"): labelled fields with room, no boxed
+// notice; founder, same day: no status pill and no glow ("no AI shi like this"), flat panel, plain words; "Secured by" with Auth0's logo ("Will be secured by" while sign-in is closed), and the
 // homepage's "In partnership with" logos. Not "Trusted by": partners.ts records that no partner endorses or uses
 // Vraelis. No testimonials: none exist.
 const ERRORS: Record<string, string> = {
@@ -72,7 +72,6 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
               ) : (
                 <>
                   <header className="lgn-head">
-                    {!open && <span className="lgn-pill" role="status"><i aria-hidden="true" />Accounts open soon</span>}
                     <h1 className="v8-h1 lgn-h">Log In</h1>
                     <p className="v8-lead lgn-lead">Use the credentials Vraelis issued to you, your team or your organization.</p>
                   </header>
@@ -93,10 +92,10 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
             </div>
             <aside className="lgn-panel" aria-label="About Vraelis accounts">
               <div className="lgn-panel__body">
-                <p className="lgn-panel__lead">One account, issued by Vraelis, for the people who approve model releases.</p>
+                <p className="lgn-panel__lead">Accounts are issued by Vraelis.</p>
                 <p className="lgn-panel__text">
-                  Accounts are set up for an organization, a team or a single person. There is no public sign-up and no
-                  third-party sign-in, and your password is checked by Auth0, never by this site.
+                  Each account is set up for an organization, a team or one person. There is no public sign-up and no
+                  sign-in with Google or other providers. Your password is checked by Auth0, not by this site.
                 </p>
               </div>
               <div className="lgn-partners">
