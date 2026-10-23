@@ -66,8 +66,12 @@ export async function pkcePair(): Promise<{ verifier: string; challenge: string 
 
 /** An Auth0 Organization, by id (org_...) or name. Accounts can belong to an organization or team, or to one person. */
 export function cleanOrganization(raw: string | null): string | undefined {
-  const v = (raw ?? "").trim().toLowerCase();
-  return /^(org_[a-z0-9]{8,32}|[a-z0-9][a-z0-9_-]{1,49})$/.test(v) ? v : undefined;
+  // Auth0 Organization IDs are case-sensitive (org_ + mixed-case letters and digits) and pass through unchanged (Codex,
+  // 2026-10-22 r2); Organization names are lowercase in Auth0, so a typed name is lowercased.
+  const v = (raw ?? "").trim();
+  if (/^org_[A-Za-z0-9]{8,32}$/.test(v)) return v;
+  const name = v.toLowerCase();
+  return /^[a-z0-9][a-z0-9_-]{1,49}$/.test(name) && !name.startsWith("org_") ? name : undefined;
 }
 /** The single-use ticket from /co/authenticate: opaque, URL-safe, bounded. */
 export function cleanLoginTicket(raw: string | null): string | undefined {

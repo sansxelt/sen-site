@@ -49,6 +49,7 @@ async function main() {
   await t("inputs are allow-listed", () => {
     eq(cleanLoginTicket("abc_DEF-123.456~7890"), "abc_DEF-123.456~7890"); eq(cleanLoginTicket("short"), undefined); eq(cleanLoginTicket("a b".repeat(10)), undefined);
     eq(cleanOrganization("Acme-Robotics"), "acme-robotics"); eq(cleanOrganization("org_abc12345"), "org_abc12345"); eq(cleanOrganization("x&y=z"), undefined);
+    eq(cleanOrganization("org_AbC123xYz9"), "org_AbC123xYz9"); eq(cleanOrganization("  org_MiXeD12345 "), "org_MiXeD12345"); eq(cleanOrganization("org_bad!"), undefined);
     eq(cleanReturnTo("/contour"), "/contour"); eq(cleanReturnTo("//evil.com"), "/login"); eq(cleanReturnTo("https://evil.com"), "/login"); eq(cleanReturnTo("/api/x"), "/login");
   });
 
@@ -119,6 +120,21 @@ async function main() {
   });
   await t("logout URL returns to /login", () => {
     const u = new URL(logoutUrl(cfg, "https://vraelis.com/login")); eq([u.pathname, u.searchParams.get("returnTo")], ["/v2/logout", "https://vraelis.com/login"]);
+  });
+
+  // ---- no-script safety (Codex r2): server-rendered, the credentials form submits nothing ----
+  await t("form: server-rendered in open mode, every credential field is disabled and the form is POST", async () => {
+    const React = await import("react"); const { renderToStaticMarkup } = await import("react-dom/server");
+    const { LoginForm } = await import("../app/dev-preview/v8/login/login-form");
+    const html = renderToStaticMarkup(React.createElement(LoginForm, { open: true, domain: "vraelis-test.us.auth0.com", clientId: "client123", realm: "Username-Password-Authentication" }));
+    const form = html.match(/<form class="lgn-form"[^>]*>/)?.[0] ?? "";
+    if (!/method="post"/.test(form)) throw new Error(`form not POST: ${form}`);
+    for (const name of ["email", "password", "organization"]) {
+      const input = html.match(new RegExp(`<input[^>]*name="${name}"[^>]*>`))?.[0] ?? "";
+      if (!/disabled=""/.test(input)) throw new Error(`${name} not disabled before hydration: ${input}`);
+    }
+    if (!/<button type="submit"[^>]*disabled=""/.test(html)) throw new Error("submit not disabled before hydration");
+    const { writeFileSync } = await import("fs"); writeFileSync(process.env.NOJS_HTML ?? "nojs-form.html", `<!doctype html><title>t</title>${html}`);
   });
 
   // ---- routes (mocked Auth0: /oauth/token and /.well-known/jwks.json) ----

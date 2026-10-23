@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 // The credentials form (founder, 2026-10-23: Vraelis issues credentials to an organization, a team or a person; no
 // Google or other third-party sign-in). Laid out like scale.com/demo: a two-column grid of fields and a Submit button
@@ -20,13 +20,19 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
   const id = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // NO-SCRIPT SAFETY (Codex, 2026-10-22 r2: with scripts off, the form fell back to a GET and put the password in the
+  // /login URL). The fields render disabled and enable only once this component has hydrated, so without JavaScript
+  // nothing can be typed and disabled fields are never submitted. method="post" is a second layer.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+  const off = !open || busy || !ready;
   const ticketForm = useRef<HTMLFormElement>(null);
   const ticket = useRef<HTMLInputElement>(null);
   const org = useRef<HTMLInputElement>(null);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!open || !domain || !clientId || !realm) return;
+    if (!open || !ready || !domain || !clientId || !realm) return;
     const f = new FormData(e.currentTarget);
     const username = String(f.get("email") ?? "").trim();
     const password = String(f.get("password") ?? "");
@@ -52,26 +58,27 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
 
   return (
     <>
-      <form className="lgn-form" onSubmit={submit} noValidate aria-describedby={error ? `${id}-err` : undefined}>
+      {open && <noscript><p className="lgn-error">Logging in needs JavaScript. Turn it on for this page, then reload.</p></noscript>}
+      <form className="lgn-form" method="post" onSubmit={submit} noValidate aria-describedby={error ? `${id}-err` : undefined}>
         <div className="lgn-grid">
           <label className="lgn-field lgn-span">
             <span className="lgn-label">Work email</span>
             <input className="lgn-input" name="email" type="email" placeholder="you@company.com" autoComplete="username"
-              inputMode="email" required disabled={!open || busy} />
+              inputMode="email" required disabled={off} />
           </label>
           <label className="lgn-field">
             <span className="lgn-label">Password</span>
             <input className="lgn-input" name="password" type="password" placeholder="Your password" autoComplete="current-password"
-              required disabled={!open || busy} />
+              required disabled={off} />
           </label>
           <label className="lgn-field">
             <span className="lgn-label">Organization <span className="lgn-opt">optional</span></span>
             <input className="lgn-input" name="organization" placeholder="e.g. acme-robotics" autoComplete="organization"
-              disabled={!open || busy} />
+              disabled={off} />
           </label>
         </div>
         {error && <p id={`${id}-err`} className="lgn-error" role="alert">{error}</p>}
-        <button type="submit" className="lgn-submit" disabled={!open || busy}>
+        <button type="submit" className="lgn-submit" disabled={off}>
           {busy ? "Logging In" : "Log In"}<span className="lgn-submit__arrow" aria-hidden="true">›</span>
         </button>
       </form>
