@@ -78,9 +78,7 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
           </label>
         </div>
         {error && <p id={`${id}-err`} className="lgn-error" role="alert">{error}</p>}
-        <button type="submit" className="lgn-submit" disabled={off}>
-          {busy ? "Logging In" : "Log In"}<span className="lgn-submit__arrow" aria-hidden="true">›</span>
-        </button>
+        <button type="submit" className="v8-btn v8-btn--solid v8-btn--lg lgn-submit" disabled={off}>{busy ? "Logging In" : "Log In"}</button>
       </form>
       {/* Carries only the single-use ticket to this site. */}
       <form ref={ticketForm} action="/api/login/start" method="post" hidden>
