@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { GENERAL_INBOX } from "@/lib/contact-routing";
 import { SESSION_COOKIE, auth0Config, loginOpen, verifyIdToken } from "@/lib/auth0-login";
+import { PARTNERS, showsLogo } from "../_content/partners";
 import { Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { href } from "../_kit/site";
@@ -11,11 +12,12 @@ import "./login.css";
 export const metadata = v8meta({ title: "Log In", description: "Log in to Vraelis with the credentials Vraelis issued to you or your organization.", path: "/login", index: false, tab: "Log In" });
 export const dynamic = "force-dynamic";
 
-// /login (founder, 2026-10-22 and 2026-10-23). Laid out like scale.com/demo: heading, one line, a grid of fields and a
-// Submit button with an arrow on the left; a lit panel on the right. Accounts are issued by Vraelis to an organization,
-// a team or a person, so there is no sign-up and no Google or other third-party sign-in. "Secured by Auth0" is stated
-// only once sign-in actually runs through Auth0; while it is closed the line says it will be.
-// The right panel carries facts about accounts, not testimonials or customer logos: Vraelis has no customers to quote.
+// /login (founder, 2026-10-22 and 2026-10-23). Two balanced columns after scale.com/demo. Accounts are issued by Vraelis
+// to an organization, a team or a person: no sign-up, no Google or other third-party sign-in.
+// 2026-10-23 ("spread more evenly, use logos, better text, and not so clumpy"): labelled fields with room, a status pill
+// instead of a boxed notice, "Secured by" with Auth0's logo ("Will be secured by" while sign-in is closed), and the
+// homepage's "In partnership with" logos. Not "Trusted by": partners.ts records that no partner endorses or uses
+// Vraelis. No testimonials: none exist.
 const ERRORS: Record<string, string> = {
   denied: "Logging in was cancelled or refused. Try again.",
   state: "That login expired or was already used. Start again.",
@@ -36,6 +38,17 @@ async function signedInEmail(): Promise<string | null> {
   }
 }
 
+function Secured({ open }: { open: boolean }) {
+  return (
+    <p className="lgn-secured">
+      <svg aria-hidden="true" viewBox="0 0 16 16" width="13" height="13"><path fill="currentColor" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm-2 5V4.5a2 2 0 1 1 4 0V6H6Z"/></svg>
+      <span>{open ? "Secured by" : "Will be secured by"}</span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="lgn-auth0" src="/v8/partners/auth0-logo-white.svg" alt="Auth0" width={2235} height={720} />
+    </p>
+  );
+}
+
 export default async function Login({ searchParams }: { searchParams: Query }) {
   const q = await searchParams;
   const open = loginOpen();
@@ -50,41 +63,53 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
             <div className="lgn-main">
               {who ? (
                 <>
-                  <h1 className="v8-h1 lgn-h">You are logged in.</h1>
-                  <p className="v8-lead">Signed in as <b data-no-translate>{who}</b>.</p>
+                  <header className="lgn-head">
+                    <h1 className="v8-h1 lgn-h">You are logged in.</h1>
+                    <p className="v8-lead lgn-lead">Signed in as <b data-no-translate>{who}</b>.</p>
+                  </header>
                   <form action="/api/login/logout" method="post"><button type="submit" className="lgn-submit">Log Out<span className="lgn-submit__arrow" aria-hidden="true">›</span></button></form>
                 </>
               ) : (
                 <>
-                  <h1 className="v8-h1 lgn-h">Log In to Vraelis</h1>
-                  <p className="v8-lead">Use the credentials Vraelis issued to you, your team or your organization.</p>
-                  {!open && (
-                    <p className="lgn-note" role="status">
-                      Accounts are not open yet. Vraelis Contour is in private development.{" "}
-                      <Link href={href("/contact")}>Join Us</Link> to talk to the team.
-                    </p>
-                  )}
+                  <header className="lgn-head">
+                    {!open && <span className="lgn-pill" role="status"><i aria-hidden="true" />Accounts open soon</span>}
+                    <h1 className="v8-h1 lgn-h">Log In</h1>
+                    <p className="v8-lead lgn-lead">Use the credentials Vraelis issued to you, your team or your organization.</p>
+                  </header>
                   {error && <p className="lgn-error" role="alert">{error}</p>}
                   <LoginForm open={open} domain={cfg?.domain} clientId={cfg?.clientId} realm={cfg?.realm} />
-                  <p className="lgn-fine">
-                    Forgot your password or lost access? Ask your organization&rsquo;s administrator, or write to{" "}
-                    <a href={`mailto:${GENERAL_INBOX}`} data-no-translate>{GENERAL_INBOX}</a>. By logging in you agree to the{" "}
-                    <Link href={href("/terms")}>Terms</Link> and <Link href={href("/privacy")}>Privacy Policy</Link>.
-                  </p>
-                  <p className="lgn-secured">
-                    <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm-2 5V4.5a2 2 0 1 1 4 0V6H6Z"/></svg>
-                    {open ? "Secured by Auth0" : "Will be secured by Auth0 when accounts open"}
-                  </p>
+                  <footer className="lgn-foot">
+                    <Secured open={open} />
+                    <p className="lgn-fine">
+                      {open ? "Need access or a new password?" : "Need access?"} Ask your organization&rsquo;s administrator or write to{" "}
+                      <a href={`mailto:${GENERAL_INBOX}`} data-no-translate>{GENERAL_INBOX}</a>.{" "}
+                      {open
+                        ? <>By logging in you agree to the <Link href={href("/terms")}>Terms</Link> and <Link href={href("/privacy")}>Privacy Policy</Link>.</>
+                        : <>Accounts are not open yet; until they are, <Link href={href("/contact")}>Join Us</Link> to talk to the team.</>}
+                    </p>
+                  </footer>
                 </>
               )}
             </div>
             <aside className="lgn-panel" aria-label="About Vraelis accounts">
-              <p className="lgn-panel__lead">Accounts are issued, not created.</p>
-              <ul className="lgn-panel__list">
-                <li><b>For organizations, teams and people.</b><span>Vraelis sets up each account for the organization, team or person it works with. There is no public sign-up.</span></li>
-                <li><b>One set of credentials.</b><span>Log in with the work email and password Vraelis gave you. Third-party sign-in is not offered.</span></li>
-                <li><b>Your password stays with the identity provider.</b><span>It is checked by Auth0, never sent to or stored on this site.</span></li>
-              </ul>
+              <div className="lgn-panel__body">
+                <p className="lgn-panel__lead">One account, issued by Vraelis, for the people who approve model releases.</p>
+                <p className="lgn-panel__text">
+                  Accounts are set up for an organization, a team or a single person. There is no public sign-up and no
+                  third-party sign-in, and your password is checked by Auth0, never by this site.
+                </p>
+              </div>
+              <div className="lgn-partners">
+                <p className="lgn-partners__label">In partnership with</p>
+                <ul className="lgn-partners__grid">
+                  {PARTNERS.filter(showsLogo).map((p) => (
+                    <li key={p.slug}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className={`lgn-partners__logo lgn-partners__logo--${p.slug}`} src={p.logo.src} alt={p.logo.alt} width={p.logo.w} height={p.logo.h} loading="lazy" decoding="async" />
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </aside>
           </div>
         </Wrap>

@@ -54,12 +54,21 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
     <>
       <form className="lgn-form" onSubmit={submit} noValidate aria-describedby={error ? `${id}-err` : undefined}>
         <div className="lgn-grid">
-          <input className="lgn-input" name="organization" aria-label="Organization or team (optional)" placeholder="Organization or team (optional)"
-            autoComplete="organization" disabled={!open || busy} />
-          <input className="lgn-input" name="email" type="email" aria-label="Work email" placeholder="Work email*" autoComplete="username"
-            inputMode="email" required disabled={!open || busy} />
-          <input className="lgn-input lgn-span" name="password" type="password" aria-label="Password" placeholder="Password*"
-            autoComplete="current-password" required disabled={!open || busy} />
+          <label className="lgn-field lgn-span">
+            <span className="lgn-label">Work email</span>
+            <input className="lgn-input" name="email" type="email" placeholder="you@company.com" autoComplete="username"
+              inputMode="email" required disabled={!open || busy} />
+          </label>
+          <label className="lgn-field">
+            <span className="lgn-label">Password</span>
+            <input className="lgn-input" name="password" type="password" placeholder="Your password" autoComplete="current-password"
+              required disabled={!open || busy} />
+          </label>
+          <label className="lgn-field">
+            <span className="lgn-label">Organization <span className="lgn-opt">optional</span></span>
+            <input className="lgn-input" name="organization" placeholder="e.g. acme-robotics" autoComplete="organization"
+              disabled={!open || busy} />
+          </label>
         </div>
         {error && <p id={`${id}-err`} className="lgn-error" role="alert">{error}</p>}
         <button type="submit" className="lgn-submit" disabled={!open || busy}>
