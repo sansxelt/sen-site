@@ -100,7 +100,8 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                 <p className="lgn-panel__lead">Accounts are issued by Vraelis.</p>
                 <p className="lgn-panel__text">
                   Each account is set up for an organization, a team or one person. There is no public sign-up and no
-                  sign-in with Google or other providers. Your password is checked by Auth0, not by this site.
+                  sign-in with Google or other providers.{" "}
+                  {open ? "Your password is checked by Auth0, not by this site." : "Logging in is not open yet: this form checks nothing and sends nothing."}
                 </p>
               </div>
               <div className="lgn-partners">

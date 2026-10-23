@@ -15,6 +15,8 @@ const MSG = {
   wrong: "That email and password do not match a Vraelis account.",
   blocked: "Too many attempts. Wait a few minutes, then try again.",
   failed: "Logging in did not work. Try again.",
+  // Codex LOGIN-R4-01: while Auth0 is not connected, say so. No account was looked up and nothing was checked.
+  closed: "Logging in is not open yet. Nothing was checked or sent.",
 };
 
 export function LoginForm({ open, domain, clientId, realm }: Props) {
@@ -27,8 +29,8 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
   const ready = useSyncExternalStore(noSubscribe, () => true, () => false);
   // Founder, 2026-10-23: "allow entire thing + flow ... no one got creds anyways". The form is usable whether or not
   // Auth0 is connected. Before it is (loginOpen() false), no account exists anywhere, so every attempt is answered
-  // "no matching account" in the browser: the password is checked for presence and then discarded, never sent or
-  // stored. Once Auth0 is configured and opened, the same form runs the real Auth0 flow below.
+  // "not open yet" in the browser (Codex LOGIN-R4-01: never imply an account lookup). The password field is cleared
+  // and nothing is sent or stored. Once Auth0 is configured and opened, the same form runs the real Auth0 flow below.
   const off = busy || !ready;
   const ticketForm = useRef<HTMLFormElement>(null);
   const ticket = useRef<HTMLInputElement>(null);
@@ -42,7 +44,11 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
     const password = String(f.get("password") ?? "");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(username)) return setError(MSG.email);
     if (!password) return setError(MSG.password);
-    if (!open || !domain || !clientId || !realm) return setError(MSG.wrong); // no accounts exist yet; nothing is sent
+    if (!open || !domain || !clientId || !realm) { // not connected: nothing is sent, and the typed password is cleared
+      const pw = e.currentTarget.elements.namedItem("password");
+      if (pw instanceof HTMLInputElement) pw.value = "";
+      return setError(MSG.closed);
+    }
     setBusy(true); setError(null);
     try {
       const res = await fetch(`https://${domain}/co/authenticate`, {
