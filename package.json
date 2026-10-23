@@ -151,7 +151,8 @@
     "v8:operator:test": "tsx scripts/v8-operator-verify.ts",
     "email:census": "tsx scripts/email-census.ts",
     "tab:titles:test": "tsx scripts/tab-titles-verify.ts",
-    "login:test": "tsx scripts/login-auth0.test.ts"
+    "login:test": "tsx scripts/login-auth0.test.ts",
+    "safe-fetch:brotli:test": "tsx scripts/safe-fetch-brotli.test.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.78",

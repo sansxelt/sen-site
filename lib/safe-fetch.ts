@@ -6,7 +6,7 @@
 
 import dns from "dns/promises";
 import net from "net";
-import { fetch as undiciFetch, Agent } from "undici";
+import { fetch as undiciFetch, Agent, type Dispatcher } from "undici";
 
 // True if an IP literal is private/reserved/loopback/link-local (incl. cloud metadata
 // 169.254.169.254). Covers IPv4 ranges + IPv6 (loopback, ULA, link-local, IPv4-mapped).
@@ -144,6 +144,7 @@ export type BlockedReason =
   | "unresolved_host"      // hostname did not resolve (NXDOMAIN / SERVFAIL / timeout / zero addresses)
   | "metadata_endpoint"    // a resolved address is the cloud metadata IP (169.254.169.254)
   | "private_address"      // a resolved address is private/reserved/loopback/link-local
+  | "unsupported_encoding" // the response was brotli-encoded (refused while CVE-2026-111497 runtimes are live)
   | "blocked";             // generic fallback
 // Every safeFetch rejection carries `message === "blocked"` (unchanged — existing callers depend on it)
 // PLUS a non-sensitive `reason` category on the error object. This reader returns it, or null if absent.
@@ -154,6 +155,38 @@ export function blockedFetchReason(e: unknown): BlockedReason | null {
 // Build safeFetch's rejection: message stays exactly "blocked"; the sanitized reason class rides alongside.
 function blockedError(reason: BlockedReason): Error & { reason: BlockedReason } {
   return Object.assign(new Error("blocked"), { reason });
+}
+
+// NODE CVE-2026-111497 (October 2026: memory corruption in the Brotli decoder used by node:zlib; patched in Node
+// 24.22.1). undici's fetch decodes a "Content-Encoding: br" body with node:zlib, and safeFetch talks to hosts a
+// user or outside party chooses. Vercel manages the function runtime's patch level and was still serving 24.21.0
+// on 23 Oct 2026, so brotli responses are refused here, at the dispatcher, before fetch builds a decoder. The
+// response body is never read. Remove once the runtime log ([vraelis-runtime], instrumentation.ts) shows >= 24.22.1.
+type Headerish = Record<string, string | string[] | undefined>;
+function isBrotli(headers: Headerish | undefined): boolean {
+  const v = headers?.["content-encoding"];
+  return (Array.isArray(v) ? v.join(",") : String(v ?? "")).toLowerCase().split(",").some((c) => c.trim() === "br");
+}
+export const refuseBrotli: Dispatcher.DispatcherComposeInterceptor = (dispatch) => (opts, handler) => {
+  const onResponseStart: Dispatcher.DispatchHandler["onResponseStart"] = (controller, status, headers, statusText) => {
+    if (isBrotli(headers as Headerish)) { controller.abort(blockedError("unsupported_encoding")); return; }
+    return handler.onResponseStart?.call(handler, controller, status, headers, statusText);
+  };
+  // Every other method runs on the original handler, unchanged.
+  const wrapped = new Proxy(handler, {
+    get(target, prop) {
+      if (prop === "onResponseStart") return onResponseStart;
+      const v = Reflect.get(target, prop, target);
+      return typeof v === "function" ? v.bind(target) : v;
+    },
+  });
+  return dispatch(opts, wrapped);
+};
+
+export function noBrotliOffer(h: HeadersInit | undefined): Headers {
+  const headers = new Headers(h);
+  if (!headers.has("accept-encoding")) headers.set("accept-encoding", "gzip, deflate");
+  return headers;
 }
 
 // Resolve the hostname, reject if ANY resolved address is private/reserved, then pin the
@@ -179,9 +212,16 @@ export async function safeFetch(url: string, init: RequestInit): Promise<Respons
   // undici's own fetch so the Agent dispatcher is version-matched (global fetch rejects a
   // foreign Agent).
   const validated = addrs.map((a) => ({ address: a.address, family: a.family }));
-  const agent = new Agent({ connect: { lookup: (_h: string, _o: unknown, cb: (e: Error | null, a: { address: string; family: number }[]) => void) => cb(null, validated) } as never });
+  const agent = new Agent({ connect: { lookup: (_h: string, _o: unknown, cb: (e: Error | null, a: { address: string; family: number }[]) => void) => cb(null, validated) } as never })
+    .compose(refuseBrotli);
+  // Ask for gzip/deflate only, so honest servers never send brotli (undici would otherwise offer "br").
+  const headers = noBrotliOffer(init.headers);
   try {
-    return (await undiciFetch(url, { ...init, dispatcher: agent } as never)) as unknown as Response;
+    return (await undiciFetch(url, { ...init, headers, dispatcher: agent } as never)) as unknown as Response;
+  } catch (e) {
+    const cause = (e as { cause?: unknown })?.cause;
+    if (blockedFetchReason(cause) === "unsupported_encoding") throw cause;
+    throw e;
   } finally {
     agent.close().catch(() => {});
   }
