@@ -59,6 +59,8 @@ export function entityJsonLd(): string {
         logo: { "@type": "ImageObject", url: ORGANIZATION.logo },
         description: ORGANIZATION.description,
         sameAs: [...ORGANIZATION.sameAs],
+        // The brand that builds Vraelis (unincorporated; no legal name is claimed).
+        parentOrganization: { "@type": "Organization", name: "Foremake", url: "https://foremake.com" },
       },
       {
         "@type": "WebSite",

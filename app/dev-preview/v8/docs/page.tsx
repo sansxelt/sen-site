@@ -64,7 +64,6 @@ const EXPLORE: Col[] = [
   ] },
   { title: "Resources", links: [
     { label: "llms.txt", to: "/docs/llms.txt" },
-    { label: "Earlier references", to: "/docs/getting-started" },
     { label: "Changelog", to: "/changelog" },
     { label: "Report a security issue", to: "/security#report" },
     { label: "Contact", to: "/contact" },

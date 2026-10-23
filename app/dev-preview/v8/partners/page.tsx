@@ -4,7 +4,7 @@ import { Section, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { href } from "../_kit/site";
 import { PARTNERS } from "../_content/partners";
-import { LogoCard, day } from "./logo-card";
+import { LogoCard } from "./logo-card";
 
 export const metadata = v8meta({
   title: "Partners",
@@ -21,6 +21,12 @@ const IN_PROGRESS: { name: string; logo?: { src: string; light: string; w: numbe
   { name: "Vanta", logo: { src: "/v8/partners/vanta-logo-white.svg", light: "/v8/partners/vanta-logo.svg", w: 159, h: 39 } },
   { name: "United Nations" },
 ];
+
+// One word per partner for the tile, instead of the date that made the page read as a timeline (founder, 2026-10-23:
+// "it just isn't neat it's just a timeline"). Dates stay on each partner's own page.
+const KIND: Record<string, string> = { bytedance: "AI models", reddit: "Advertising", "stripe-startups": "Startup program", cloudflare: "Technology" };
+// Events on record. Cloudflare Connect 2026: Foremake was invited with registrant type Partner (partners.ts record).
+const EVENTS = [{ when: "Oct 19–21, 2026", name: "Cloudflare Connect 2026", where: "Moscone West, San Francisco", role: "Registered as a Cloudflare partner" }];
 
 export default function PartnersPage() {
   const structuredData = {
@@ -47,32 +53,36 @@ export default function PartnersPage() {
     <Section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <Wrap>
-        <div className="pt-overview v8-stack--lg">
+        <div className="pt-overview">
           <header className="pt-intro v8-stack">
             <span className="v8-eyebrow">Company</span>
             <h1 className="v8-h1">Partners</h1>
-            <p className="v8-lead">Working with ByteDance, Reddit, Stripe Startups and Cloudflare across AI models, advertising and startup resources.</p>
+            <p className="v8-lead">Who Vraelis works with, who it is talking to, and where it shows up. Partnerships are held through Foremake, the brand that builds Vraelis.</p>
           </header>
-          <div className="pt-cards pt-cards--equal">
-            {PARTNERS.map((p) => (
-              <Link key={p.slug} href={href(`/partners/${p.slug}`)} className="pt-card">
-                <LogoCard p={p} />
-                <div className="pt-card__copy">
-                  <p className="pt-meta"><span>Official partnership</span><time dateTime={p.established}>{day(p.established)}</time></p>
-                  <h2>{p.title}</h2>
-                  <p className="v8-small">{p.summary}</p>
-                  <span className="pt-card__read">Read partnership<span className="v8-arrow" aria-hidden="true" /></span>
-                </div>
-              </Link>
-            ))}
-          </div>
-          {/* IN PROGRESS (founder, 2026-10-23: "we arent with them yet dont list them as partners ... we are in the
+
+          <section className="pt-block" aria-labelledby="pt-partners-h">
+            <h2 id="pt-partners-h" className="pt-block__h">Partners</h2>
+            <div className="pt-grid">
+              {PARTNERS.map((p) => (
+                <Link key={p.slug} href={href(`/partners/${p.slug}`)} className="pt-tile">
+                  <LogoCard p={p} className="pt-tile__logo" />
+                  <div className="pt-tile__copy">
+                    <span className="pt-tile__kind">{KIND[p.slug]}</span>
+                    <h3 className="pt-tile__name">{p.name}</h3>
+                    <span className="pt-tile__read">Read more<span className="v8-arrow" aria-hidden="true" /></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* FUTURE PARTNERS (founder, 2026-10-23: "we arent with them yet dont list them as partners ... we are in the
               PROGRESS, so we not legally claiming anything"; founder chose to name all three after being advised that
-              naming the United Nations carries the most risk). Names only, as plain text: no logos, no emblem, no
-              partner card or page, and an explicit statement that nothing is signed and none endorses Vraelis.
-              Remove a name if talks end; move it to PARTNERS only with a signed agreement. */}
-          <section className="pt-progress" aria-labelledby="pt-progress-h">
-            <h2 id="pt-progress-h" className="pt-progress__h">Future partners</h2>
+              naming the United Nations carries the most risk). No partner card or page, and an explicit statement
+              that nothing is signed and none endorses Vraelis. Remove a name if talks end; move it to PARTNERS only
+              with a signed agreement. */}
+          <section className="pt-block" aria-labelledby="pt-progress-h">
+            <h2 id="pt-progress-h" className="pt-block__h">Future partners</h2>
             <ul className="pt-progress__row">
               {IN_PROGRESS.map((o) => (
                 <li key={o.name}>
@@ -86,7 +96,21 @@ export default function PartnersPage() {
                 </li>
               ))}
             </ul>
-            <p className="v8-small pt-progress__note">Conversations with these organizations are under way. They are not partners: no agreement has been signed, and none of them endorses Vraelis.</p>
+            <p className="v8-small pt-block__note">Conversations with these organizations are under way. They are not partners: no agreement has been signed, and none of them endorses Vraelis.</p>
+          </section>
+
+          <section className="pt-block" aria-labelledby="pt-events-h">
+            <h2 id="pt-events-h" className="pt-block__h">Events</h2>
+            <ul className="pt-events">
+              {EVENTS.map((e) => (
+                <li key={e.name} className="pt-event">
+                  <span className="pt-event__when">{e.when}</span>
+                  <span className="pt-event__name">{e.name}</span>
+                  <span className="pt-event__where">{e.where}</span>
+                  <span className="pt-event__role">{e.role}</span>
+                </li>
+              ))}
+            </ul>
           </section>
         </div>
       </Wrap>

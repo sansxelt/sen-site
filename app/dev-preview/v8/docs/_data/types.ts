@@ -8,7 +8,7 @@ import type { Kind } from "../../_kit/site";
 // [label](href) links, and nothing else. A site path ("/docs/overview") goes through href(); a link to the
 // closed console (app.vraelis.com) is dropped, because product access is closed.
 
-/** The docs tabs, in header order: Vraelis (get started), Products, Research, Earlier references. */
+/** The docs tabs, in header order: Vraelis (get started), Products, Research. ("earlier" stays in the type for code that still checks it; no page uses it since 2026-10-23.) */
 export type TabId = "vraelis" | "products" | "research" | "earlier";
 
 /** The id of the JSON script tag that holds a page's Markdown once, for both Copy for LLM buttons. */

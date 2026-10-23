@@ -1,5 +1,4 @@
 import { CONTOUR_PAGES } from "./contour";
-import { EARLIER_PAGES } from "./earlier";
 import { OBSERVATION_PAGES, VRAELIS_MORE } from "./more";
 import { HELPFUL } from "./helpful";
 import { RESEARCH_PAGES } from "./research";
@@ -12,13 +11,13 @@ import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from
 // appears everywhere. Order matters: the sidebar and the pager follow it within each tab.
 //
 // The tabs follow the founder's order (2026-10-10): Vraelis first (get started), then Products (Vraelis Contour is
-// the one product, under its own heading), then Research, then the earlier references.
+// the one product, under its own heading), then Research. The earlier references were retired on 2026-10-23
+// (lib/retired-docs.ts): their addresses answer 410 Gone.
 
 export const TABS: Tab[] = [
   { id: "vraelis", label: "Vraelis", to: "/docs", line: "What Vraelis is, how to read these docs, key concepts, a glossary and answers to common questions." },
   { id: "products", label: "Products", to: "/docs/products", line: "Vraelis Contour, the one product direction: how it works today, what the experiment records, and where it stops." },
   { id: "research", label: "Research", to: "/docs/research", line: "The guides on model releases, operating constraints and AI security evaluation." },
-  { id: "earlier", label: "Earlier references", to: "/docs/getting-started", line: "The earlier browser-testing product, kept as history. Not current." },
 ];
 
 // The Vraelis tab in sidebar order: Get started, Applications, Trust, Status, Reference (more.ts, 2026-10-12, added the
@@ -33,7 +32,7 @@ const VRAELIS_ORDERED: Page[] = [
 ];
 const scopeAt = CONTOUR_PAGES.findIndex((p) => p.group === "Scope");
 const CONTOUR_ORDERED: Page[] = [...CONTOUR_PAGES.slice(0, scopeAt), ...OBSERVATION_PAGES, HELPFUL.architecture, ...HELPFUL.guides, ...HELPFUL.reference, ...CONTOUR_PAGES.slice(scopeAt)];
-export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES, ...EARLIER_PAGES]
+export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES]
   .filter((p) => !(p.slug in SITE_FORWARDS));
 
 /** Slugs that moved. They redirect permanently (308) to the page that now holds their content.
@@ -116,13 +115,10 @@ function mainTopics(): NavTopic[] {
   if (missing.length || repeated.length) throw new Error(`docs sidebar tree: missing ${missing.join(", ") || "none"}; repeated ${repeated.join(", ") || "none"}`);
   return topics;
 }
-function earlierTopics(): NavTopic[] {
-  return tabGroups("earlier").map((g) => ({ title: g.group, items: g.pages.map((p) => ({ to: `/docs/${p.slug}`, label: navLabel(p), badge: p.badge })) }));
-}
 
 /** The sidebar of every tab, and the Products menu, as plain data for the client header and sidebar. */
 export function navModel(): NavTab[] {
-  const main = mainTopics(), earlier = earlierTopics();
+  const main = mainTopics();
   return TABS.map((t) => {
     const groups = tabGroups(t.id).map((g) => ({
       section: g.section, group: g.group,
@@ -132,7 +128,7 @@ export function navModel(): NavTab[] {
     const menu = t.id === "products"
       ? [{ to: "/docs/products", label: "Overview", line: "The one product direction" }, { to: "/docs/contour", label: "Vraelis Contour", line: "Model release security" }]
       : undefined;
-    return { id: t.id, label: t.label, to: t.to, groups, topics: t.id === "earlier" ? earlier : main, menu };
+    return { id: t.id, label: t.label, to: t.to, groups, topics: main, menu };
   });
 }
 

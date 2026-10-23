@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { retiredDocResponse, retiredDocSlug } from "./lib/retired-docs";
 import { csrfVerdict } from "@/lib/csrf";
 import type { NextRequest } from "next/server";
 import { isAppPath, legacyToNew, legacyRunsPath, legacySystemsPath } from "./lib/app-routes";
@@ -483,6 +484,8 @@ export default function proxy(req: NextRequest) {
 
   // The docs host serves only the docs (see docsHost above). After the curtain, so stealth covers it exactly
   // as it covers the main host, and before every main-host rule.
+  // Retired docs (lib/retired-docs.ts): 410 Gone on the docs host and on /docs/<slug> of the main host.
+  if (retiredDocSlug(path, !!docsMain)) return retiredDocResponse();
   if (docsMain) return docsHost(req, path, docsMain);
 
   // 00) The PUBLIC API namespace. /v1/* is the versioned surface machines call; it is served by the route
