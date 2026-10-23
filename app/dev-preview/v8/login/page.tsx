@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { SESSION_COOKIE, auth0Config, loginOpen, verifyIdToken } from "@/lib/auth0-login";
+import { PARTNERS, showsLogo } from "../_content/partners";
 import { Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { href } from "../_kit/site";
@@ -16,8 +17,9 @@ export const dynamic = "force-dynamic";
 // notice; founder, same day: no status pill and no glow ("no AI shi like this"), flat panel, plain words; "Secured by" with Auth0's logo ("Will be secured by" while sign-in is closed), and the
 // homepage's "In partnership with" logos. Not "Trusted by": partners.ts records that no partner endorses or uses
 // Vraelis. No testimonials: none exist.
-// Founder, 2026-10-23 (later): account requests go to sales@vraelis.com (there is no enterprise@); the right-hand panel
-// is removed; not a copy of scale.com: one centred column and the site's own solid button.
+// Founder, 2026-10-23 (later): this two-column layout restored ("the scale design was better, I just meant don't take it
+// 1:1"); account requests go to sales@vraelis.com (there is no enterprise@), Join Us for anything else; "Soon to be
+// secured by" while sign-in is closed.
 const SALES = "sales@vraelis.com";
 const ERRORS: Record<string, string> = {
   denied: "Logging in was cancelled or refused. Try again.",
@@ -68,7 +70,7 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                     <h1 className="v8-h1 lgn-h">You are logged in.</h1>
                     <p className="v8-lead lgn-lead">Signed in as <b data-no-translate>{who}</b>.</p>
                   </header>
-                  <form action="/api/login/logout" method="post"><button type="submit" className="v8-btn v8-btn--solid v8-btn--lg lgn-submit">Log Out</button></form>
+                  <form action="/api/login/logout" method="post"><button type="submit" className="lgn-submit">Log Out<span className="lgn-submit__arrow" aria-hidden="true">›</span></button></form>
                 </>
               ) : (
                 <>
@@ -91,6 +93,26 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                 </>
               )}
             </div>
+            <aside className="lgn-panel" aria-label="About Vraelis accounts">
+              <div className="lgn-panel__body">
+                <p className="lgn-panel__lead">Accounts are issued by Vraelis.</p>
+                <p className="lgn-panel__text">
+                  Each account is set up for an organization, a team or one person. There is no public sign-up and no
+                  sign-in with Google or other providers. Your password is checked by Auth0, not by this site.
+                </p>
+              </div>
+              <div className="lgn-partners">
+                <p className="lgn-partners__label">In partnership with</p>
+                <ul className="lgn-partners__grid">
+                  {PARTNERS.filter(showsLogo).map((p) => (
+                    <li key={p.slug}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className={`lgn-partners__logo lgn-partners__logo--${p.slug}`} src={p.logo.src} alt={p.logo.alt} width={p.logo.w} height={p.logo.h} loading="lazy" decoding="async" />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
           </div>
         </Wrap>
       </section>
