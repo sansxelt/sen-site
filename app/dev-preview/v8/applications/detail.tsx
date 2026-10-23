@@ -27,7 +27,7 @@ export function AppDetail({ page }: { page: AppPage }) {
         eyebrow={area.title}
         title={page.title}
         lead={page.lead}
-        actions={<><Button to={contactTo} arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
+        actions={<><Button to={contactTo} arrow>Join Us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
         aside={page.slug === "defense" ? <DefensePhoto /> : page.handoff ? (
           // The handoff takes the hero media's place, stacked under the introduction (founder, 2026-10-17: option A).
           <div id="contour" className="rx-handoff-wrap">
@@ -167,7 +167,7 @@ export function AppDetail({ page }: { page: AppPage }) {
       <Section tight>
         <Wrap>
           {page.contact ? (
-            <Band title={page.contact.title} lead={page.contact.lead} actions={<><Button to={page.contact.to} arrow>Join us</Button><Button to="/contour/status" kind="soft">Development status</Button></>} />
+            <Band title={page.contact.title} lead={page.contact.lead} actions={<><Button to={page.contact.to} arrow>Join Us</Button><Button to="/contour/status" kind="soft">Development status</Button></>} />
           ) : (
             <JoinBand />
           )}

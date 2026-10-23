@@ -35,8 +35,8 @@ const WHO: Page = {
       "No verdict on model behaviour. A signature endorses bytes, not behaviour.",
       "No permission to change a customer's system. That stays the customer's decision.",
     ] },
-    { t: "h2", text: "Join us" },
-    { t: "p", text: "Describe the models you release, the systems that run them, how a release is approved today and which evidence you would need. [Join us](/contact)" },
+    { t: "h2", text: "Join Us" },
+    { t: "p", text: "Describe the models you release, the systems that run them, how a release is approved today and which evidence you would need. [Join Us](/contact)" },
   ],
 };
 
@@ -212,7 +212,7 @@ const FAQ: Page = {
   updated: UPDATED,
   blocks: [
     { t: "h3", text: `Is ${CONTOUR.name} available?` },
-    { t: "p", text: `Not publicly. It is built for ${lower(CONTOUR.audience)} [Join us](/contact) to tell us about your release path.` },
+    { t: "p", text: `Not publicly. It is built for ${lower(CONTOUR.audience)} [Join Us](/contact) to tell us about your release path.` },
     { t: "h3", text: "Is there a public API, command line tool or console?" },
     { t: "p", text: "No. Vraelis Contour has private access. It does not currently offer a public API or command line tool." },
     { t: "h3", text: "Does it roll back automatically?" },

@@ -283,7 +283,7 @@ export default function Home() {
                   <li>Map your release path</li>
                   <li>Agree what evidence matters</li>
                 </ul>
-                <Button to="/contact?topic=contour" arrow>Join us</Button>
+                <Button to="/contact?topic=contour" arrow>Join Us</Button>
               </div>
               <div className="v8-box">
                 <h3 className="v8-h3" style={{ fontSize: 24 }}>Research collaboration</h3>
@@ -295,7 +295,7 @@ export default function Home() {
                   <li>Review what the evidence shows and does not show</li>
                 </ul>
                 {/* One contact action per section (founder, 2026-10-17: "shouldnt be 2 contacts for the same place"):
-                    Join us goes to the contact page, where research is one of the topics; this card leads to the research. */}
+                    Join Us goes to the contact page, where research is one of the topics; this card leads to the research. */}
                 <Button to="/research" kind="ghost">Explore research</Button>
               </div>
             </div>

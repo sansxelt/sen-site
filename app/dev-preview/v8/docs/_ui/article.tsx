@@ -72,7 +72,7 @@ export function Article({ page }: { page: Page }) {
         </div>
         {page.tab !== "earlier" ? (
           <div className="v8-docs-ctas">
-            <A to="/contact?topic=contour" className="v8-btn v8-btn--solid v8-btn--sm">Join us<span className="v8-chev" aria-hidden="true" /></A>
+            <A to="/contact?topic=contour" className="v8-btn v8-btn--solid v8-btn--sm">Join Us<span className="v8-chev" aria-hidden="true" /></A>
             <A to="/contour" className="v8-docs-meet">Meet {CONTOUR.name}<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 2.5h6v6M9.5 2.5l-7 7" /></svg></A>
           </div>
         ) : null}

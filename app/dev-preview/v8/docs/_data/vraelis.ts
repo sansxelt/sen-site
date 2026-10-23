@@ -186,6 +186,6 @@ export const PRODUCTS_OVERVIEW: Page = {
     { t: "p", text: "The four research areas, model integrity, adversarial threats, machine trust and security evidence, are workstreams, not products. [Research](/docs/research)" },
     { historical: true, t: "p", text: "The earlier browser-testing product is history. Its documentation is kept under Earlier references and is not current." },
     { t: "h2", text: "Access" },
-    { t: "p", text: `${CONTOUR.name} is not for public use. There is no public API, command line tool, console or account. To talk about it, use Join us. [Join us](/contact?topic=contour)` },
+    { t: "p", text: `${CONTOUR.name} is not for public use. There is no public API, command line tool, console or account. To talk about it, use Join us. [Join Us](/contact?topic=contour)` },
   ],
 };

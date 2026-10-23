@@ -157,8 +157,8 @@ export function V8Header() {
             {/* One way in, as on scale.com where Contact and Get Started are the same form (founder, 2026-10-11). */}
             {/* The nav items' height, 36px, so it sits on their line (founder, 2026-10-12: the hero size was "way too big"). */}
             {/* Log in sits right beside Join us, as on scale.com (founder, 2026-10-22). Login only; no sign-up. */}
-            <Link className="v8-header__login" href={href("/login")} aria-current={isCurrent("/login") ? "page" : undefined}>Log in</Link>
-            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href("/contact")}>Join us</Link>
+            <Link className="v8-header__login" href={href("/login")} aria-current={isCurrent("/login") ? "page" : undefined}>Log In</Link>
+            <Link className="v8-btn v8-btn--solid v8-btn--sm v8-header__join" href={href("/contact")}>Join Us</Link>
             <button type="button" className="v8-burger" aria-label={drawer ? "Close menu" : "Open menu"} aria-expanded={drawer} aria-controls="v8-drawer"
               onClick={() => setDrawer((d) => !d)}><span aria-hidden="true" /></button>
           </div>
@@ -192,8 +192,8 @@ export function V8Header() {
         </section>
         <div className="v8-drawer__ctas">
           <div className="v8-drawer__pair">
-            <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href("/contact")} onClick={() => setDrawer(false)}>Join us</Link>
-            <Link className="v8-btn v8-btn--ghost v8-btn--lg" href={href("/login")} onClick={() => setDrawer(false)}>Log in</Link>
+            <Link className="v8-btn v8-btn--solid v8-btn--lg" href={href("/contact")} onClick={() => setDrawer(false)}>Join Us</Link>
+            <Link className="v8-btn v8-btn--ghost v8-btn--lg" href={href("/login")} onClick={() => setDrawer(false)}>Log In</Link>
           </div>
           <nav className="v8-drawer__links" aria-label="More">
             {DRAWER_LINKS.map((l) => <Link key={l.to} href={href(l.to)} onClick={() => setDrawer(false)}>{l.label}</Link>)}

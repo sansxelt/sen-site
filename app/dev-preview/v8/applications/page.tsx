@@ -29,7 +29,7 @@ export default function ApplicationsOverview() {
         eyebrow="Applications"
         title="Intended for defense, critical infrastructure and autonomous systems."
         lead="Model integrity and release evidence across the systems people depend on."
-        actions={<><Button to="/contact?topic=contour" arrow>Join us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
+        actions={<><Button to="/contact?topic=contour" arrow>Join Us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
         aside={
           // Existing civilian context film; source and licensing records remain at /image-sources.
           <figure className="rx-film">

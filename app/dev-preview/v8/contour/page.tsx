@@ -71,7 +71,7 @@ export default function ContourPage() {
         title={<RiseWords text={CONTOUR.headline} />}
         lead={CONTOUR.line}
         actions={<>
-          <Button to="/contact?topic=contour" size="lg" arrow>Join us</Button>
+          <Button to="/contact?topic=contour" size="lg" arrow>Join Us</Button>
           <Button to="/docs" kind="soft" size="lg">Read the documentation</Button>
         </>}
       />
@@ -191,7 +191,7 @@ export default function ContourPage() {
           <Faq
             title={<>Questions about {CONTOUR.name}</>}
             items={[
-              { q: `Is ${CONTOUR.name} available?`, a: <>Not publicly. It is built for release, platform and security engineers at suppliers and system integrators. <Link className="v8-under" href={href("/contact?topic=contour")}>Join us</Link> to tell us how you release models.</> },
+              { q: `Is ${CONTOUR.name} available?`, a: <>Not publicly. It is built for release, platform and security engineers at suppliers and system integrators. <Link className="v8-under" href={href("/contact?topic=contour")}>Join Us</Link> to tell us how you release models.</> },
               { q: "Does it roll back automatically?", a: "No. Baseline mode serves what it loaded until an explicit, recorded reload. The experiment also has a reconcile mode." },
               { q: "Where is the source?", a: "Private. This site shows recorded evidence and captures of the evidence app." },
             ]}

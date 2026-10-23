@@ -395,7 +395,7 @@ export const CONTOUR_PAGES: Page[] = [
       ] },
       { t: "h2", text: "Product access" },
       { t: "p", text: "Vraelis Contour is not for public use; it is built for release, platform and security engineers at suppliers and system integrators. There is no public API, command line tool, console or account. The internal automated testing tooling used for the experiment is not a customer developer platform." },
-      { t: "p", text: "To talk about Vraelis Contour, use Join us, which leads to the contact form. [Join us](/contact?topic=contour)" },
+      { t: "p", text: "To talk about Vraelis Contour, use Join Us, which leads to the contact form. [Join Us](/contact?topic=contour)" },
       { t: "p", text: "The development status page keeps the same lists in one place. [Development status](/contour/status)" },
     ],
   },

@@ -112,7 +112,7 @@ function JoinMenu() {
   ];
   return (
     <div ref={box} className="v8-dhd__split" data-open={open}>
-      <Go to={link("/contact")} className="v8-dhd__join">Join us</Go>
+      <Go to={link("/contact")} className="v8-dhd__join">Join Us</Go>
       <button ref={button} type="button" className="v8-dhd__joinmore" aria-label="More links" aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}><Chevron /></button>
       {open ? (
         <div id={id} className="v8-dhd__card v8-dhd__card--end">
@@ -250,7 +250,7 @@ export function DocsHeader({ nav, slugTab }: { nav: NavTab[]; slugTab: Record<st
       <div id="v8-dhd-sheet" className="v8-dhd-sheet" hidden={!sheet} data-no-reveal>
         <nav aria-label={`${current.label} pages`} className="v8-dsb v8-dsb--sheet"><NavTree tab={current} onNavigate={() => setSheet(false)} /></nav>
         <div className="v8-dhd-sheet__end">
-          <Go to={link("/contact")} className="v8-btn v8-btn--solid v8-btn--lg" onClick={() => setSheet(false)}>Join us</Go>
+          <Go to={link("/contact")} className="v8-btn v8-btn--solid v8-btn--lg" onClick={() => setSheet(false)}>Join Us</Go>
           <div className="v8-dhd-sheet__row">
             <Go to={home} className="v8-dhd-sheet__home">vraelis.com{main ? <OutArrow /> : null}</Go>
             {sheet ? <ThemeToggle /> : null}
