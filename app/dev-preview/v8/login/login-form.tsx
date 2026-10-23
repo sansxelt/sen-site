@@ -25,19 +25,24 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
   // /login URL). The fields render disabled and enable only once this component has hydrated, so without JavaScript
   // nothing can be typed and disabled fields are never submitted. method="post" is a second layer.
   const ready = useSyncExternalStore(noSubscribe, () => true, () => false);
-  const off = !open || busy || !ready;
+  // Founder, 2026-10-23: "allow entire thing + flow ... no one got creds anyways". The form is usable whether or not
+  // Auth0 is connected. Before it is (loginOpen() false), no account exists anywhere, so every attempt is answered
+  // "no matching account" in the browser: the password is checked for presence and then discarded, never sent or
+  // stored. Once Auth0 is configured and opened, the same form runs the real Auth0 flow below.
+  const off = busy || !ready;
   const ticketForm = useRef<HTMLFormElement>(null);
   const ticket = useRef<HTMLInputElement>(null);
   const org = useRef<HTMLInputElement>(null);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!open || !ready || !domain || !clientId || !realm) return;
+    if (!ready) return;
     const f = new FormData(e.currentTarget);
     const username = String(f.get("email") ?? "").trim();
     const password = String(f.get("password") ?? "");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(username)) return setError(MSG.email);
     if (!password) return setError(MSG.password);
+    if (!open || !domain || !clientId || !realm) return setError(MSG.wrong); // no accounts exist yet; nothing is sent
     setBusy(true); setError(null);
     try {
       const res = await fetch(`https://${domain}/co/authenticate`, {
@@ -58,7 +63,7 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
 
   return (
     <>
-      {open && <noscript><p className="lgn-error">Logging in needs JavaScript. Turn it on for this page, then reload.</p></noscript>}
+      {<noscript><p className="lgn-error">Logging in needs JavaScript. Turn it on for this page, then reload.</p></noscript>}
       <form className="lgn-form" method="post" onSubmit={submit} noValidate aria-describedby={error ? `${id}-err` : undefined}>
         <div className="lgn-grid">
           <label className="lgn-field lgn-span">

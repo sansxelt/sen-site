@@ -89,7 +89,7 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                       <a href={`mailto:${SALES}`} data-no-translate>{SALES}</a>, or <Link href={href("/contact")}>Join Us</Link> for anything else.{" "}
                       {open
                         ? <>By logging in you agree to the <Link href={href("/terms")}>Terms</Link> and <Link href={href("/privacy")}>Privacy Policy</Link>.</>
-                        : <>Accounts are not open yet.</>}
+                        : null}
                     </p>
                   </footer>
                 </>
