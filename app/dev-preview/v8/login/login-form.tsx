@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 
 // The credentials form (founder, 2026-10-23: Vraelis issues credentials to an organization, a team or a person; no
 // Google or other third-party sign-in). Laid out like scale.com/demo: a two-column grid of fields and a Submit button
 // with an arrow. The password goes from this browser straight to Auth0 (/co/authenticate); this site receives only the
 // single-use login ticket, POSTed to /api/login/start, which continues to Auth0's /authorize. Errors are generic: the
 // form never says whether an email exists.
+const noSubscribe = () => () => {};
 type Props = { open: boolean; domain?: string; clientId?: string; realm?: string };
 const MSG = {
   email: "Enter the work email on your Vraelis account.",
@@ -23,8 +24,7 @@ export function LoginForm({ open, domain, clientId, realm }: Props) {
   // NO-SCRIPT SAFETY (Codex, 2026-10-22 r2: with scripts off, the form fell back to a GET and put the password in the
   // /login URL). The fields render disabled and enable only once this component has hydrated, so without JavaScript
   // nothing can be typed and disabled fields are never submitted. method="post" is a second layer.
-  const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
+  const ready = useSyncExternalStore(noSubscribe, () => true, () => false);
   const off = !open || busy || !ready;
   const ticketForm = useRef<HTMLFormElement>(null);
   const ticket = useRef<HTMLInputElement>(null);
