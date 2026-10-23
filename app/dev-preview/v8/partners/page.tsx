@@ -20,6 +20,8 @@ const IN_PROGRESS: { name: string; logo?: { src: string; light: string; w: numbe
   { name: "Auth0", logo: { src: "/v8/partners/auth0-logo-white.svg", light: "/v8/partners/auth0-logo.svg", w: 2235, h: 720 } },
   { name: "Vanta", logo: { src: "/v8/partners/vanta-logo-white.svg", light: "/v8/partners/vanta-logo.svg", w: 159, h: 39 } },
   { name: "United Nations" },
+  // Text only, as with the UN: NATO restricts use of its emblem (founder, 2026-10-23: future, in progress).
+  { name: "NATO" },
 ];
 
 // One word per partner for the tile, instead of the date that made the page read as a timeline (founder, 2026-10-23:
