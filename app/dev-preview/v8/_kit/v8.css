@@ -212,6 +212,9 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-caret { width: 6px; height: 6px; border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor; transform: translateY(-2px) rotate(45deg); opacity: .6; transition: transform .25s var(--ease); }
 [aria-expanded="true"] > .v8-caret { transform: translateY(1px) rotate(225deg); }
 .v8-header__end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+/* Log in, beside Join us (founder, 2026-10-22): a quiet text link at the nav items' size, so Join us stays the one button. */
+.v8-header__login { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 999px; color: var(--ink-2); font-size: 14px; font-weight: 500; transition: color .15s, background-color .15s; }
+.v8-header__login:hover, .v8-header__login[aria-current="page"] { color: var(--ink); background: var(--s2); }
 .v8-split { position: relative; display: inline-flex; border-radius: 10px; background: var(--ink); color: var(--ground); }
 .v8-split > a, .v8-split > button { display: inline-flex; align-items: center; min-height: 38px; border: 0; background: none; color: inherit; font: 500 14px/1 var(--sans); cursor: pointer; }
 .v8-split > a { padding: 0 14px 0 17px; border-radius: 10px 0 0 10px; }
@@ -272,12 +275,13 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 .v8-drawer__card b { font: 500 15px/1.25 var(--display); }
 .v8-drawer__card > span:last-child { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--ink-3); font-size: 12.5px; line-height: 1.4; }
 .v8-drawer__ctas { display: grid; gap: 18px; margin-top: auto; padding-top: 24px; }
+.v8-drawer__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .v8-drawer__links { display: flex; justify-content: center; gap: 26px; color: var(--ink-3); font-size: 14px; }
 .v8-drawer__links a { color: inherit; padding: 6px 2px; }
 .v8-drawer__links a:hover { color: var(--ink-2); }
 
 @media (max-width: 1100px) {
-  .v8-nav, .v8-header__end .v8-btn, .v8-split { display: none; }
+  .v8-nav, .v8-header__end .v8-btn, .v8-header__login, .v8-split { display: none; }
   .v8-burger { display: grid; }
 }
 

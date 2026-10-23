@@ -145,7 +145,8 @@
     "v8:paths:test": "tsx scripts/v8-promotion-paths-verify.ts",
     "v8:operator:test": "tsx scripts/v8-operator-verify.ts",
     "email:census": "tsx scripts/email-census.ts",
-    "tab:titles:test": "tsx scripts/tab-titles-verify.ts"
+    "tab:titles:test": "tsx scripts/tab-titles-verify.ts",
+    "login:test": "tsx scripts/login-auth0.test.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.78",

@@ -1,0 +1,24 @@
+/* /login (v8). One centred card on kit tokens, laid out like scale.com's log-in. Scoped under .v8 .lgn. */
+.v8 .lgn-sec { min-height: calc(100svh - var(--header-h)); display: grid; align-items: center; padding-bottom: var(--section); }
+.v8 .lgn-card { width: min(100%, 420px); margin: 0 auto; display: grid; gap: 18px; padding: clamp(24px, 4vw, 40px); border-radius: var(--r-xl);
+  background: radial-gradient(60% 50% at 100% 0%, rgba(255,255,255,.03), transparent 70%), var(--s1);
+  box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 0 color-mix(in srgb, var(--ink) 3.5%, transparent); }
+.v8 .lgn-h { margin: 0; text-align: center; }
+.v8 .lgn-sub { margin: 0; text-align: center; color: var(--ink-2); }
+.v8 .lgn-form { display: grid; gap: 10px; margin: 0; }
+.v8 .lgn-wide { width: 100%; justify-content: center; gap: 10px; }
+.v8 .lgn-google svg { flex: none; }
+.v8 .lgn-or { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; color: var(--ink-4); font-size: 12.5px; }
+.v8 .lgn-or::before, .v8 .lgn-or::after { content: ""; height: 1px; background: var(--line); }
+.v8 .lgn-label { color: var(--ink-2); font-size: 13.5px; font-weight: 500; }
+.v8 .lgn-input { display: block; width: 100%; min-height: 48px; padding: 12px 14px; border: 0; border-radius: var(--r-md); background: var(--ground);
+  color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); font: 400 16px/1.4 var(--sans); }
+.v8 .lgn-input::placeholder { color: var(--ink-4); }
+.v8 .lgn-input:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 2px; }
+.v8 .lgn-card button:disabled, .v8 .lgn-input:disabled { opacity: .45; cursor: not-allowed; }
+.v8 .lgn-note, .v8 .lgn-error { margin: 0; padding: 12px 14px; border-radius: var(--r-md); font-size: 14px; line-height: 1.5; }
+.v8 .lgn-note { background: var(--s2); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line); }
+.v8 .lgn-error { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(255,122,85,.7); }
+.v8 .lgn-note a, .v8 .lgn-fine a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.v8 .lgn-sso { margin: 0; color: var(--ink-3); font-size: 13px; line-height: 1.5; text-align: center; }
+.v8 .lgn-fine { margin: 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-4); font-size: 12.5px; line-height: 1.5; text-align: center; }
