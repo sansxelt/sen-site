@@ -62,5 +62,10 @@
 /* In progress (founder, 2026-10-23): plain text under the partner cards. */
 .v8 .pt-progress { display: grid; gap: 10px; padding-top: 32px; border-top: 1px solid var(--line); max-width: 820px; }
 .v8 .pt-progress__h { margin: 0; color: var(--ink-3); font-size: 13px; font-weight: 500; }
-.v8 .pt-progress__names { margin: 0; color: var(--ink); font: 500 clamp(18px, 1.8vw, 22px)/1.4 var(--display); letter-spacing: -.01em; }
+.v8 .pt-progress__row { list-style: none; margin: 6px 0 4px; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 18px 44px; }
+.v8 .pt-progress__row li { display: flex; align-items: center; min-height: 32px; }
+.v8 .pt-progress__logo { display: block; height: 24px; width: auto; }
+.v8 .pt-progress__logo--auth0 { height: 26px; }
+.v8 .pt-progress__logo--vanta { height: 19px; }
+.v8 .pt-progress__name { color: var(--ink); font: 500 clamp(18px, 1.8vw, 21px)/1 var(--display); letter-spacing: -.01em; }
 .v8 .pt-progress__note { margin: 0; color: var(--ink-3); }

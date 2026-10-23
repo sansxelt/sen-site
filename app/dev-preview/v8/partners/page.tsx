@@ -12,7 +12,15 @@ export const metadata = v8meta({
   path: "/partners",
 });
 
-const IN_PROGRESS = ["Auth0", "Vanta", "United Nations"];
+// Future partners (founder, 2026-10-23: "do all as future"). Auth0's logo is public domain (Wikimedia Commons, author
+// Auth0); Vanta's is its own site's logo (vanta.com header), recoloured white for the dark site and otherwise unchanged.
+// The United Nations stays a text name: its emblem may not be used without the Secretary-General's written
+// authorization (UN General Assembly resolution 92(I)), whatever the framing.
+const IN_PROGRESS: { name: string; logo?: { src: string; w: number; h: number } }[] = [
+  { name: "Auth0", logo: { src: "/v8/partners/auth0-logo-white.svg", w: 2235, h: 720 } },
+  { name: "Vanta", logo: { src: "/v8/partners/vanta-logo-white.svg", w: 159, h: 39 } },
+  { name: "United Nations" },
+];
 
 export default function PartnersPage() {
   const structuredData = {
@@ -64,8 +72,16 @@ export default function PartnersPage() {
               partner card or page, and an explicit statement that nothing is signed and none endorses Vraelis.
               Remove a name if talks end; move it to PARTNERS only with a signed agreement. */}
           <section className="pt-progress" aria-labelledby="pt-progress-h">
-            <h2 id="pt-progress-h" className="pt-progress__h">In progress</h2>
-            <p className="pt-progress__names">{IN_PROGRESS.join(" · ")}</p>
+            <h2 id="pt-progress-h" className="pt-progress__h">Future partners</h2>
+            <ul className="pt-progress__row">
+              {IN_PROGRESS.map((o) => (
+                <li key={o.name}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {o.logo ? <img className={`pt-progress__logo pt-progress__logo--${o.name.toLowerCase()}`} src={o.logo.src} alt={o.name} width={o.logo.w} height={o.logo.h} loading="lazy" decoding="async" />
+                    : <span className="pt-progress__name">{o.name}</span>}
+                </li>
+              ))}
+            </ul>
             <p className="v8-small pt-progress__note">Conversations with these organizations are under way. They are not partners: no agreement has been signed, and none of them endorses Vraelis.</p>
           </section>
         </div>
