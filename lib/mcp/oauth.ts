@@ -92,7 +92,7 @@ export async function resolveClient(clientId: string): Promise<OAuthClient | nul
   // Client ID Metadata Document: the id is an https URL serving the client's own metadata.
   if (/^https:\/\//.test(clientId) && clientId.length <= 500) {
     try {
-      const res = await safeFetch(clientId, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(5000) });
+      const res = await safeFetch(clientId, { headers: { accept: "application/json" }, redirect: "manual", signal: AbortSignal.timeout(5000) });
       if (!res.ok) return null;
       const text = await res.text();
       if (text.length > 20_000) return null;

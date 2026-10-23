@@ -155,7 +155,7 @@ async function main() {
   ok("block_reasons records a SANITIZED reason class (unresolved_host here), never a destination",
     Array.isArray(ssrf.summary.block_reasons) && ssrf.summary.block_reasons.includes("unresolved_host"), JSON.stringify(ssrf.summary.block_reasons));
   ok("the recorded reason exposes NO host/IP/port (fixed enum only)",
-    (ssrf.summary.block_reasons as string[]).every((r) => ["private_address","metadata_endpoint","unresolved_host","unsupported_scheme","port_not_allowed","blocked"].includes(r)));
+    (ssrf.summary.block_reasons as string[]).every((r) => ["private_address","metadata_endpoint","unresolved_host","unsupported_scheme","port_not_allowed","unsupported_encoding","blocked"].includes(r)));
 
   console.log("\n── CANCEL: a cancelled run settles with no decision row and no usage ──");
   const cancel = (results.cancel = await runCanaryPhase(deps, "cancel"));
@@ -253,7 +253,7 @@ async function main() {
     ok(`  ...and message stays exactly "blocked" (existing callers unbroken)`,
       caught instanceof Error && caught.message === "blocked");
     ok(`  ...and the reason exposes no host/port (fixed enum)`,
-      ["private_address","metadata_endpoint","unresolved_host","unsupported_scheme","port_not_allowed","blocked"].includes(blockedFetchReason(caught) ?? ""));
+      ["private_address","metadata_endpoint","unresolved_host","unsupported_scheme","port_not_allowed","unsupported_encoding","blocked"].includes(blockedFetchReason(caught) ?? ""));
   }
 
   console.log(`\n${pass}/${pass + fail} passed`);
