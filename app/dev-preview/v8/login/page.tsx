@@ -18,9 +18,8 @@ export const dynamic = "force-dynamic";
 // homepage's "In partnership with" logos. Not "Trusted by": partners.ts records that no partner endorses or uses
 // Vraelis. No testimonials: none exist.
 // Founder, 2026-10-23 (later): this two-column layout restored ("the scale design was better, I just meant don't take it
-// 1:1"); account requests go to sales@vraelis.com (there is no enterprise@), Join Us for more (founder's wording); "Soon to be
+// 1:1"); account requests go through Join Us, the same process for everyone (founder, 2026-10-24); "Soon to be
 // secured by" while sign-in is closed.
-const SALES = "sales@vraelis.com";
 const ERRORS: Record<string, string> = {
   denied: "Logging in was cancelled or refused. Try again.",
   state: "That login expired or was already used. Start again.",
@@ -85,9 +84,8 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                   <footer className="lgn-foot">
                     <Secured open={open} />
                     <p className="lgn-fine">
-                      {/* One purpose, one address (founder, 2026-10-24: "Join Us" here was confusing). */}
-                      {open ? "Need access or a new password? Email" : "Don't have an account? Request one at"}{" "}
-                      <a href={`mailto:${SALES}`} data-no-translate>{SALES}</a>.{" "}
+                      {/* Founder, 2026-10-24: "just say join us". */}
+                      {open ? "Need access or a new password?" : "Don't have an account?"} <Link href={href("/contact")}>Join Us</Link>.{" "}
                       {open
                         ? <>By logging in you agree to the <Link href={href("/terms")}>Terms</Link> and <Link href={href("/privacy")}>Privacy Policy</Link>.</>
                         : null}
