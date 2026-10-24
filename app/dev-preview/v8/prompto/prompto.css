@@ -19,3 +19,16 @@
 .v8 .pr-steps .v8-small { color: var(--ink-2); margin-top: 6px; }
 @media (max-width: 900px) { .v8 .pr-dl { grid-template-columns: repeat(2, minmax(0, 1fr)); } .v8 .pr-steps { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 480px) { .v8 .pr-dl { grid-template-columns: minmax(0, 1fr); } }
+/* Under the hero buttons: version and a link for every system (founder, 2026-10-24: "mac and linux too"). */
+.v8 .pr-also { flex-basis: 100%; margin: 6px 0 0; display: grid; justify-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); }
+.v8 .pr-also__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; }
+.v8 .pr-also__links a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px; }
+.v8 .pr-also__links a:hover { color: var(--ink); }
+.v8 .pr-versions { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.v8 .pr-versions li { display: grid; grid-template-columns: 140px 130px minmax(0, 1fr) auto; gap: 8px 24px; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.v8 .pr-versions__v { font: 500 17px/1.2 var(--display); color: var(--ink); display: flex; align-items: center; gap: 10px; }
+.v8 .pr-versions__v em { font-style: normal; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; }
+.v8 .pr-versions__date { color: var(--ink-3); font-size: 13.5px; }
+.v8 .pr-versions__line { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; }
+.v8 .pr-versions li a { font-size: 13px; white-space: nowrap; }
+@media (max-width: 760px) { .v8 .pr-versions li { grid-template-columns: 1fr auto; } .v8 .pr-versions__line { grid-column: 1 / -1; } .v8 .pr-versions li a { grid-column: 1 / -1; } }

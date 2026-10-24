@@ -1,5 +1,5 @@
 import { CodeTabs, RiseWords } from "../_kit/client";
-import { Button, Faq, PageHero, Section, TextLink, Wrap } from "../_kit/blocks";
+import { Faq, PageHero, Section, TextLink, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
 import { PROMPTO, TAB_NAMES, promptoDownloadUrl } from "../_kit/site";
 import { DownloadButton } from "./download";
@@ -65,7 +65,15 @@ export default function Prompto() {
         lead={PROMPTO.line}
         actions={<>
           <DownloadButton />
-          <Button to="/news/vraelis-cli-0-1-0" kind="soft" size="lg">Release notes</Button>
+          <a className="v8-btn v8-btn--soft v8-btn--lg" href="#versions">All versions</a>
+          <p className="pr-also">
+            <span>Version {PROMPTO.version} · {PROMPTO.released}</span>
+            <span className="pr-also__links">
+              {PROMPTO.downloads.map((d) => (
+                <a key={d.file} href={promptoDownloadUrl(d.file)}>{d.label}{d.os === "mac" ? ` (${d.arch})` : ""}</a>
+              ))}
+            </span>
+          </p>
         </>}
       />
 
@@ -92,6 +100,27 @@ export default function Prompto() {
               <div><h3 className="v8-h3">Linux</h3><p className="v8-small">Unpack with tar -xzf, then run ./vraelis from that folder.</p></div>
             </div>
             <p className="v8-small">Then run <code>vraelis --version</code>. The downloads are not yet signed, which is why your system warns you. Check each file against <a className="v8-under" href={promptoDownloadUrl("SHA256SUMS-downloads")}>SHA256SUMS-downloads</a>.</p>
+          </div>
+        </Wrap>
+      </Section>
+
+      <Section rule id="versions">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head" style={{ maxWidth: 720 }}>
+              <span className="v8-eyebrow">Versions</span>
+              <h2 className="v8-h2">Release history</h2>
+            </div>
+            <ol className="pr-versions">
+              {PROMPTO.versions.map((r, i) => (
+                <li key={r.v}>
+                  <span className="pr-versions__v">{r.v}{i === 0 ? <em>Latest</em> : null}</span>
+                  <span className="pr-versions__date">{r.date}</span>
+                  <span className="pr-versions__line">{r.line}</span>
+                  <a className="v8-under" href={`${PROMPTO.repo}/releases/tag/v${r.v}`}>Release notes</a>
+                </li>
+              ))}
+            </ol>
           </div>
         </Wrap>
       </Section>

@@ -80,6 +80,13 @@ export const PROMPTO = {
   line: "Open source. Records exactly which AI model files and coding-agent add-ons you approved, offline, and tells you the moment anything changes.",
   repo: "https://github.com/sansxelt/vraelis-cli",
   version: "0.1.2",
+  released: "October 21, 2026",
+  /** Newest first, from the public CHANGELOG. Standalone downloads exist from 0.1.2. */
+  versions: [
+    { v: "0.1.2", date: "Oct 21, 2026", line: "Ignore rules now match git exactly, so a gitignored agent config is never treated as shared." },
+    { v: "0.1.1", date: "Oct 21, 2026", line: "Privacy and reporting fixes for agent configs, and files checked for presence only are now listed in every result." },
+    { v: "0.1.0", date: "Oct 20, 2026", line: "First public release (alpha): locks for AI model folders and coding-agent add-ons." },
+  ],
   /** Standalone executables attached to the release by the public repo's downloads workflow. Unsigned for now. */
   downloads: [
     { os: "windows", label: "Windows", arch: "x64", file: "vraelis-0.1.2-windows-x64.exe" },
