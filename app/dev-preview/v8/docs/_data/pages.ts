@@ -3,6 +3,7 @@ import { OBSERVATION_PAGES, VRAELIS_MORE } from "./more";
 import { HELPFUL } from "./helpful";
 import { RESEARCH_PAGES } from "./research";
 import { PRODUCTS_OVERVIEW, VRAELIS_PAGES } from "./vraelis";
+import { PROMPTO_PAGES } from "./prompto";
 import { SITE_FORWARDS } from "./forwards";
 import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from "./types";
 
@@ -16,7 +17,7 @@ import type { Block, NavLeaf, NavTab, NavTopic, Page, Tab, TabId, TocItem } from
 
 export const TABS: Tab[] = [
   { id: "vraelis", label: "Vraelis", to: "/docs", line: "What Vraelis is, how to read these docs, key concepts, a glossary and answers to common questions." },
-  { id: "products", label: "Products", to: "/docs/products", line: "Vraelis Contour, the one product direction: how it works today, what the experiment records, and where it stops." },
+  { id: "products", label: "Products", to: "/docs/products", line: "Vraelis Prompto, open source and available, and Vraelis Contour, in private development: how each works and where it stops." },
   { id: "research", label: "Research", to: "/docs/research", line: "The guides on model releases, operating constraints and AI security evaluation." },
 ];
 
@@ -32,7 +33,7 @@ const VRAELIS_ORDERED: Page[] = [
 ];
 const scopeAt = CONTOUR_PAGES.findIndex((p) => p.group === "Scope");
 const CONTOUR_ORDERED: Page[] = [...CONTOUR_PAGES.slice(0, scopeAt), ...OBSERVATION_PAGES, HELPFUL.architecture, ...HELPFUL.guides, ...HELPFUL.reference, ...CONTOUR_PAGES.slice(scopeAt)];
-export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...CONTOUR_ORDERED, ...RESEARCH_PAGES]
+export const PAGES: Page[] = [...VRAELIS_ORDERED, PRODUCTS_OVERVIEW, ...PROMPTO_PAGES, ...CONTOUR_ORDERED, ...RESEARCH_PAGES]
   .filter((p) => !(p.slug in SITE_FORWARDS));
 
 /** Slugs that moved. They redirect permanently (308) to the page that now holds their content.
@@ -71,7 +72,9 @@ type TreeItem = string | { label: string; slugs: string[] };
 const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
   { title: "Get started", items: ["@home", "introduction", "key-concepts", "reading-the-docs", "who-its-for"] },
   { title: "Products", items: [
-    "products", "contour", "architecture",
+    "products",
+    { label: "Vraelis Prompto", slugs: ["prompto", "prompto-install", "prompto-models", "prompto-agents", "prompto-results", "prompto-limits"] },
+    "contour", "architecture",
     { label: "Guides", slugs: ["walkthrough", "review-an-observation", "evaluate-contour"] },
     { label: "Concepts", slugs: ["release-identity", "approval-binding", "runtime-integration", "comparing-approved-and-reported"] },
     { label: "Evidence", slugs: ["evidence-and-observations", "evidence-app"] },

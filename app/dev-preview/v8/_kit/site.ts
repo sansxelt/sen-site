@@ -209,6 +209,8 @@ export const TAB_NAMES: Record<string, string> = {
   // Earlier references (history)
   "getting-started": "Start here", "the-loop": "The loop", "what-you-can-check": "Checks", "ai-assistants": "AI assistants", ci: "CI gate",
   review: "Plan review", "run-activity": "Run activity", "recorded-reports": "Task reports", cli: "CLI",
+  // Docs: Vraelis Prompto (docs/_data/prompto.ts)
+  "prompto-install": "Install", "prompto-models": "Models", "prompto-agents": "Agents", "prompto-results": "Results", "prompto-limits": "Secrets",
   // Docs: key concepts, architecture, guides, reference (helpful.ts)
   "key-concepts": "Key concepts", architecture: "Architecture", walkthrough: "Walkthrough", "review-an-observation": "Review guide",
   "evaluate-contour": "Evaluate", "observation-record": "Record fields", "states-and-codes": "States, codes",

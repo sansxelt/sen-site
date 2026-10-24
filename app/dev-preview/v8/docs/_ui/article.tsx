@@ -1,7 +1,7 @@
 import { GENERAL_INBOX } from "@/lib/contact-routing";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CONTOUR } from "../../_kit/site";
+import { CONTOUR, PROMPTO } from "../../_kit/site";
 import { dl } from "../_data/host";
 import { adjacent, crumbs, navLabel, outline } from "../_data/pages";
 import { pageMarkdown } from "../_data/text";
@@ -73,7 +73,8 @@ export function Article({ page }: { page: Page }) {
         {page.tab !== "earlier" ? (
           <div className="v8-docs-ctas">
             <A to="/contact?topic=contour" className="v8-btn v8-btn--solid v8-btn--sm">Join Us<span className="v8-chev" aria-hidden="true" /></A>
-            <A to="/contour" className="v8-docs-meet">Meet {CONTOUR.name}<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 2.5h6v6M9.5 2.5l-7 7" /></svg></A>
+            {/* Prompto's pages point to its product page and downloads; every other page to Contour. */}
+            <A to={page.section === PROMPTO.name ? "/prompto" : "/contour"} className="v8-docs-meet">{page.section === PROMPTO.name ? `Get ${PROMPTO.name}` : `Meet ${CONTOUR.name}`}<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 2.5h6v6M9.5 2.5l-7 7" /></svg></A>
           </div>
         ) : null}
         <p className="v8-docs-lead">{page.lead ?? page.description}</p>
