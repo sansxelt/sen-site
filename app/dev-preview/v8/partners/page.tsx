@@ -28,7 +28,11 @@ const IN_PROGRESS: { name: string; logo?: { src: string; light: string; w: numbe
 // "it just isn't neat it's just a timeline"). Dates stay on each partner's own page.
 const KIND: Record<string, string> = { bytedance: "AI models", reddit: "Advertising", "stripe-startups": "Startup program", cloudflare: "Technology" };
 // Events on record. Cloudflare Connect 2026: Foremake was invited with registrant type Partner (partners.ts record).
-const EVENTS = [{ when: "Oct 19–21, 2026", name: "Cloudflare Connect 2026", where: "Moscone West, San Francisco", role: "Registered as a Cloudflare partner" }];
+// Newest first. Autonomous Futures: Vraelis was invited to and attended (foremake.com/events, founder-confirmed).
+const EVENTS = [
+  { when: "Oct 19–21, 2026", name: "Cloudflare Connect 2026", where: "Moscone West, San Francisco", role: "Registered as a Cloudflare partner" },
+  { when: "Jul 6, 2026", name: "Autonomous Futures Physical AI Summit 2026", where: "Autonomous Futures", role: "Invited and attended" },
+];
 
 export default function PartnersPage() {
   const structuredData = {
