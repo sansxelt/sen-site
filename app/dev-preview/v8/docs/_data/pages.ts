@@ -83,7 +83,7 @@ const MAIN_TREE: { title: string; items: TreeItem[] }[] = [
   { title: "Reference", items: ["glossary", "faq"] },
   // The pages these docs used to repeat, linked where they live (forwards.ts). "@site:<path>|<label>" is a site page.
   { title: "On vraelis.com", items: [
-    "@site:/applications|Applications", "@site:/research|Research areas", "@site:/contour/status|Development status", "@site:/news|News", "@changelog",
+    "@site:/applications|Applications", "@site:/research|Research areas", "@site:/status|Development status", "@site:/news|News", "@changelog",
     "@site:/company|About", "@site:/partners|Partnerships", "@site:/security|Security and disclosure", "@site:/privacy|Privacy",
   ] },
 ];

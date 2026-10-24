@@ -36,7 +36,7 @@ export const NEWS: NewsItem[] = [
     title: "Internal automated testing reproduces 133 of 133 experiment tests (runtime rejection-diagnostics revision)",
     summary: "In a pinned, network-disabled harness. It supersedes the earlier 131-test suite count.",
     image: { src: "/v8/contour/app-observations-unavailable-1200.webp", alt: "The Vraelis Contour app showing an observation with the runtime report unavailable.", w: 1200, h: 750 },
-    to: "/contour/status",
+    to: "/status",
   },
   {
     id: "2026-10-10-qa-131",
@@ -45,7 +45,7 @@ export const NEWS: NewsItem[] = [
     title: "Internal automated testing reproduces 131 of 131 experiment tests (runtime-policy revision)",
     summary: "Internal automated testing rebuilt the pinned harness offline and reproduced every experiment test.",
     image: { src: "/v8/contour/app-policy-1200.webp", alt: "The runtime policy in the Vraelis Contour app: ONNX Runtime 1.23.2 and CPUExecutionProvider.", w: 1200, h: 750 },
-    to: "/contour/status",
+    to: "/status",
   },
   {
     id: "2026-10-08-contour",

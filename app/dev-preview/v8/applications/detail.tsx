@@ -144,7 +144,7 @@ export function AppDetail({ page }: { page: AppPage }) {
           <Split head={<Head eyebrow="Limits" title="What we do not claim." />}>
             <NotList items={page.notClaimed} />
             <div className="v8-actions" style={{ marginTop: 22 }}>
-              <TextLink to="/contour/status">Development status</TextLink>
+              <TextLink to="/status">Development status</TextLink>
             </div>
           </Split>
         </Wrap>
@@ -167,7 +167,7 @@ export function AppDetail({ page }: { page: AppPage }) {
       <Section tight>
         <Wrap>
           {page.contact ? (
-            <Band title={page.contact.title} lead={page.contact.lead} actions={<><Button to={page.contact.to} arrow>Join Us</Button><Button to="/contour/status" kind="soft">Development status</Button></>} />
+            <Band title={page.contact.title} lead={page.contact.lead} actions={<><Button to={page.contact.to} arrow>Join Us</Button><Button to="/status" kind="soft">Development status</Button></>} />
           ) : (
             <JoinBand />
           )}

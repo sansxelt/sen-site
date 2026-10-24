@@ -6,7 +6,7 @@ import { entityJsonLd } from '../lib/entity';
 for (const [path, title, image, siteName] of [
   ['/research', 'Research', 'vraelis-physical-ai-v1.png', 'Vraelis'],
   ['/contour', 'Vraelis Contour', 'vraelis-contour-v1.png', 'Vraelis'],
-  ['/contour/status', 'Development status', 'vraelis-contour-v1.png', 'Vraelis'],
+  ['/status', 'Development status', 'vraelis-contour-v1.png', 'Vraelis'],
   ['/docs', 'Get started with Vraelis', 'vraelis-docs-v1.png', 'Vraelis docs'],
   ['/docs/release-identity', 'Release identity', 'vraelis-docs-v1.png', 'Vraelis docs'],
 ]) {

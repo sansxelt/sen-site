@@ -39,7 +39,7 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
                 <Head eyebrow="What exists today" title={ex.title} lead={ex.lead} />
                 <KindList items={ex.items} />
                 <div className="v8-actions">
-                  <TextLink to="/contour/status">Development status</TextLink>
+                  <TextLink to="/status">Development status</TextLink>
                 </div>
               </div>
               <div className="rx-exists__media">
@@ -51,7 +51,7 @@ export function ResearchDetail({ page }: { page: ResearchPage }) {
               <div className="rx-prose">
                 {ex.paragraphs.map((p) => <p key={p}>{p}</p>)}
                 <div className="v8-actions">
-                  <TextLink to="/contour/status">Vraelis Contour development status</TextLink>
+                  <TextLink to="/status">Vraelis Contour development status</TextLink>
                 </div>
               </div>
             </Split>

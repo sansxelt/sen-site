@@ -1,13 +1,13 @@
-import { Button, Capture, JoinBand, PageHero, Section, Tag, Wrap } from "../../_kit/blocks";
-import { v8meta } from "../../_kit/meta";
-import { CONTOUR, DIRECTION, FACTS, PROMPTO, STATUS, type Kind, STATUS_SOURCES, TAB_NAMES, href } from "../../_kit/site";
+import { Button, Capture, JoinBand, PageHero, Section, Tag, Wrap } from "../_kit/blocks";
+import { v8meta } from "../_kit/meta";
+import { CONTOUR, DIRECTION, FACTS, PROMPTO, STATUS, type Kind, STATUS_SOURCES, TAB_NAMES, href } from "../_kit/site";
 import Link from "next/link";
-import "../contour.css";
+import "../contour/contour.css";
 
 export const metadata = v8meta({
   title: "Vraelis development status",
   description: `Where each Vraelis product stands: ${PROMPTO.name} (available), ${CONTOUR.name} (private development) and what comes next, with the source for every line.`,
-  path: "/contour/status",
+  path: "/status",
   tab: TAB_NAMES["contour-status"],
 });
 

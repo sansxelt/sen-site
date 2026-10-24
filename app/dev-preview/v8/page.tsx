@@ -159,7 +159,7 @@ export default function Home() {
               <TypeLoop idle="Search the documentation" queries={DOCS_QUERIES} />
               <div className="v8-tile__foot" style={{ marginTop: "auto" }}><span>Documentation</span><small>Explore <span className="v8-arrow" aria-hidden="true" /></small></div>
             </Link>
-            <Link href={href("/contour/status")} className="v8-tile">
+            <Link href={href("/status")} className="v8-tile">
               <div className="hm-cmp">
                 <Rotate className="hm-cmp__rot" ms={3200} slides={STATUS_STATES.map((s) => (
                   <Fragment key={s.state}>
@@ -222,12 +222,12 @@ export default function Home() {
                 <Button to="/docs" kind="soft">Read the docs</Button>
               </div>
               <div className="v8-facts">
-                {/* The earlier suite's count (testsEarlier) is dated history and stays on /contour/status only. */}
+                {/* The earlier suite's count (testsEarlier) is dated history and stays on /status only. */}
                 {[FACTS.tests, FACTS.runtime, FACTS.observations].map((f) => (
                   <div key={f.value}><b>{f.value}</b><span>{"short" in f ? f.short : f.label}</span></div>
                 ))}
               </div>
-              <TextLink to="/contour/status" muted>Dates, versions and limits</TextLink>
+              <TextLink to="/status" muted>Dates, versions and limits</TextLink>
             </div>
             <CodeTabs tabs={[
               { id: "obs", label: "Recorded observation", file: "observation 02, reload pending", code: OBSERVATION_2 },
@@ -246,7 +246,7 @@ export default function Home() {
                 <span className="v8-eyebrow">Where we are</span>
                 <h2 className="v8-h2">What works today, and what does not yet.</h2>
               </div>
-              <TextLink to="/contour/status">Development status</TextLink>
+              <TextLink to="/status">Development status</TextLink>
             </div>
             <Ledger />
           </div>

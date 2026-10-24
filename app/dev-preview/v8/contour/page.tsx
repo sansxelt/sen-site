@@ -179,7 +179,7 @@ export default function ContourPage() {
                 <span className="v8-eyebrow">Where we are</span>
                 <h2 className="v8-h2">Where it stands</h2>
               </div>
-              <TextLink to="/contour/status">Development status and sources</TextLink>
+              <TextLink to="/status">Development status and sources</TextLink>
             </div>
             <Ledger />
           </div>

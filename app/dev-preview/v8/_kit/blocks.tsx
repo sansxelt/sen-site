@@ -214,7 +214,7 @@ export function Band({ title, lead, actions }: { title: ReactNode; lead?: ReactN
     </div>
   );
 }
-export function JoinBand({ title = "Build trusted AI for the physical world.", lead = "Join us in building Vraelis.", secondary = { to: "/contour/status", label: "Development status" }, topic = "contour" }: { title?: ReactNode; lead?: ReactNode; secondary?: { to: string; label: string } | null; topic?: string }) {
+export function JoinBand({ title = "Build trusted AI for the physical world.", lead = "Join us in building Vraelis.", secondary = { to: "/status", label: "Development status" }, topic = "contour" }: { title?: ReactNode; lead?: ReactNode; secondary?: { to: string; label: string } | null; topic?: string }) {
   return <Band title={title} lead={lead} actions={<><Button to={`/contact?topic=${topic}`} arrow>Join Us</Button>{secondary ? <Button to={secondary.to} kind="soft">{secondary.label}</Button> : null}</>} />;
 }
 

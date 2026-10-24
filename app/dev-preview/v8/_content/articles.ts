@@ -99,7 +99,7 @@ export const ARTICLES: Article[] = [
       ] },
     ],
     notClaimed: ["Live-cluster validation of the current revision", "Customer clusters or deployments", "Hardware attestation", "New test counts"],
-    links: [{ label: "Development status", to: "/contour/status" }],
+    links: [{ label: "Development status", to: "/status" }],
   },
   {
     slug: "five-ways-a-model-update-goes-wrong",
@@ -161,7 +161,7 @@ export const ARTICLES: Article[] = [
       ] },
     ],
     notClaimed: ["Hardware attestation", "Heartbeat freshness, which is planned, not built", "Detection of a runtime that reports falsely"],
-    links: [{ label: "The terms Contour uses", to: "/contour" }, { label: "Development status", to: "/contour/status" }],
+    links: [{ label: "The terms Contour uses", to: "/contour" }, { label: "Development status", to: "/status" }],
   },
   {
     slug: "evidence-unavailable-is-a-result",

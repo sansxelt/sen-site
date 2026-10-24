@@ -86,8 +86,8 @@ export default function V8SecurityPage() {
               <Topics items={STATUS_TOPICS} />
               <p className="v8-body">The experiment records comparisons between approved releases and trusted worker reports. Its evidence app checks imported records for internal consistency, not authenticity. Earlier browser-testing documentation describes a retired product and does not establish current Contour capabilities.</p>
               <div className="v8-sec__links">
-                <TextLink to="/contour/status">Development status</TextLink>
-                <TextLink to="/contour/status#limits">Read the limitations</TextLink>
+                <TextLink to="/status">Development status</TextLink>
+                <TextLink to="/status#limits">Read the limitations</TextLink>
               </div>
             </div>
           </div>

@@ -113,7 +113,7 @@ export const VRAELIS_PAGES: Page[] = [
         { to: "/docs/limits", title: "Limits and what is not built", line: "Each item not built, and what the evidence does not establish." },
         { to: "/docs/runtime-integration", title: "Runtime integration", line: "The one supported runtime and its policy." },
       ] },
-      { t: "p", text: "The development status page on vraelis.com keeps the same lists. [Development status](/contour/status)" },
+      { t: "p", text: "The development status page on vraelis.com keeps the same lists. [Development status](/status)" },
     ],
   },
   {

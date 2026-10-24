@@ -176,7 +176,7 @@ export const OBSERVATION_TIMES: Record<string, { time: string; reason?: string }
   "04": { time: "07:41:29.723", reason: "RUNTIME_UNAVAILABLE" },
 };
 
-/** Where each status line comes from. Shared by /contour/status and the docs' sources page. */
+/** Where each status line comes from. Shared by /status and the docs' sources page. */
 export const STATUS_SOURCES = {
   brief: { label: "Founder brief, 10 October 2026", line: "What is implemented, unfinished and never claimed." },
   qaTests: { label: "Internal automated testing, runtime-policy revision", line: "The 131 tests of the earlier runtime-policy revision, reproduced offline on a separate pinned Docker build. Runtime policy enforcement checked." },
@@ -293,7 +293,7 @@ export const DRAWER_LINKS = [{ label: "News", to: "/news" }, { label: "Privacy",
 export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/news" }] as const;
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
-  { title: "Products", links: [{ label: "Vraelis Contour", to: "/contour" }, { label: "Development status", to: "/contour/status" }, { label: "Vraelis Prompto", to: "/prompto" }, { label: "Prompto on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Documentation", to: "/docs" }] },
+  { title: "Products", links: [{ label: "Vraelis Contour", to: "/contour" }, { label: "Development status", to: "/status" }, { label: "Vraelis Prompto", to: "/prompto" }, { label: "Prompto on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Documentation", to: "/docs" }] },
   { title: "Research", links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
   { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },

@@ -102,7 +102,7 @@ export default function Changelog() {
         <Wrap>
           <div className="clg-end">
             <p className="v8-body">Where things stand today.</p>
-            <TextLink to="/contour/status">Development status</TextLink>
+            <TextLink to="/status">Development status</TextLink>
           </div>
         </Wrap>
       </Section>

@@ -42,7 +42,7 @@ const EXPLORE: Col[] = [
     { label: "Introduction", to: "/docs/introduction" },
     { label: "Key concepts", to: "/docs/key-concepts" },
     { label: "How to read these docs", to: "/docs/reading-the-docs" },
-    { label: "Development status", to: "/contour/status" },
+    { label: "Development status", to: "/status" },
     { label: "Glossary", to: "/docs/glossary" },
   ] },
   { title: CONTOUR.name, links: [
@@ -115,7 +115,7 @@ export default async function DocsHome() {
               <p className="v8-dh-product__p">{CONTOUR.headline} {CONTOUR.name} is built to connect an approved model release to the runtime that receives it. In the reference experiment, it shows whether that runtime reports loading what was approved.</p>
               <div className="v8-dh-product__actions">
                 <A to="/docs/contour" className="v8-btn v8-btn--solid v8-btn--sm">Read the docs</A>
-                <A to="/contour/status" className="v8-btn v8-btn--ghost v8-btn--sm">Development status</A>
+                <A to="/status" className="v8-btn v8-btn--ghost v8-btn--sm">Development status</A>
               </div>
             </div>
             <dl className="v8-dh-spec">
