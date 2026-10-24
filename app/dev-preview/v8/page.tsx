@@ -123,30 +123,6 @@ export default function Home() {
         <PartnerBand />
       </section>
 
-      <Section rule id="direction">
-        <Wrap>
-          <div className="v8-stack--lg">
-            <div className="v8-head" style={{ maxWidth: 760 }}>
-              <span className="v8-eyebrow">{DIRECTION.eyebrow}</span>
-              <h2 className="v8-h2">{DIRECTION.headline}</h2>
-              <p className="v8-lead">{DIRECTION.line}</p>
-              <p className="v8-body">{DIRECTION.who}</p>
-            </div>
-            <ol className="hm-dir">
-              {DIRECTION.steps.map((st, i) => (
-                <li key={st.title} className={`hm-dir__step${st.to ? "" : " hm-dir__step--plan"}`}>
-                  <span className="hm-dir__n">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="hm-dir__tag">{st.tag}</span>
-                  <h3 className="v8-h3">{st.title}</h3>
-                  <p className="v8-small">{st.line}</p>
-                  {st.to ? <TextLink to={st.to}>Explore</TextLink> : null}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </Wrap>
-      </Section>
-
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
           <div className="v8-bento">
@@ -205,6 +181,30 @@ export default function Home() {
           </div>
         </Wrap>
       </section>
+
+      <Section rule id="direction">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head" style={{ maxWidth: 760 }}>
+              <span className="v8-eyebrow">{DIRECTION.eyebrow}</span>
+              <h2 className="v8-h2">{DIRECTION.headline}</h2>
+              <p className="v8-lead">{DIRECTION.line}</p>
+              <p className="v8-body">{DIRECTION.who}</p>
+            </div>
+            <ol className="hm-dir">
+              {DIRECTION.steps.map((st, i) => (
+                <li key={st.title} className={`hm-dir__step${st.to ? "" : " hm-dir__step--plan"}`}>
+                  <span className="hm-dir__n">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="hm-dir__tag">{st.tag}</span>
+                  <h3 className="v8-h3">{st.title}</h3>
+                  <p className="v8-small">{st.line}</p>
+                  {st.to ? <TextLink to={st.to}>Explore</TextLink> : null}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Wrap>
+      </Section>
 
       <Section rule>
         <Wrap>
