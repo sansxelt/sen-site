@@ -22,7 +22,7 @@ export default function ResearchOverview() {
     <div className="v8-rx v8-rx--research">
       <PageHero
         eyebrow="Research"
-        title="Research in four areas of AI security."
+        title="The research behind trusted AI in machines."
         lead={`${WORK_LINE} Workstreams, not products.`}
         actions={<><Button to="/contact?topic=research" arrow>Research collaboration</Button><Button to="/contour" kind="soft">Vraelis Contour</Button></>}
       />

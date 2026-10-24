@@ -49,9 +49,9 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   defense: {
     slug: "defense",
     metaTitle: "Defense",
-    description: "AI security for defense systems: model integrity, destination-bound release approval, and reviewable security evidence.",
-    title: "AI security for defense systems.",
-    lead: "Model integrity and release evidence for teams working across defense systems.",
+    description: "Trusted AI for defense systems: which AI each system runs, who approved it for where, and evidence a reviewer can read.",
+    title: "Trusted AI for defense systems.",
+    lead: "Which AI a defense system runs, who approved it, and whether it changed, for teams working across defense programs.",
     whyTitle: "A model update crosses organizations.",
     why: [
       { title: "Updates cross organizations", body: "Trained by one team, integrated by another, operated by a third." },
@@ -92,8 +92,8 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   "critical-infrastructure": {
     slug: "critical-infrastructure",
     metaTitle: "Critical infrastructure",
-    description: "Model release integrity for energy, water, and communications systems, connecting approved updates with reported runtime state.",
-    title: "AI security for critical infrastructure.",
+    description: "Trusted AI for energy, water and communications: which AI each system runs, who approved it, and whether it changed.",
+    title: "Trusted AI for critical infrastructure.",
     lead: "In energy, water and communications, vendors ship models into systems operators own.",
     whyTitle: "The model changes. The operational record must keep up.",
     why: [
@@ -134,8 +134,8 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   "autonomous-systems": {
     slug: "autonomous-systems",
     metaTitle: "Autonomous systems",
-    description: "Model release integrity for robots and autonomous vehicles, from release approval to reported runtime state.",
-    title: "AI security for autonomous systems.",
+    description: "Trusted AI for robots and autonomous vehicles: which AI each machine runs, who approved it, and whether it changed.",
+    title: "Trusted AI for robots and autonomous systems.",
     lead: "Robots and vehicles get model updates in the field, often from a supplier.",
     whyTitle: "A model update changes what a machine can do.",
     why: [
@@ -177,8 +177,8 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   government: {
     slug: "government",
     metaTitle: "Government and institutions",
-    description: "Model release evidence for public-sector review: what was approved, for which system, and what the runtime reports.",
-    title: "Model release evidence a reviewer can read.",
+    description: "For governments and public institutions: which AI a system runs, who approved it, and evidence a reviewer outside engineering can read.",
+    title: "Know which AI a public system runs.",
     lead: "Which model was approved, for which system, and what that system reports running.",
     whyTitle: "Oversight runs on records.",
     why: [
@@ -216,7 +216,7 @@ export const APP_PAGES: Record<AppSlug, AppPage> = {
   integrators: {
     slug: "integrators",
     metaTitle: "Suppliers and integrators",
-    description: "A shared model release record for suppliers and integrators: approvals, runtime reports, and evidence both sides can review.",
+    description: "A shared record for suppliers and integrators: which AI was approved, what each machine reports running, and evidence both sides can review.",
     title: "For teams who ship models into systems they do not own.",
     lead: "Release, platform and security engineers at suppliers and system integrators.",
     whyTitle: "You ship it. Someone else runs it.",

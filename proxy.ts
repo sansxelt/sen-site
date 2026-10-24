@@ -237,7 +237,7 @@ const v8Public = () => process.env.NEXT_PUBLIC_VRAELIS_V8_PUBLIC === "1";
 // off (today's production) none of this runs. First used for the review deployment the founder asked for
 // (2026-10-10): a separate *.vercel.app project, never vraelis.com.
 const V8_ROOTS = new Set(["acceptable-use", "applications", "changelog", "company", "contact", "contour", "cookies",
-  "data-rights", "docs", "image-sources", "legal", "login", "news", "partners", "partnerships", "privacy", "refunds", "research",
+  "data-rights", "docs", "image-sources", "legal", "login", "news", "partners", "partnerships", "privacy", "prompto", "refunds", "research",
   "security", "subprocessors", "terms", "trademark"]);
 const v8Owns = (path: string) => v8Public() && (path === "/" || V8_ROOTS.has(path.split("/")[1] ?? ""));
 /** The previous site's public addresses and where each now lives in v8 (308, permanent). */

@@ -67,11 +67,18 @@ export const DIRECTION = {
   line: "Robots, drones, power grids and defense systems are starting to run AI that changes faster than anyone can audit it. Vraelis is building the record that travels with every model: which AI is in which machine, who approved it, and whether it has changed since.",
   who: "Built for the companies that make these machines, and for the governments, alliances and international organizations that will oversee them.",
   steps: [
-    { tag: "Available", title: "Lock the files", line: "Vraelis Prompto, our open-source tool, records the exact bytes of AI model folders and coding-agent add-ons, and tells you when anything changes.", to: "/news/vraelis-cli-0-1-0" },
+    { tag: "Available", title: "Lock the files", line: "Vraelis Prompto, our open-source tool, records the exact bytes of AI model folders and coding-agent add-ons, and tells you when anything changes.", to: "/prompto" },
     { tag: "Private development", title: "Prove what is running", line: "Vraelis Contour connects a release approval to what a machine reports it has loaded, and keeps every observation, including the ones that confirm nothing.", to: "/contour" },
     { tag: "Next", title: "One record for every model", line: "A signed record of which model was approved, for which machine, by whom, that anyone can check, even offline.", to: null },
     { tag: "Direction", title: "The registry for physical AI", line: "One place where models for robots, drones and infrastructure are published, approved and checked, by the companies that build them and the institutions that oversee them.", to: null },
   ],
+} as const;
+/** The public, open-source product (founder, 2026-10-24: renamed from "vraelis CLI"; the command stays vraelis). */
+export const PROMPTO = {
+  name: "Vraelis Prompto",
+  headline: "Lock AI to its exact bytes.",
+  line: "Open source. Records exactly which AI model files and coding-agent add-ons you approved, offline, and tells you the moment anything changes.",
+  repo: "https://github.com/sansxelt/vraelis-cli",
 } as const;
 export const CONTOUR = {
   name: "Vraelis Contour",
@@ -169,7 +176,7 @@ export const STATUS_SOURCES = {
  *  subjects). A page not listed uses its own short label. scripts/tab-titles-verify.ts holds every title to 24. */
 export const TAB_NAMES: Record<string, string> = {
   // Site
-  contour: "Contour", "contour-status": "Contour status", company: "About", refunds: "Refunds",
+  contour: "Contour", "contour-status": "Contour status", prompto: "Prompto", company: "About", refunds: "Refunds",
   bytedance: "ByteDance", reddit: "Reddit", "stripe-startups": "Stripe", cloudflare: "Cloudflare",
   // Applications (site and docs)
   defense: "Defense", "critical-infrastructure": "Infrastructure", "autonomous-systems": "Autonomy", government: "Government", integrators: "Integrators",
@@ -237,7 +244,7 @@ export const MENUS: Menu[] = [
       // One entry per product (founder, 2026-10-13: "dont have 2 for 1"). Contour status is reached from /contour.
       { label: "Vraelis Contour", to: "/contour", line: "Release security for AI in machines: what was approved, and what each machine reports it is running.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
       // 2026-10-23 (founder: "ensure it's updated"): the public open-source CLI, released 20 Oct (github.com/sansxelt/vraelis-cli).
-      { label: "Vraelis Prompto", to: "/news/vraelis-cli-0-1-0", line: "Open source: locks AI model folders and coding-agent add-ons to their exact bytes, offline.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
+      { label: "Vraelis Prompto", to: "/prompto", line: "Open source: locks AI model folders and coding-agent add-ons to their exact bytes, offline.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
     ],
   },
   {
@@ -259,7 +266,7 @@ export const MENUS: Menu[] = [
  *  photographs from the editorial registry (credited on Image sources). */
 export const DRAWER_FEATURED = [
   { label: "Vraelis Contour", line: "Release security for AI in machines: what was approved, and what each machine reports it is running.", to: "/contour", img: "/v8/contour/app-overview-1200.webp", alt: "The Vraelis Contour app overview screen.", capture: true },
-  { label: "Research", line: "Four areas of AI security.", to: "/research", img: "/site/photography/editorial-microscopeInspection.jpg", alt: "An engineer inspecting a circuit board under a microscope." },
+  { label: "Research", line: "The research behind trusted AI in machines.", to: "/research", img: "/site/photography/editorial-microscopeInspection.jpg", alt: "An engineer inspecting a circuit board under a microscope." },
   { label: "Applications", line: "Defense, critical infrastructure and autonomous systems.", to: "/applications", img: "/site/photography/editorial-robotProduction.jpg", alt: "Industrial robot arms on a factory floor." },
 ] as const;
 /** The phone menu's small links under the ways in. */
@@ -270,7 +277,7 @@ export const DRAWER_LINKS = [{ label: "News", to: "/news" }, { label: "Privacy",
 export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/news" }] as const;
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
-  { title: "Vraelis Contour", links: [{ label: "Overview", to: "/contour" }, { label: "How it works", to: "/contour#how" }, { label: "Development status", to: "/contour/status" }, { label: "Documentation", to: "/docs" }] },
+  { title: "Products", links: [{ label: "Vraelis Contour", to: "/contour" }, { label: "Contour status", to: "/contour/status" }, { label: "Vraelis Prompto", to: "/prompto" }, { label: "Prompto on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Documentation", to: "/docs" }] },
   { title: "Research", links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
   { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },

@@ -25,7 +25,7 @@ export function GET() {
     <title>Vraelis News</title>
     <link>${SITE_ORIGIN}/news</link>
     <atom:link href="${SITE_ORIGIN}/news/rss.xml" rel="self" type="application/rss+xml"/>
-    <description>Product updates, research and perspectives from Vraelis on AI security and model release integrity.</description>
+    <description>Product updates, research and perspectives from Vraelis on trusted AI in the physical world.</description>
     <language>en</language>
     <lastBuildDate>${rfc822(ARTICLES[0].date)}</lastBuildDate>
 ${items}

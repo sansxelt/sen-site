@@ -28,7 +28,7 @@ export default function ApplicationsOverview() {
       <PageHero
         eyebrow="Applications"
         title="Intended for defense, critical infrastructure and autonomous systems."
-        lead="Model integrity and release evidence across the systems people depend on."
+        lead="Which AI runs, who approved it, and whether it changed, across the systems people depend on."
         actions={<><Button to="/contact?topic=contour" arrow>Join Us</Button><Button to="/contour" kind="soft">{CONTOUR.name}</Button></>}
         aside={
           // Existing civilian context film; source and licensing records remain at /image-sources.
@@ -64,7 +64,7 @@ export default function ApplicationsOverview() {
       <Section rule>
         <Wrap>
           <div className="v8-stack--lg">
-            <Head eyebrow="What the areas share" title="Why release integrity matters in each." />
+            <Head eyebrow="What the areas share" title="Why knowing which AI runs matters in each." />
             <div className="v8-grid-3 rx-shared">
               {SHARED.map((s, i) => (
                 <div key={s}>

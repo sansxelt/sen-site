@@ -1,0 +1,11 @@
+/* Vraelis Prompto product page. */
+.v8 .pr-locks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-block: 1px solid var(--line); }
+.v8 .pr-lock { display: grid; align-content: start; gap: 12px; padding: 30px 30px 32px 0; }
+.v8 .pr-lock + .pr-lock { padding-left: 30px; border-left: 1px solid var(--line); }
+.v8 .pr-lock__cmd { justify-self: start; font: 500 13px/1 var(--mono, ui-monospace, monospace); color: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; }
+.v8 .pr-lock__tag { margin-left: 10px; vertical-align: middle; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); border: 1px dashed var(--line); border-radius: 999px; padding: 3px 8px; }
+.v8 .pr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.v8 .pr-list li { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; padding-left: 16px; position: relative; }
+.v8 .pr-list li::before { content: ""; position: absolute; left: 0; top: .78em; width: 8px; height: 1px; background: var(--ink-4); }
+.v8 .pr-list--not { max-width: 760px; }
+@media (max-width: 900px) { .v8 .pr-locks { grid-template-columns: minmax(0, 1fr); } .v8 .pr-lock + .pr-lock { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); } }

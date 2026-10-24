@@ -8,7 +8,7 @@ import "./contour.css";
 
 export const metadata = v8meta({
   title: `${CONTOUR.name} | ${CONTOUR.headline.replace(/\.$/, "")}`,
-  description: "Vraelis Contour connects approved model releases with reported runtime state and a clear observation history. In private development.",
+  description: "Vraelis Contour compares what was approved with what each machine reports it is running, and keeps a clear observation history. In private development.",
   path: "/contour",
   tab: TAB_NAMES.contour,
 });

@@ -183,6 +183,7 @@ export const PRODUCTS_OVERVIEW: Page = {
     { t: "h2", text: "Vraelis Prompto" },
     { t: "p", text: "An open-source command-line tool (alpha, Apache-2.0). It keeps a lockfile of exactly what you approved and later reports Unchanged, Changed or Can't verify, offline, for AI model folders (vraelis models) and AI coding-agent add-ons (vraelis agents, preview). It is not a security assessment. [vraelis on GitHub](https://github.com/sansxelt/vraelis-cli)" },
     { t: "cards", items: [
+      { to: "/prompto", title: "Vraelis Prompto", line: "The product page: what it locks, how to use it, and what a result does not show." },
       { to: "/news/vraelis-cli-0-1-0", title: "Vraelis Prompto announcement (released as vraelis CLI 0.1.0)", line: "What it checks, what it does not, and how it was tested." },
     ] },
     { t: "h2", text: "What is not a product" },

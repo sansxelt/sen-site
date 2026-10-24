@@ -11,7 +11,7 @@ import "./news.css";
 
 const META = v8meta({
   title: "News",
-  description: "Product updates, research and perspectives from Vraelis on AI security and model release integrity.",
+  description: "Product updates, research and perspectives from Vraelis on trusted AI in the physical world.",
   path: "/news",
 });
 export const metadata = { ...META, alternates: { ...META.alternates, types: { "application/rss+xml": [{ url: `${SITE_ORIGIN}/news/rss.xml`, title: "Vraelis News" }] } } };
@@ -45,7 +45,7 @@ export default function News() {
             <div className="v8-head" style={{ maxWidth: 760 }}>
               <span className="v8-eyebrow">Newsroom</span>
               <h1 className="v8-h1">News</h1>
-              <p className="v8-lead">Product updates, research and perspectives on AI security and model release integrity.</p>
+              <p className="v8-lead">Product updates, research and perspectives on trusted AI in the physical world.</p>
             </div>
             <a className="nws-rss" href={href("/news/rss.xml")}>RSS feed</a>
           </div>

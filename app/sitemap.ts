@@ -28,6 +28,7 @@ type Freq = NonNullable<Entry["changeFrequency"]>;
 const WEIGHT: Record<string, { p: number; f: Freq }> = {
   "/": { p: 1, f: "weekly" },
   "/contour": { p: 0.9, f: "monthly" },
+  "/prompto": { p: 0.9, f: "monthly" },
   "/platform": { p: 0.9, f: "monthly" },
   "/zero-trust": { p: 0.9, f: "monthly" },
   "/developers": { p: 0.8, f: "monthly" },
