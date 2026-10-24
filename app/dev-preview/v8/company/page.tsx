@@ -28,7 +28,7 @@ export default function About() {
           <div className="v8-head"><span className="v8-eyebrow">Vraelis by Foremake, Inc</span><h2 className="v8-h2">{DIRECTION.headline}</h2></div>
           <p className="v8-lead">{DIRECTION.line}</p>
           <p className="v8-body">{DIRECTION.who}</p>
-          <p className="v8-body">Today there are two products: the open-source vraelis CLI, available to anyone, and Vraelis Contour, in private development. Next is one signed record for every model, then a shared registry for physical AI. Those are plans, not products yet.</p>
+          <p className="v8-body">Today there are two products: Vraelis Prompto, open source and available to anyone, and Vraelis Contour, in private development. Next is one signed record for every model, then a shared registry for physical AI. Those are plans, not products yet.</p>
           <p className="v8-body">{FOREMAKE}</p>
           <p className="v8-body"><a className="v8-under" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">About Foremake, Inc</a></p>
         </div></Wrap>

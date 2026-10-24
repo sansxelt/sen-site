@@ -163,8 +163,8 @@ export const VRAELIS_PAGES: Page[] = [
 export const PRODUCTS_OVERVIEW: Page = {
   tab: "products", group: "Products", slug: "products",
   title: "Products", nav: "Overview",
-  description: `${CONTOUR.name} is in private development. The vraelis CLI is a public, open-source alpha.`,
-  lead: `${CONTOUR.name} is our first product, in private development. The vraelis CLI is our public, open-source tool.`,
+  description: `${CONTOUR.name} is in private development. Vraelis Prompto is a public, open-source alpha (command: vraelis).`,
+  lead: `${CONTOUR.name} is our first product, in private development. Vraelis Prompto is our public, open-source tool.`,
   updated: UPDATED,
   blocks: [
     { t: "h2", text: CONTOUR.name },
@@ -180,10 +180,10 @@ export const PRODUCTS_OVERVIEW: Page = {
       { to: "/docs/contour", title: `${CONTOUR.name} overview`, line: "The five-step workflow and where it stands." },
       { to: "/docs/limits", title: "Limits and what is not built", line: `Where ${CONTOUR.name} stops today.` },
     ] },
-    { t: "h2", text: "vraelis CLI" },
+    { t: "h2", text: "Vraelis Prompto" },
     { t: "p", text: "An open-source command-line tool (alpha, Apache-2.0). It keeps a lockfile of exactly what you approved and later reports Unchanged, Changed or Can't verify, offline, for AI model folders (vraelis models) and AI coding-agent add-ons (vraelis agents, preview). It is not a security assessment. [vraelis on GitHub](https://github.com/sansxelt/vraelis-cli)" },
     { t: "cards", items: [
-      { to: "/news/vraelis-cli-0-1-0", title: "vraelis CLI announcement", line: "What it checks, what it does not, and how it was tested." },
+      { to: "/news/vraelis-cli-0-1-0", title: "Vraelis Prompto announcement (released as vraelis CLI 0.1.0)", line: "What it checks, what it does not, and how it was tested." },
     ] },
     { t: "h2", text: "What is not a product" },
     { t: "p", text: "The four research areas, model integrity, adversarial threats, machine trust and security evidence, are workstreams, not products. [Research](/docs/research)" },

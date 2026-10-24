@@ -78,7 +78,7 @@ export const CONTOUR_PAGES: Page[] = [
     updated: UPDATED,
     blocks: [
       { t: "h2", text: "What Vraelis Contour is" },
-      { t: "p", text: "Know what you are releasing. A model release changes how an AI system behaves, so the release itself is a security decision. Vraelis Contour is built to connect an approved model release to the runtime that receives it, and to show whether that runtime reports loading what was approved." },
+      { t: "p", text: "Know which AI each machine runs. A model release changes how an AI system behaves, so the release itself is a security decision. Vraelis Contour is built to connect an approved model release to the runtime that receives it, and to show whether that runtime reports loading what was approved." },
       { t: "p", text: "It keeps the evidence in order, including the observations that cannot confirm anything: an update that has not been loaded yet, or a runtime that stopped reporting." },
       { t: "p", text: "We think the people who need this are release, platform and security engineers at suppliers and system integrators: the teams who ship model updates into systems they do not own. That is a hypothesis we are testing, not a customer base." },
       { t: "h2", text: "Status" },

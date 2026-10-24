@@ -21,7 +21,7 @@ const DOCS_PUBLIC_ORIGIN = (DOCS_ENV === "local" ? "" : DOCS_ENV ?? (
 const isDocsPath = (path: string) => path === "/docs" || /^\/docs[/?#]/.test(path);
 
 /** A site path as a link. /docs paths go to the docs' public address when there is one (see above). An absolute
- *  https address (the public vraelis CLI on GitHub) passes through unchanged. */
+ *  https address (Vraelis Prompto on GitHub) passes through unchanged. */
 export const href = (path: string) => {
   if (path.startsWith("https://")) return path;
   if (DOCS_PUBLIC_ORIGIN && isDocsPath(path)) {
@@ -67,7 +67,7 @@ export const DIRECTION = {
   line: "Robots, drones, power grids and defense systems are starting to run AI that changes faster than anyone can audit it. Vraelis is building the record that travels with every model: which AI is in which machine, who approved it, and whether it has changed since.",
   who: "Built for the companies that make these machines, and for the governments, alliances and international organizations that will oversee them.",
   steps: [
-    { tag: "Available", title: "Lock the files", line: "The open-source vraelis CLI records the exact bytes of AI model folders and coding-agent add-ons, and tells you when anything changes.", to: "/news/vraelis-cli-0-1-0" },
+    { tag: "Available", title: "Lock the files", line: "Vraelis Prompto, our open-source tool, records the exact bytes of AI model folders and coding-agent add-ons, and tells you when anything changes.", to: "/news/vraelis-cli-0-1-0" },
     { tag: "Private development", title: "Prove what is running", line: "Vraelis Contour connects a release approval to what a machine reports it has loaded, and keeps every observation, including the ones that confirm nothing.", to: "/contour" },
     { tag: "Next", title: "One record for every model", line: "A signed record of which model was approved, for which machine, by whom, that anyone can check, even offline.", to: null },
     { tag: "Direction", title: "The registry for physical AI", line: "One place where models for robots, drones and infrastructure are published, approved and checked, by the companies that build them and the institutions that oversee them.", to: null },
@@ -75,8 +75,8 @@ export const DIRECTION = {
 } as const;
 export const CONTOUR = {
   name: "Vraelis Contour",
-  headline: "Know what you are releasing.",
-  line: "Model release security, from approval to reported runtime state.",
+  headline: "Know which AI each machine runs.",
+  line: "Release security for AI in machines: what was approved, and what each machine reports it is running.",
   status: "In private development.",
   audience: "Release, platform and security engineers at suppliers and system integrators.",
   /** What it does, before any count (content review 2026-10-11). */
@@ -235,9 +235,9 @@ export const MENUS: Menu[] = [
     id: "contour", label: "Products", kind: "mega",
     links: [
       // One entry per product (founder, 2026-10-13: "dont have 2 for 1"). Contour status is reached from /contour.
-      { label: "Vraelis Contour", to: "/contour", line: "Model release security, from approval to reported runtime state.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
+      { label: "Vraelis Contour", to: "/contour", line: "Release security for AI in machines: what was approved, and what each machine reports it is running.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
       // 2026-10-23 (founder: "ensure it's updated"): the public open-source CLI, released 20 Oct (github.com/sansxelt/vraelis-cli).
-      { label: "vraelis CLI", to: "/news/vraelis-cli-0-1-0", line: "Open source: offline lockfiles for AI model folders and coding-agent add-ons.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
+      { label: "Vraelis Prompto", to: "/news/vraelis-cli-0-1-0", line: "Open source: locks AI model folders and coding-agent add-ons to their exact bytes, offline.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
     ],
   },
   {
@@ -258,7 +258,7 @@ export const MENUS: Menu[] = [
  *  button). Each has its own picture, none shown elsewhere on the site: a real Contour capture and two licensed
  *  photographs from the editorial registry (credited on Image sources). */
 export const DRAWER_FEATURED = [
-  { label: "Vraelis Contour", line: "Model release security, from approval to reported runtime state.", to: "/contour", img: "/v8/contour/app-overview-1200.webp", alt: "The Vraelis Contour app overview screen.", capture: true },
+  { label: "Vraelis Contour", line: "Release security for AI in machines: what was approved, and what each machine reports it is running.", to: "/contour", img: "/v8/contour/app-overview-1200.webp", alt: "The Vraelis Contour app overview screen.", capture: true },
   { label: "Research", line: "Four areas of AI security.", to: "/research", img: "/site/photography/editorial-microscopeInspection.jpg", alt: "An engineer inspecting a circuit board under a microscope." },
   { label: "Applications", line: "Defense, critical infrastructure and autonomous systems.", to: "/applications", img: "/site/photography/editorial-robotProduction.jpg", alt: "Industrial robot arms on a factory floor." },
 ] as const;
