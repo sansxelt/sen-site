@@ -36,7 +36,7 @@ export const SOCIAL_IMAGE_ALT = "Vraelis — Security for AI in the physical wor
 export type SocialImageKind = "site" | "contour" | "docs";
 const SOCIAL_IMAGES = {
   site: { url: SOCIAL_IMAGE, alt: SOCIAL_IMAGE_ALT },
-  contour: { url: "https://vraelis.com/social/vraelis-contour-v1.png", alt: "Vraelis Contour: approved cpu-2 beside reported loaded cpu-1 in the recorded synthetic CPU experiment. Private development." },
+  contour: { url: "https://vraelis.com/social/vraelis-contour-v2.png", alt: "Vraelis Contour: approved cpu-2 beside reported loaded cpu-1 in the recorded synthetic CPU experiment. Private development." },
   docs: { url: "https://vraelis.com/social/vraelis-docs-v1.png", alt: "Vraelis documentation: release identity, approval binding and reported runtime. Private development." },
 } satisfies Record<SocialImageKind, { url: string; alt: string }>;
 
