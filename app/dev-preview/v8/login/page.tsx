@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 // homepage's "In partnership with" logos. Not "Trusted by": partners.ts records that no partner endorses or uses
 // Vraelis. No testimonials: none exist.
 // Founder, 2026-10-23 (later): this two-column layout restored ("the scale design was better, I just meant don't take it
-// 1:1"); account requests go to sales@vraelis.com (there is no enterprise@), Join Us for anything else; "Soon to be
+// 1:1"); account requests go to sales@vraelis.com (there is no enterprise@), Join Us for more (founder's wording); "Soon to be
 // secured by" while sign-in is closed.
 const SALES = "sales@vraelis.com";
 const ERRORS: Record<string, string> = {
@@ -86,7 +86,7 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                     <Secured open={open} />
                     <p className="lgn-fine">
                       {open ? "Need access or a new password?" : "Need an account?"} Write to{" "}
-                      <a href={`mailto:${SALES}`} data-no-translate>{SALES}</a>, or <Link href={href("/contact")}>Join Us</Link> for anything else.{" "}
+                      <a href={`mailto:${SALES}`} data-no-translate>{SALES}</a>, or <Link href={href("/contact")}>Join Us</Link> for more.{" "}
                       {open
                         ? <>By logging in you agree to the <Link href={href("/terms")}>Terms</Link> and <Link href={href("/privacy")}>Privacy Policy</Link>.</>
                         : null}
