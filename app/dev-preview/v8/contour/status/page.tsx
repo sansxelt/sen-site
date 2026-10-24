@@ -1,11 +1,12 @@
 import { Button, Capture, JoinBand, PageHero, Section, Tag, Wrap } from "../../_kit/blocks";
 import { v8meta } from "../../_kit/meta";
-import { CONTOUR, FACTS, STATUS, type Kind, STATUS_SOURCES, TAB_NAMES } from "../../_kit/site";
+import { CONTOUR, DIRECTION, FACTS, PROMPTO, STATUS, type Kind, STATUS_SOURCES, TAB_NAMES, href } from "../../_kit/site";
+import Link from "next/link";
 import "../contour.css";
 
 export const metadata = v8meta({
-  title: `${CONTOUR.name} development status`,
-  description: `What works in the ${CONTOUR.name} reference experiment, what is planned next, what we do not claim, and the source for every line.`,
+  title: "Vraelis development status",
+  description: `Where each Vraelis product stands: ${PROMPTO.name} (available), ${CONTOUR.name} (private development) and what comes next, with the source for every line.`,
   path: "/contour/status",
   tab: TAB_NAMES["contour-status"],
 });
@@ -74,6 +75,15 @@ const DOES_NOT = [
   "What a machine runs, beyond its worker's report",
 ];
 
+// Every product at a glance (founder, 2026-10-24: this page is the company's status page, linked from About, Docs and
+// Applications). Steps 3 and 4 are plans and say so.
+const GLANCE: { what: string; tag: string; line: string; to: string | null }[] = [
+  { what: PROMPTO.name, tag: DIRECTION.steps[0].tag, to: "/prompto", line: `Version ${PROMPTO.version}, released ${PROMPTO.released}. Open source (Apache-2.0), alpha, with downloads for Windows, macOS and Linux. Testing so far is self-run; no outside user has run it yet.` },
+  { what: CONTOUR.name, tag: DIRECTION.steps[1].tag, to: "/contour", line: "A private reference experiment, not a product release. Line by line below." },
+  { what: DIRECTION.steps[2].title, tag: DIRECTION.steps[2].tag, to: null, line: "Planned: a signed record of which model was approved, for which machine, by whom. Not available." },
+  { what: DIRECTION.steps[3].title, tag: DIRECTION.steps[3].tag, to: null, line: "Where the company is going. A plan, not a product." },
+];
+
 function StatusTag({ status }: { status: Row["status"] }) {
   return <Tag kind={status.kind}>{status.text}</Tag>;
 }
@@ -83,23 +93,52 @@ export default function ContourStatusPage() {
     <div className="ct-page ct-status">
       <PageHero
         eyebrow="Development status"
-        title={`Where ${CONTOUR.name} stands.`}
-        lead="Every line names its source."
+        title="Where Vraelis stands."
+        lead="Every product, what works today, and the source for every line."
         actions={<>
           <Button to="/contact?topic=contour" arrow>Join Us</Button>
           <Button to="/contour" kind="soft">{CONTOUR.name} overview</Button>
         </>}
       />
 
+      <Section rule id="products">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head--row v8-head">
+              <div className="v8-head" style={{ maxWidth: 680 }}>
+                <span className="v8-eyebrow">Products</span>
+                <h2 className="v8-h2">At a glance</h2>
+              </div>
+              <p className="ct-asof">As of 23 October 2026</p>
+            </div>
+            <div className="v8-table-wrap">
+              <table className="v8-table ct-table">
+                <caption className="v8-sr">Each Vraelis product and where it stands</caption>
+                <thead><tr><th scope="col">Product</th><th scope="col">Status</th><th scope="col">Where it stands</th></tr></thead>
+                <tbody>
+                  {GLANCE.map((g) => (
+                    <tr key={g.what}>
+                      <td>{g.to ? <Link className="v8-under" href={href(g.to)}>{g.what}</Link> : g.what}</td>
+                      <td><Tag>{g.tag}</Tag></td>
+                      <td>{g.line}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Wrap>
+      </Section>
+
       <Section rule>
         <Wrap>
           <div className="v8-stack--lg">
             <div className="v8-head--row v8-head">
               <div className="v8-head" style={{ maxWidth: 680 }}>
-                <span className="v8-eyebrow">Status</span>
+                <span className="v8-eyebrow">{CONTOUR.name}</span>
                 <h2 className="v8-h2">Line by line, with sources</h2>
               </div>
-              <p className="ct-asof">As of 10 October 2026</p>
+              <p className="ct-asof">As of 17 October 2026</p>
             </div>
             <div className="v8-table-wrap">
               <table className="v8-table ct-table">

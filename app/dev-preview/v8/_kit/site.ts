@@ -192,7 +192,7 @@ export const STATUS_SOURCES = {
  *  subjects). A page not listed uses its own short label. scripts/tab-titles-verify.ts holds every title to 24. */
 export const TAB_NAMES: Record<string, string> = {
   // Site
-  contour: "Contour", "contour-status": "Contour status", prompto: "Prompto", company: "About", refunds: "Refunds",
+  contour: "Contour", "contour-status": "Status", prompto: "Prompto", company: "About", refunds: "Refunds",
   bytedance: "ByteDance", reddit: "Reddit", "stripe-startups": "Stripe", cloudflare: "Cloudflare",
   // Applications (site and docs)
   defense: "Defense", "critical-infrastructure": "Infrastructure", "autonomous-systems": "Autonomy", government: "Government", integrators: "Integrators",
@@ -293,7 +293,7 @@ export const DRAWER_LINKS = [{ label: "News", to: "/news" }, { label: "Privacy",
 export const FOOTER_QUICK = [{ label: "About", to: "/company" }, { label: "Partners", to: "/partners" }, { label: "News", to: "/news" }] as const;
 
 export const FOOTER: { title: string; links: { label: string; to: string }[] }[] = [
-  { title: "Products", links: [{ label: "Vraelis Contour", to: "/contour" }, { label: "Contour status", to: "/contour/status" }, { label: "Vraelis Prompto", to: "/prompto" }, { label: "Prompto on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Documentation", to: "/docs" }] },
+  { title: "Products", links: [{ label: "Vraelis Contour", to: "/contour" }, { label: "Development status", to: "/contour/status" }, { label: "Vraelis Prompto", to: "/prompto" }, { label: "Prompto on GitHub", to: "https://github.com/sansxelt/vraelis-cli" }, { label: "Documentation", to: "/docs" }] },
   { title: "Research", links: [{ label: "All research", to: "/research" }, ...RESEARCH.map((r) => ({ label: r.title, to: `/research/${r.slug}` }))] },
   { title: "Applications", links: APPLICATIONS.map((a) => ({ label: a.title, to: `/applications/${a.slug}` })) },
   { title: "Trust", links: [{ label: "Security", to: "/security" }, { label: "Subprocessors", to: "/subprocessors" }, { label: "Data rights", to: "/data-rights" }, { label: "Image sources", to: "/image-sources" }] },
