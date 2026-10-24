@@ -85,8 +85,9 @@ export default async function Login({ searchParams }: { searchParams: Query }) {
                   <footer className="lgn-foot">
                     <Secured open={open} />
                     <p className="lgn-fine">
-                      {open ? "Need access or a new password?" : "Need an account?"} Write to{" "}
-                      <a href={`mailto:${SALES}`} data-no-translate>{SALES}</a>, or <Link href={href("/contact")}>Join Us</Link> for more.{" "}
+                      {/* One purpose, one address (founder, 2026-10-24: "Join Us" here was confusing). */}
+                      {open ? "Need access or a new password? Email" : "Don't have an account? Request one at"}{" "}
+                      <a href={`mailto:${SALES}`} data-no-translate>{SALES}</a>.{" "}
                       {open
                         ? <>By logging in you agree to the <Link href={href("/terms")}>Terms</Link> and <Link href={href("/privacy")}>Privacy Policy</Link>.</>
                         : null}
