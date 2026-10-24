@@ -242,9 +242,9 @@ export const MENUS: Menu[] = [
     id: "contour", label: "Products", kind: "mega",
     links: [
       // One entry per product (founder, 2026-10-13: "dont have 2 for 1"). Contour status is reached from /contour.
-      { label: "Vraelis Contour", to: "/contour", line: "Release security for AI in machines: what was approved, and what each machine reports it is running.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
+      { label: "Vraelis Contour", to: "/contour", line: "Checks which AI each machine reports running against what was approved.", preview: crop("crop-approved-cpu2"), previewAlt: "Approved release cpu-2 with its identity digests." },
       // 2026-10-23 (founder: "ensure it's updated"): the public open-source CLI, released 20 Oct (github.com/sansxelt/vraelis-cli).
-      { label: "Vraelis Prompto", to: "/prompto", line: "Open source: locks AI model folders and coding-agent add-ons to their exact bytes, offline.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
+      { label: "Vraelis Prompto", to: "/prompto", line: "Open source. Locks AI models and agent add-ons to their exact bytes.", preview: "/site/photography/editorial-codeMonitor.jpg", previewAlt: "A software developer working at a computer." },
     ],
   },
   {
@@ -265,7 +265,7 @@ export const MENUS: Menu[] = [
  *  button). Each has its own picture, none shown elsewhere on the site: a real Contour capture and two licensed
  *  photographs from the editorial registry (credited on Image sources). */
 export const DRAWER_FEATURED = [
-  { label: "Vraelis Contour", line: "Release security for AI in machines: what was approved, and what each machine reports it is running.", to: "/contour", img: "/v8/contour/app-overview-1200.webp", alt: "The Vraelis Contour app overview screen.", capture: true },
+  { label: "Vraelis Contour", line: "Checks which AI each machine reports running against what was approved.", to: "/contour", img: "/v8/contour/app-overview-1200.webp", alt: "The Vraelis Contour app overview screen.", capture: true },
   { label: "Research", line: "The research behind trusted AI in machines.", to: "/research", img: "/site/photography/editorial-microscopeInspection.jpg", alt: "An engineer inspecting a circuit board under a microscope." },
   { label: "Applications", line: "Defense, critical infrastructure and autonomous systems.", to: "/applications", img: "/site/photography/editorial-robotProduction.jpg", alt: "Industrial robot arms on a factory floor." },
 ] as const;
