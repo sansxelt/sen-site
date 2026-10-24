@@ -310,7 +310,7 @@ function docsHost(req: NextRequest, path: string, main: string) {
   if (endpoint) return NextResponse.next(withGround(req, path));
   // A site page typed on the docs host (docs.vraelis.com/company) belongs to the main site. "contour" and "research"
   // are docs pages as well, so they stay here.
-  const sitePage = parts.length === 1 && V8_ROOTS.has(parts[0]) && !["contour", "research", "docs"].includes(parts[0]);
+  const sitePage = parts.length === 1 && V8_ROOTS.has(parts[0]) && !["contour", "prompto", "research", "docs"].includes(parts[0]);
   const isDocs = !sitePage && (parts.length <= 1 || (parts.length === 2 && parts[0] === "md"));
   if (!isDocs) {
     const to = `${main}${path}${req.nextUrl.search}`;
