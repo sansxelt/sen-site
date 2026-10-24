@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button, Capture, PageHero, Section, Tag, Wrap } from "../_kit/blocks";
 import { RiseWords } from "../_kit/client";
 import { v8meta } from "../_kit/meta";
-import { COMPANY_LINE, WORK_LINE, CONTOUR, FACTS, RESEARCH, STATUS, FOREMAKE, href, TAB_NAMES } from "../_kit/site";
+import { COMPANY_LINE, DIRECTION, WORK_LINE, CONTOUR, FACTS, RESEARCH, STATUS, FOREMAKE, href, TAB_NAMES } from "../_kit/site";
 import "./company.css";
 
 export const metadata = v8meta({
@@ -18,16 +18,18 @@ export default function About() {
     <div className="cmp">
       <PageHero
         eyebrow="About"
-        title={<RiseWords text="Security for AI in the physical world." />}
+        title={<RiseWords text="The trust layer for AI in the physical world." />}
         lead={<>{COMPANY_LINE} {WORK_LINE}</>}
         actions={<><Button to="/contact" arrow>Join Us</Button><Button to="/contour/status" kind="soft">Development status</Button></>}
       />
 
       <Section rule id="company">
         <Wrap><div className="v8-stack--lg">
-          <div className="v8-head"><span className="v8-eyebrow">Vraelis by Foremake, Inc</span><h2 className="v8-h2">A company built around AI security.</h2></div>
+          <div className="v8-head"><span className="v8-eyebrow">Vraelis by Foremake, Inc</span><h2 className="v8-h2">{DIRECTION.headline}</h2></div>
+          <p className="v8-lead">{DIRECTION.line}</p>
+          <p className="v8-body">{DIRECTION.who}</p>
+          <p className="v8-body">Today there are two products: the open-source vraelis CLI, available to anyone, and Vraelis Contour, in private development. Next is one signed record for every model, then a shared registry for physical AI. Those are plans, not products yet.</p>
           <p className="v8-body">{FOREMAKE}</p>
-          <p className="v8-body">Our first product, Vraelis Contour, has private access. We are researching public products with distinct user workflows; no additional product is available or named yet.</p>
           <p className="v8-body"><a className="v8-under" href="https://foremake.com/" target="_blank" rel="noopener noreferrer">About Foremake, Inc</a></p>
         </div></Wrap>
       </Section>

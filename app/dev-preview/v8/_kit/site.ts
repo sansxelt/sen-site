@@ -31,12 +31,12 @@ export const href = (path: string) => {
   return localHref(path);
 };
 
-export const TAGLINE = "AI security for defense, critical infrastructure and autonomous systems.";
+export const TAGLINE = "The trust layer for AI in the physical world.";
 export const AREAS = ["defense", "critical infrastructure", "autonomous systems"] as const;
 /** The hero rotation: the three core areas first, then intended applications (not products, not deployments), in the
  *  founder's order. It loops straight back to the start, so it reads as an ongoing list. */
 export const HERO_KEYWORDS = [
-  "defense.", "critical infrastructure.", "autonomous systems.",
+  "the physical world.", "robots.", "drones.", "power grids.", "defense.", "critical infrastructure.", "autonomous systems.",
   "deployed AI models.", "model updates.", "edge AI.", "machine vision.", "perception systems.", "industrial automation.",
   "autonomous fleets.", "distributed inference.", "field-deployed systems.", "inspection systems.", "AI supply chains.",
   "mission-critical workloads.",
@@ -57,8 +57,22 @@ export const TERMS: { term: string; line: string; kind: Kind; status: string }[]
   { term: "Model provenance", line: "Where a model and its training inputs came from, beyond its digest.", kind: "hyp", status: "Research" },
 ];
 
-export const COMPANY_LINE = "Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems.";
+export const COMPANY_LINE = "Vraelis is building the trust layer for AI in the physical world: defense, critical infrastructure and autonomous systems.";
 export const WORK_LINE = "Our work spans model integrity, adversarial threats, machine trust and security evidence.";
+/** The company direction (founder, 2026-10-24: "our website has to be the company direction + idea"). Each step is labeled
+ *  for what it is today. Only the first is available; "Next" and "Direction" are plans, not products. */
+export const DIRECTION = {
+  eyebrow: "Where we are going",
+  headline: "Every machine should be able to prove which AI it runs.",
+  line: "Robots, drones, power grids and defense systems are starting to run AI that changes faster than anyone can audit it. Vraelis is building the record that travels with every model: which AI is in which machine, who approved it, and whether it has changed since.",
+  who: "Built for the companies that make these machines, and for the governments, alliances and international organizations that will oversee them.",
+  steps: [
+    { tag: "Available", title: "Lock the files", line: "The open-source vraelis CLI records the exact bytes of AI model folders and coding-agent add-ons, and tells you when anything changes.", to: "/news/vraelis-cli-0-1-0" },
+    { tag: "Private development", title: "Prove what is running", line: "Vraelis Contour connects a release approval to what a machine reports it has loaded, and keeps every observation, including the ones that confirm nothing.", to: "/contour" },
+    { tag: "Next", title: "One record for every model", line: "A signed record of which model was approved, for which machine, by whom, that anyone can check, even offline.", to: null },
+    { tag: "Direction", title: "The registry for physical AI", line: "One place where models for robots, drones and infrastructure are published, approved and checked, by the companies that build them and the institutions that oversee them.", to: null },
+  ],
+} as const;
 export const CONTOUR = {
   name: "Vraelis Contour",
   headline: "Know what you are releasing.",

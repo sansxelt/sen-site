@@ -93,7 +93,7 @@ export function pageMarkdown(page: Page, options: { currentOnly?: boolean } = {}
 export function indexMarkdown(): string {
   const out = [
     "# Vraelis documentation", "",
-    "> Vraelis develops cybersecurity software for AI in defense, critical infrastructure and autonomous systems. These docs cover Vraelis, its first product direction (Vraelis Contour, model release security from approval to reported runtime state), and its research.", "",
+    "> Vraelis is building the trust layer for AI in the physical world: defense, critical infrastructure and autonomous systems. These docs cover Vraelis, its first product direction (Vraelis Contour, model release security from approval to reported runtime state), and its research.", "",
     "Vraelis Contour is not for public use: it is built for release, platform and security engineers at suppliers and system integrators. Every page labels each claim as working in the experiment, measured, proposed, hypothesis or not claimed.", "",
     `- [Docs home](${DOCS_ORIGIN}/): Get started with Vraelis.`, "",
   ];

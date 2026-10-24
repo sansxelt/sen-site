@@ -17,7 +17,7 @@ export const SOCIAL_TITLE = "Vraelis";
 // 2026-10-23: names the two current products, because a description that named none let Google's AI overview fill
 // the gap from the retired browser-testing docs (now 410 Gone, lib/retired-docs.ts). Foremake is named without "Inc":
 // it is an unincorporated brand.
-export const SOCIAL_DESCRIPTION = "Vraelis builds AI security software for defense, critical infrastructure and robotics: Vraelis Contour for model release security, and the open-source vraelis CLI. Built by Foremake.";
+export const SOCIAL_DESCRIPTION = "Vraelis is building the trust layer for AI in the physical world: proof of which AI runs in robots, drones and critical infrastructure, who approved it, and whether it changed. Products: Vraelis Contour and the open-source vraelis CLI. Built by Foremake.";
 
 /** Wide editorial card for shared links; distinct from the browser favicon. */
 export const SOCIAL_IMAGE = "https://vraelis.com/social/vraelis-physical-ai-v1.png";

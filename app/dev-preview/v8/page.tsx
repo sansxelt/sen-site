@@ -5,7 +5,7 @@ import { buildSearchIndex } from "./docs/_data/text";
 import { KeywordMorph } from "./_kit/keyword";
 import { Button, CAPTURES, Ledger, Section, TextLink, Wrap, captureSrc, type CaptureName } from "./_kit/blocks";
 import { v8meta } from "./_kit/meta";
-import { CONTOUR, FACTS, HERO_KEYWORDS, OBSERVATIONS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
+import { CONTOUR, DIRECTION, FACTS, HERO_KEYWORDS, OBSERVATIONS, RESEARCH, TAGLINE, WORK_LINE, href } from "./_kit/site";
 import { OBSERVATION_2, POLICY, TRACE_TESTS } from "./_content/evidence";
 import { formatDay } from "./_content/news";
 import { ARTICLES } from "./_content/articles";
@@ -108,21 +108,44 @@ export default function Home() {
             </Link>
             <h1 className="v8-hero-title" style={{ width: "100%" }}>
               <span className="v8-sr">{TAGLINE}</span>
-              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
+              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="Trusted AI for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
-            {/* The heading names application areas; this steady line names the four areas of work. */}
-            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Model integrity, adversarial threats, machine trust, and security evidence.</p>
+            {/* The company in one line (founder, 2026-10-24: the site leads with the direction, not one product). */}
+            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Proof of which AI runs in every machine, who approved it, and whether it changed.</p>
             <div className="v8-actions v8-fade hm-hero__actions" style={{ ["--d" as string]: ".7s" }}>
-              {/* Join us lives in the header; the hero leads to the product instead of repeating it (founder, 2026-10-12). */}
-              <Button to="/contour" size="lg" arrow>Explore Vraelis Contour</Button>
+              <a className="v8-btn v8-btn--solid v8-btn--lg" href="#direction">Where we are going<span className="v8-arrow" aria-hidden="true" /></a>
               {/* On a phone the two sit on one centered row, as x.ai's do, so the second says less. */}
-              <Button to="/docs" kind="soft" size="lg"><span className="hm-wide">Read the documentation</span><span className="hm-narrow">Read the docs</span></Button>
+              <Button to="/contour" kind="soft" size="lg"><span className="hm-wide">Explore Vraelis Contour</span><span className="hm-narrow">Vraelis Contour</span></Button>
             </div>
           </div>
         </Wrap>
         <PartnerBand />
       </section>
+
+      <Section rule id="direction">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head" style={{ maxWidth: 760 }}>
+              <span className="v8-eyebrow">{DIRECTION.eyebrow}</span>
+              <h2 className="v8-h2">{DIRECTION.headline}</h2>
+              <p className="v8-lead">{DIRECTION.line}</p>
+              <p className="v8-body">{DIRECTION.who}</p>
+            </div>
+            <ol className="hm-dir">
+              {DIRECTION.steps.map((st, i) => (
+                <li key={st.title} className={`hm-dir__step${st.to ? "" : " hm-dir__step--plan"}`}>
+                  <span className="hm-dir__n">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="hm-dir__tag">{st.tag}</span>
+                  <h3 className="v8-h3">{st.title}</h3>
+                  <p className="v8-small">{st.line}</p>
+                  {st.to ? <TextLink to={st.to}>Explore</TextLink> : null}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Wrap>
+      </Section>
 
       <section aria-label="What Vraelis works on" style={{ paddingBottom: "var(--section)" }}>
         <Wrap>
@@ -188,7 +211,7 @@ export default function Home() {
           <div className="v8-split-sec">
             <div className="v8-stack--lg">
               <div className="v8-head">
-                <span className="v8-eyebrow">For release engineers</span>
+                <span className="v8-eyebrow">First product · for release engineers</span>
                 <h2 className="v8-h2">{CONTOUR.headline}</h2>
                 <p className="v8-lead">{CONTOUR.line}</p>
                 <p className="v8-body">{CONTOUR.job}</p>

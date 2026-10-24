@@ -683,3 +683,14 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
   .v8-btn::before, .v8-split > a::before, .v8-split > button::before,
   .v8 .v8-dhd__join::before, .v8 .v8-dhd__joinmore::before, .v8 .v8-docs-askbtn::before { transition: none; }
 }
+
+/* Homepage direction: four steps, each labeled for what it is today (founder, 2026-10-24). */
+.hm-dir { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-block: 1px solid var(--line); }
+.hm-dir__step { display: grid; align-content: start; gap: 12px; padding: 28px 24px 30px 0; }
+.hm-dir__step + .hm-dir__step { padding-left: 24px; border-left: 1px solid var(--line); }
+.hm-dir__n { color: var(--ink-4); font: 500 13px/1 var(--display); letter-spacing: .02em; }
+.hm-dir__tag { justify-self: start; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+.hm-dir__step--plan .hm-dir__tag { color: var(--ink-3); border-style: dashed; }
+.hm-dir__step .v8-small { color: var(--ink-2); }
+@media (max-width: 1000px) { .hm-dir { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hm-dir__step:nth-child(3) { padding-left: 0; border-left: 0; } .hm-dir__step:nth-child(n+3) { border-top: 1px solid var(--line); } }
+@media (max-width: 640px) { .hm-dir { grid-template-columns: minmax(0, 1fr); } .hm-dir__step + .hm-dir__step { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); } }
