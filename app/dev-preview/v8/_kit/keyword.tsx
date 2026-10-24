@@ -20,7 +20,8 @@ type P = { x: number; y: number; a: number; r: number; j: number };
 
 // Readable first (website handoff 2026-10-12, item 1): each phrase holds 2.8 s, crisp, and the change between two
 // takes about 1.2 s, so the line is mostly words, not particles. (Was 1.6 s held and 1.72 s changing.)
-const HOLD = 2800, OUT = 560, IN = 620;
+// Founder, 2026-10-24: "updates too slow". About 2.5 s per phrase instead of about 4 s.
+const HOLD = 1600, OUT = 420, IN = 460;
 
 export function KeywordMorph({ words, delay = 1300 }: { words: string[]; delay?: number }) {
   const [i, setI] = useState(0);
