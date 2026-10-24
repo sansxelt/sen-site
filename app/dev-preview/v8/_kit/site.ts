@@ -36,7 +36,7 @@ export const AREAS = ["defense", "critical infrastructure", "autonomous systems"
 /** The hero rotation: the three core areas first, then intended applications (not products, not deployments), in the
  *  founder's order. It loops straight back to the start, so it reads as an ongoing list. */
 export const HERO_KEYWORDS = [
-  "the physical world.", "robots.", "drones.", "power grids.", "defense.", "critical infrastructure.", "autonomous systems.",
+  "defense.", "critical infrastructure.", "autonomous systems.",
   "deployed AI models.", "model updates.", "edge AI.", "machine vision.", "perception systems.", "industrial automation.",
   "autonomous fleets.", "distributed inference.", "field-deployed systems.", "inspection systems.", "AI supply chains.",
   "mission-critical workloads.",

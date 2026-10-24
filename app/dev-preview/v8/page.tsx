@@ -108,7 +108,7 @@ export default function Home() {
             </Link>
             <h1 className="v8-hero-title" style={{ width: "100%" }}>
               <span className="v8-sr">{TAGLINE}</span>
-              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="Trusted AI for" /></span>
+              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
             {/* The company in one line (founder, 2026-10-24: the site leads with the direction, not one product). */}
