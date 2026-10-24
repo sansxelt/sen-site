@@ -79,7 +79,16 @@ export const PROMPTO = {
   headline: "Lock AI to its exact bytes.",
   line: "Open source. Records exactly which AI model files and coding-agent add-ons you approved, offline, and tells you the moment anything changes.",
   repo: "https://github.com/sansxelt/vraelis-cli",
+  version: "0.1.2",
+  /** Standalone executables attached to the release by the public repo's downloads workflow. Unsigned for now. */
+  downloads: [
+    { os: "windows", label: "Windows", arch: "x64", file: "vraelis-0.1.2-windows-x64.exe" },
+    { os: "mac", label: "macOS", arch: "Apple silicon", file: "vraelis-0.1.2-macos-arm64.tar.gz" },
+    { os: "mac", label: "macOS", arch: "Intel", file: "vraelis-0.1.2-macos-x64.tar.gz" },
+    { os: "linux", label: "Linux", arch: "x64", file: "vraelis-0.1.2-linux-x64.tar.gz" },
+  ],
 } as const;
+export const promptoDownloadUrl = (file: string) => `${PROMPTO.repo}/releases/download/v${PROMPTO.version}/${file}`;
 export const CONTOUR = {
   name: "Vraelis Contour",
   headline: "Know which AI each machine runs.",

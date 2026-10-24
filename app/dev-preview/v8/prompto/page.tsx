@@ -1,7 +1,8 @@
 import { CodeTabs, RiseWords } from "../_kit/client";
 import { Button, Faq, PageHero, Section, TextLink, Wrap } from "../_kit/blocks";
 import { v8meta } from "../_kit/meta";
-import { PROMPTO, TAB_NAMES } from "../_kit/site";
+import { PROMPTO, TAB_NAMES, promptoDownloadUrl } from "../_kit/site";
+import { DownloadButton } from "./download";
 import "./prompto.css";
 
 // Vraelis Prompto, the public open-source product (founder, 2026-10-24: "it isn't a news article, it's a real product").
@@ -44,7 +45,7 @@ vraelis models diff   approved.json new.json
 vraelis agents lock   ./project         # writes ./project/addonlock.json
 vraelis agents verify ./project`;
 
-const INSTALL = `# Python 3.11 or newer. Check the wheel against SHA256SUMS from the same release.
+const INSTALL = `# For developers who prefer pip (Python 3.11 or newer). Check the wheel against SHA256SUMS.
 pip install https://github.com/sansxelt/vraelis-cli/releases/download/v0.1.2/vraelis-0.1.2-py3-none-any.whl`;
 
 const NOT = [
@@ -63,10 +64,37 @@ export default function Prompto() {
         title={<RiseWords text={PROMPTO.headline} />}
         lead={PROMPTO.line}
         actions={<>
-          <Button to={PROMPTO.repo} external size="lg" arrow>Get it on GitHub</Button>
+          <DownloadButton />
           <Button to="/news/vraelis-cli-0-1-0" kind="soft" size="lg">Release notes</Button>
         </>}
       />
+
+      <Section rule id="download">
+        <Wrap>
+          <div className="v8-stack--lg">
+            <div className="v8-head" style={{ maxWidth: 720 }}>
+              <span className="v8-eyebrow">Download</span>
+              <h2 className="v8-h2">One file. Nothing else to install.</h2>
+              <p className="v8-lead">Version {PROMPTO.version}. Each download includes everything it needs, so you do not need Python.</p>
+            </div>
+            <ul className="pr-dl">
+              {PROMPTO.downloads.map((d) => (
+                <li key={d.file}>
+                  <a className="pr-dl__link" href={promptoDownloadUrl(d.file)}>
+                    <b>{d.label}</b><span>{d.arch}</span><span className="v8-arrow" aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <div className="pr-steps">
+              <div><h3 className="v8-h3">Windows</h3><p className="v8-small">Rename the file to vraelis.exe and open a terminal in its folder. Windows may say &ldquo;Windows protected your PC&rdquo; the first time: choose More info, then Run anyway.</p></div>
+              <div><h3 className="v8-h3">macOS</h3><p className="v8-small">Double-click to unpack, then open Terminal in that folder. macOS blocks the first run of a download it does not know: right-click vraelis, choose Open, then Open again.</p></div>
+              <div><h3 className="v8-h3">Linux</h3><p className="v8-small">Unpack with tar -xzf, then run ./vraelis from that folder.</p></div>
+            </div>
+            <p className="v8-small">Then run <code>vraelis --version</code>. The downloads are not yet signed, which is why your system warns you. Check each file against <a className="v8-under" href={promptoDownloadUrl("SHA256SUMS-downloads")}>SHA256SUMS-downloads</a>.</p>
+          </div>
+        </Wrap>
+      </Section>
 
       <Section rule>
         <Wrap>
@@ -108,7 +136,7 @@ export default function Prompto() {
             </div>
             <CodeTabs tabs={[
               { id: "use", label: "Use", file: "terminal", code: USE },
-              { id: "install", label: "Install", file: "terminal", code: INSTALL },
+              { id: "install", label: "pip", file: "terminal", code: INSTALL },
             ]} />
           </div>
         </Wrap>
@@ -135,7 +163,8 @@ export default function Prompto() {
               { q: `Is ${PROMPTO.name} free?`, a: "Yes. It is open source under the Apache-2.0 license." },
               { q: "Why is the command called vraelis?", a: `${PROMPTO.name} is the product name; the command you run is vraelis, as it was at the first release.` },
               { q: `How does it relate to Vraelis Contour?`, a: `${PROMPTO.name} records which files you approved, on your own machine. Vraelis Contour, in private development, compares an approved release with what a machine reports it is running.` },
-              { q: "Is it on PyPI?", a: "Not yet. Install the wheel from the GitHub release and check it against SHA256SUMS." },
+              { q: "Do I need Python?", a: "No. The downloads include everything they need. Developers who prefer pip can install the Python package instead (Python 3.11 or newer); it is not on PyPI yet." },
+              { q: "Why does my computer warn me?", a: "The downloads are not code-signed yet, so Windows and macOS do not recognize the publisher. Check the file against SHA256SUMS-downloads, then allow it once." },
             ]}
           />
         </Wrap>
