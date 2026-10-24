@@ -108,11 +108,11 @@ export default function Home() {
             </Link>
             <h1 className="v8-hero-title" style={{ width: "100%" }}>
               <span className="v8-sr">{TAGLINE}</span>
-              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="Verified AI for" /></span>
+              <span aria-hidden="true" style={{ display: "block" }}><RiseWords text="AI security for" /></span>
               <span aria-hidden="true" className="v8-fade" style={{ display: "block", ["--d" as string]: ".3s" }}><KeywordMorph words={HERO_KEYWORDS} /></span>
             </h1>
             {/* One mission line, Anduril/Palantir register (founder, 2026-10-24: one line, the stakes, not the mechanism). */}
-            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}><span className="hm-hero__line">Securing the AI models that run the machines the world depends on.</span> <span className="hm-hero__line">Built for governments, alliances and the companies that supply them.</span></p>
+            <p className="v8-lead v8-fade hm-hero__lead" style={{ ["--d" as string]: ".55s" }}>Every model approved, verified and accounted for.</p>
             <div className="v8-actions v8-fade hm-hero__actions" style={{ ["--d" as string]: ".7s" }}>
               <a className="v8-btn v8-btn--solid v8-btn--lg" href="#direction">Where we are going<span className="v8-arrow" aria-hidden="true" /></a>
               {/* On a phone the two sit on one centered row, as x.ai's do, so the second says less. */}

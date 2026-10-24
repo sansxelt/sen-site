@@ -642,7 +642,9 @@ a:hover > .v8-arrow::after, button:hover > .v8-arrow::after, .v8-link:hover .v8-
 /* Tight (founder, 2026-10-12: "too much space to the partnerships"): close under the actions, close above the tiles. */
 /* Hero buttons: centered under the headline; on a phone one row, the second labelled short. */
 .hm-hero__lead { margin: 6px auto 0; max-width: 40ch; text-align: center; color: var(--ink-2); }
-@media (min-width: 760px) { .hm-hero__lead { max-width: none; } .hm-hero__line { display: block; white-space: nowrap; } }
+/* One short line under the hero, a step larger (founder, 2026-10-24). */
+.hm-hero__lead { font-size: clamp(18px, 1.7vw, 24px); }
+@media (min-width: 760px) { .hm-hero__lead { max-width: none; white-space: nowrap; } }
 .hm-hero__actions { justify-content: center; margin-top: 30px; }
 .hm-narrow { display: none; }
 @media (max-width: 560px) {
